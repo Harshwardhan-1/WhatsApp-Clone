@@ -62,3 +62,76 @@ export const signup=async(req:Request,res:Response,next:NextFunction):Promise<vo
         next(err);
     }
 }
+
+
+
+
+
+
+
+export const signin=async(req:Request,res:Response,next:NextFunction):Promise<void>=>{
+    try{
+        const {email,password}=req.body;
+        if(!email || !password){
+            res.status(400).json({
+                success:false,
+                message:"All Fields are Required",
+            });
+        }
+        const user=await User.findOne({email:email.toLowerCase()});
+        if(!user){
+            res.status(400).json({
+                success:false,
+                message:"please don a signup first",
+            });
+            return;
+        }
+        const compare=await bcrypt.compare(password,user.password);
+        if(!compare){
+            res.status(400).json({
+                success:false,
+                message:"incorrect password",
+            });
+            return;
+        }
+        let token=generateToken(user._id.toString(),email);
+        res.cookie("token",token,{
+            httpOnly:true,
+            secure:true,
+            sameSite:"none",
+        });
+        res.status(200).json({
+            success:true,
+            message:"succcessfullu verified",
+        });
+    }catch(err){
+        next(err);
+    }
+}
+
+
+
+
+
+
+
+
+export const logout=async(req:Request,res:Response,next:NextFunction):Promise<void>=>{
+try{
+    const token=req.cookies?.token;
+    if(!token){
+        res.status(400).json({
+            success:false,
+            message:"not login",
+        });
+        return;
+    }
+    res.clearCookie(token);
+    res.status(200).json({
+        success:true,
+        message:"successfully logout",
+    });
+}catch(err){
+    next(err);
+}
+}
