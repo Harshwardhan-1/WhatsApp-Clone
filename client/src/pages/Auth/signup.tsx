@@ -1,13 +1,27 @@
 import { useState } from "react";
-export function RegisterPage(){
+import { env } from "../../configs/env.config";
+import axios,{AxiosError} from 'axios';
+import { useNavigate } from "react-router-dom";
+const RegisterPage=()=>{
+    const navigate=useNavigate();
     const [name,setName]=useState("");
     const [email,setEmail]=useState("");
     const [password,setPassword]=useState("");
     
 
-    const handleSubmit=(e:React.FormEvent<HTMLFormElement>)=>{
+    const handleSubmit=async(e:React.FormEvent<HTMLFormElement>)=>{
         e.preventDefault();
+        try{
+        const send={name,email,password};
+        const response=await axios.post(`${env.backendUrl}/api/v1/auth/register`,send,{withCredentials:true});
+        if(response.data.message=== 'successfully register'){
+            navigate("/");
+        }
+    }catch(err){
+        const error=err as AxiosError;
+        console.log(error);
     }
+}
     return(
         <div>
             <form onSubmit={handleSubmit}>
@@ -19,3 +33,5 @@ export function RegisterPage(){
         </div>
     );
 }
+
+export default RegisterPage
