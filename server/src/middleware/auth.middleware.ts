@@ -3,7 +3,7 @@ import { userpayload } from "../types/auth.Requests.types";
 import { authRequest } from "../types/auth.Requests.types";
 import { JWT_SECRET } from '../configs/env.config';
 import jwt from 'jsonwebtoken';
-import { userModel } from '../models/user.model';
+import { User } from '../models/user.model';
 
 
 export const isUserLoggedIn=async(req:authRequest,res:Response,next:NextFunction)=>{
@@ -17,7 +17,7 @@ export const isUserLoggedIn=async(req:authRequest,res:Response,next:NextFunction
         }
         //after verificaton it the data that we set in token is easily identifiable by decodeddata
         const decodedData=jwt.verify(token,JWT_SECRET as string)as userpayload;
-        const user=await userModel.findOne({email:decodedData.email});
+        const user=await User.findOne({email:decodedData.email}).select("-password");
         if(!user){
             return res.status(400).json({
                 success:false,
@@ -46,7 +46,7 @@ export const isAdminLoggedIn=async(req:authRequest,res:Response,next:NextFunctio
             });
         }
         const decodedData=jwt.verify(token,JWT_SECRET as string) as userpayload;
-        const user=await userModel.findOne({email:decodedData.email});
+        const user=await User.findOne({email:decodedData.email}).select("-password");
         if(!user || user.role!== 'ADMIN'){
             return res.status(403).json({
                 success:false,

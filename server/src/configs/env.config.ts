@@ -7,4 +7,5 @@ export const{
     JWT_SECRET,
     SALT_ROUND,
     PORT,
+    JWT_EXPIRES_IN,
 }=process.env
