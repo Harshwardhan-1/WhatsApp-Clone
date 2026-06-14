@@ -16,7 +16,7 @@ const userSchema=new mongoose.Schema<IUser>({
         type:String,
         required:[true,'name is required'],
         minLength:[3,'name must be atleast 3 characters'],
-        maxLength:[25,'name must be smaller than 25 characters'],
+        maxLength:[50,'name must be smaller than 50 characters'],
     },
     email:{
         type:String,
@@ -29,6 +29,7 @@ const userSchema=new mongoose.Schema<IUser>({
         type:String,
         required:[true,'password is required'],
          minLength:[3,'password must be greter than equals to 3'],
+         maxLength:[32,'password cannot be more than 32 characters'],
          match: [/^(?=.*\d).+$/, 'Password must contain at least one number'],
     },
     role:{
