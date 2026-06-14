@@ -13,10 +13,15 @@ app.use(cors({
      credentials:true,
 }));
 
+import { authRouter } from './routes/auth.routes';
+
 app.get("/",(req,res)=>{
     res.send("hii harsh here");
 })
 
+
+
+app.use("/api/v1/auth",authRouter);
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(ErrorMiddleware);
