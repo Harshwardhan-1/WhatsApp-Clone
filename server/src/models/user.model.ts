@@ -5,6 +5,7 @@ export interface IUser extends Document{
     name:string,
     email:string,
     password:string,
+    role:string,
     avatar?:string,
     createdAt:Date,
     updatedAt:Date,
@@ -30,6 +31,10 @@ const userSchema=new mongoose.Schema<IUser>({
          minLength:[3,'password must be greter than equals to 3'],
          match: [/^(?=.*\d).+$/, 'Password must contain at least one number'],
     },
+    role:{
+        type:String,
+        default:"user",
+    },
     avatar:{
         type:String,
         default:"",
@@ -39,4 +44,4 @@ const userSchema=new mongoose.Schema<IUser>({
 )
 
 
-export const authModel=mongoose.model<IUser>("user",userSchema);
+export const userModel=mongoose.model<IUser>("user",userSchema);

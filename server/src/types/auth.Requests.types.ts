@@ -9,5 +9,5 @@ export interface userpayload extends JwtPayload{
 
 
 export interface authRequest extends Request{
-    user?:IUser | null
+    user?:null | IUser
 }
