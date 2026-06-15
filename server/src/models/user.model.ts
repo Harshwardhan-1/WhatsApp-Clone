@@ -29,7 +29,7 @@ const userSchema=new mongoose.Schema<IUser>({
         type:String,
         required:[true,'password is required'],
          minLength:[3,'password must be greter than equals to 3'],
-         match: [/^(?=.*\d).+$/, 'Password must contain at least one number'],
+        //  match: [/^(?=.*\d).+$/, 'Password must contain at least one number'],
     },
     role:{
         type:String,

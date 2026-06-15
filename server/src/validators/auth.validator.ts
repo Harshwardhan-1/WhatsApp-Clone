@@ -17,12 +17,11 @@ export const signupschema=z.object({
     password:
     z.string().
     min(3,'pssword must be atleast 3 characters').
-    max(32,'password cannot be more than 32 characters').
-    regex(/[A-Z]/,'password must contain atleast one uppercase letter')
-    .regex(/[a-z]/,'password must contain atleast one lowercase letter').
-    regex(/[0-9]/,'password must contain atleast one number'),
-});
-
+    max(32,'password cannot be more than 32 characters')
+    // regex(/[A-Z]/,'password must contain atleast one uppercase letter')
+    // .regex(/[a-z]/,'password must contain atleast one lowercase letter').
+    // regex(/[0-9]/,'password must contain atleast one number'),
+})
 
 
 

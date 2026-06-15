@@ -3,7 +3,9 @@ import { useState } from "react";
 import { env } from "../../configs/env.config";
 import { Link } from "react-router-dom";
 import { showApiError } from "../../utils/showApiError";
+import { useNavigate } from "react-router-dom";
 const Login=()=>{
+    const navigate=useNavigate();
     const [email,setEmail]=useState("");
     const [password,setPassword]=useState("");
     const [loading,setLoading]=useState<boolean>(false);
@@ -14,7 +16,8 @@ const Login=()=>{
             const send={email,password};
         const response=await axios.post(`${env.backendUrl}/api/v1/auth/login`,send,{withCredentials:true});
         if(response.data.message=== "successfully verified"){
-            alert("successfull");
+            localStorage.setItem("token",response.data.token);
+            navigate("/ChatPage");
         }
     }catch(err){
         showApiError(err);

@@ -84,7 +84,7 @@ export const signin=async(req:Request,res:Response,next:NextFunction):Promise<vo
         if(!user){
             res.status(400).json({
                 success:false,
-                message:"please don a signup first",
+                message:"please do a signup first",
             });
             return;
         }
@@ -104,7 +104,8 @@ export const signin=async(req:Request,res:Response,next:NextFunction):Promise<vo
         });
         res.status(200).json({
             success:true,
-            message:"succcessfully verified",
+            message:"successfully verified",
+            token,
         });
     }catch(err){
         next(err);
