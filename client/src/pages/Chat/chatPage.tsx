@@ -6,14 +6,16 @@ const ChatPage = () => {
   const location = useLocation();
   const data = location.state?.data;
   const data2=location.state?.data2;
+  const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
+
 
   return (
     <div className="chat">
       <div className="chatHeader">
         <div className="chatHeaderLeft">
-          <div className="avatar">
-            {data?.name?.charAt(0).toUpperCase()}
-          </div>
+          <div className="avat"style={{backgroundColor:colors[(data?.name?.charCodeAt(0) || 0) % colors.length]}}>
+              {data?.name?.charAt(0).toUpperCase()}
+                </div>
 
           <div className="userInfo"><h4>{data?.name}</h4></div>
         </div>
@@ -23,8 +25,6 @@ const ChatPage = () => {
         <div className="encryptBox">
            Messages are end-to-end encrypted. No one outside this chat can read or listen to them.
         </div>
-
-        {/* Messages yaha render honge */}
 
         <p>jisko message bhejna ha uski id {data?._id}</p> 
         <p>jisko message bhejna ha uska email {data?.email}</p>

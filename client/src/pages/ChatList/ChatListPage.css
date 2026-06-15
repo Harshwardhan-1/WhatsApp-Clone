@@ -82,10 +82,14 @@
 .chatPage__userList::-webkit-scrollbar {
   display: none;
 }
+
 .chatPage__userList {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding-bottom: 52px;
+  box-sizing: border-box;
 }
+
 
 .chatPage__userCard {
   display: flex;
@@ -186,4 +190,13 @@
   .right_side {
     height: 40vh;
   }
+}
+
+
+
+.noChatsFound{
+  text-align:center;
+  padding:30px;
+  color:#667781;
+  font-weight:500;
 }

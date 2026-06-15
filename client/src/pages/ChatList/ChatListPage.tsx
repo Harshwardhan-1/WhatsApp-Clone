@@ -42,17 +42,28 @@ const ChatPage =()=>{
       </div>
 
       <div className="chatPage__userList">
-        {data.filter((user: User)=>user.name.toLowerCase().includes(search.toLowerCase()))
-           .map((all:User,index:number)=>(
-            <div className="chatPage__userCard" key={all._id} onClick={()=>handleClick(all)}>
-              <div className="chatPage__avatar"style={{ backgroundColor: colors[index % colors.length],}}>
-                {getInitials(all.name)}
-
-                <span className="chatPage__onlineDot"></span>
-              </div>
-              <div className="chatPage__content"><h4 className="chatPage__name">{all._id === userData?.loginUserId ? "You (You)": all.name}</h4></div>
-            </div>
-          ))}
+     {
+  data.filter((user:User)=>
+    user.name.toLowerCase().includes(search.toLowerCase())
+  ).length===0 ?(
+    <div className="noChatsFound">No records found</div>
+  ):(
+    data.filter((user: User)=>
+      user.name.toLowerCase().includes(search.toLowerCase())
+    )
+    .map((all:User,index:number)=>(
+      <div className="chatPage__userCard" key={all._id} onClick={()=>handleClick(all)}>
+        <div className="chatPage__avatar"style={{ backgroundColor: colors[index % colors.length] }}>
+          {getInitials(all.name)}
+          <span className="chatPage__onlineDot"></span>
+        </div>
+        <div className="chatPage__content">
+          <h4 className="chatPage__name">{all._id === userData?.loginUserId ? "You (You)" : all.name}</h4>
+        </div>
+      </div>
+    ))
+  )
+}
       </div>
       <div>
       </div>

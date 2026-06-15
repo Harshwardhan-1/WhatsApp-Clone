@@ -7,7 +7,6 @@
     overflow: hidden;
 }
 
-/* HEADER */
 
 .chatHeader {
     height: 60px;
@@ -25,18 +24,15 @@
     align-items: center;
     gap: 14px;
 }
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #dfe5e7;
-    color: #54656f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 16px;
+.avat {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
 }
 
 .userInfo h4 {
@@ -61,7 +57,6 @@
     cursor: pointer;
 }
 
-/* BODY */
 
 .chatBody {
     flex: 1;
