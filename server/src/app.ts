@@ -15,6 +15,7 @@ app.use(cors({
 }));
 
 import { authRouter } from './routes/auth.routes';
+import { chatpageRoutes } from './routes/chat.routes';
 
 app.get("/",(req,res)=>{
     res.send("hii harsh here");
@@ -23,6 +24,7 @@ app.get("/",(req,res)=>{
 
 
 app.use("/api/v1/auth",authRouter);
+app.use("/api/v1/chat",chatpageRoutes);
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(ErrorMiddleware);

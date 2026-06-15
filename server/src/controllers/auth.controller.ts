@@ -3,6 +3,7 @@ import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
 import { JWT_SECRET,JWT_EXPIRES_IN } from '../configs/env.config';
 import jwt,{Secret,SignOptions} from 'jsonwebtoken';
+import { authRequest } from '../types/auth.Requests.types';
 
 //it tells the type of it
 const secret:Secret=JWT_SECRET!;
@@ -137,4 +138,41 @@ try{
 }catch(err){
     next(err);
 }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const allUsers=async(req:authRequest,res:Response,next:NextFunction)=>{
+    try{
+        const user=req?.user;
+        const id=user?._id;
+        const allUser=await User.find().select("_id name email");
+        if(allUser.length===0){
+            res.status(400).json({
+                success:false,
+                message:"new users will join soon",
+            });
+            return;
+        }
+        res.status(200).json({
+            success:true,
+            message:"all users",
+            data:{
+                allUser,
+                currentUserId:id,
+            }
+        });
+    }catch(err){
+        next(err);
+    }
 }
