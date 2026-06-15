@@ -1,0 +1,123 @@
+.chat {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #efeae2;
+    overflow: hidden;
+}
+
+/* HEADER */
+
+.chatHeader {
+    height: 60px;
+    min-height: 60px;
+    background: #f0f2f5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-left: 1px solid #d1d7db;
+}
+
+.chatHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #dfe5e7;
+    color: #54656f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.userInfo h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #111b21;
+}
+
+.userInfo p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: #667781;
+}
+
+.chatHeaderRight {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    color: #54656f;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+/* BODY */
+
+.chatBody {
+    flex: 1;
+    overflow-y: auto;
+    background-image: url("/whatappback.jpg");
+    background-repeat: repeat;
+    padding: 14px 8%;
+    background-size: 412px auto;
+}
+
+.chatBody::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chatBody::-webkit-scrollbar-thumb {
+    background: #b6b6b6;
+    border-radius: 10px;
+}
+
+.encryptBox {
+    max-width: 520px;
+    margin: 8px auto 20px;
+    background: #fff3c4;
+    color: #54656f;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* FOOTER */
+
+.chatFooter {
+    height: 62px;
+    min-height: 62px;
+    background: #f0f2f5;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 16px;
+}
+
+.footerIcon {
+    font-size: 24px;
+    color: #54656f;
+    cursor: pointer;
+}
+
+.chatFooter input {
+    flex: 1;
+    height: 42px;
+    border: none;
+    outline: none;
+    background: #fff;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 15px;
+}

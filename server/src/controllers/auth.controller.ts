@@ -156,6 +156,7 @@ export const allUsers=async(req:authRequest,res:Response,next:NextFunction)=>{
     try{
         const user=req?.user;
         const id=user?._id;
+        const email=user?.email;
         const allUser=await User.find().select("_id name email");
         if(allUser.length===0){
             res.status(400).json({
@@ -169,8 +170,11 @@ export const allUsers=async(req:authRequest,res:Response,next:NextFunction)=>{
             message:"all users",
             data:{
                 allUser,
-                currentUserId:id,
-            }
+            },
+            userData:{
+                loginUserId:id,
+                email:email,
+            },
         });
     }catch(err){
         next(err);

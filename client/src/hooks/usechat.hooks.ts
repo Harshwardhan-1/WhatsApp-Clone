@@ -8,25 +8,29 @@ interface data{
     _id:string,
     name:string,
     email:string,
-    currentUserId:string,
+}
+
+interface currentUser{
+ loginUserId:string,
+ email:string,
 }
 
 export function ShowAllUser(){
     const [data,setData]=useState<data[]>([]);
-    const [currentUserId,setcurrentUserId]=useState<string>("");
+    const [userData,setUserData]=useState<currentUser>();
     try{
     useEffect(()=>{
         const fetch=async()=>{
             const response=await axios.get(`${env.backendUrl}/api/v1/chat/alluser`,{withCredentials:true});
             if(response.data.success===true && response.data.message=== 'all users'){
                 setData(response.data.data.allUser);
-                setcurrentUserId(response.data.data.currentUserId);
+                setUserData(response.data.userData);
             }
         }
   fetch();
-    });
+    },[]);
 }catch(err){
 showApiError(err);
 }
-return {data,currentUserId};
+return {data,userData};
 }

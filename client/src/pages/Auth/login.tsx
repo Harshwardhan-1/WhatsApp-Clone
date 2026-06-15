@@ -18,7 +18,7 @@ const Login=()=>{
         const response=await axios.post(`${env.backendUrl}/api/v1/auth/login`,send,{withCredentials:true});
         if(response.data.message=== "successfully verified"){
             localStorage.setItem("token",response.data.token);
-            navigate("/ChatPage");
+            navigate("/ChatListPage");
         }
     }catch(err){
         showApiError(err);

@@ -5,7 +5,8 @@ import "./App.css";
 const RegisterPage=lazy(()=>import("./pages/Auth/signup"));
 const Login=lazy(()=>import("./pages/Auth/login"));
 const HomePage=lazy(()=>import("./pages/HomePage/HomePage"));
-const ChatPage=lazy(()=>import("./pages/ChatList/ChatListPage"));
+const ChatListPage=lazy(()=>import("./pages/ChatList/ChatListPage"));
+const ChatPage=lazy(()=>import("./pages/Chat/ChatPage"));
 
 
 
@@ -35,6 +36,7 @@ function App() {
         <Route path='/signup' element={<RegisterPage/>}></Route>
         <Route path='/login' element={<Login/>}></Route>
         <Route path='/' element={<HomePage />}></Route>
+        <Route path='/ChatListPage' element={<ChatListPage />}></Route>
         <Route path='/ChatPage' element={<ChatPage />}></Route>
       </Routes>
       </Suspense>

@@ -34,15 +34,45 @@
 
 .chatPage__searchWrapper {
   padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .chatPage__searchInput {
-  width: 98%;
-  padding: 12px 6px;
+  width: 100%;
+  padding: 12px 10px;
   border: none;
   outline: none;
   border-radius: 10px;
   background: white;
+  margin-bottom: 8px;
+}
+
+.chatPage__searchWrapper button {
+  border: none;
+  outline: none;
+  padding: 8px 14px;
+  border-radius: 18px;
+  background: white;
+  color: #54656f;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #d1d7db;
+}
+
+.chatPage__searchWrapper button:hover {
+  background: #e7fce3;
+  color: #008069;
+  border-color: #008069;
+}
+
+.chatPage__searchWrapper button:first-of-type {
+  background: #d9fdd3;
+  color: #008069;
+  border-color: #008069;
 }
 
 .chatPage__userList {
@@ -131,7 +161,7 @@
 }
 
 .right_side img {
-  width: 190px;
+  width: 130px;
   max-width: 80%;
   margin-bottom: 20px;
   opacity: 0.9;
