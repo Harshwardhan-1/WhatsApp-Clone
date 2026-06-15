@@ -1,0 +1,159 @@
+.chatPage {
+  width: 400px;
+  height: 100vh;
+  background: #f0f2f5;
+  overflow: hidden;
+}
+
+.chatPage__header {
+  height: 64px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chatPage__profile {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ec4899;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.chatPage__icons {
+  display: flex;
+  gap: 18px;
+  font-size: 20px;
+  color: #54656f;
+}
+
+.chatPage__searchWrapper {
+  padding: 12px;
+}
+
+.chatPage__searchInput {
+  width: 98%;
+  padding: 12px 6px;
+  border: none;
+  outline: none;
+  border-radius: 10px;
+  background: white;
+}
+
+.chatPage__userList {
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+.chatPage__userList::-webkit-scrollbar {
+  display: none;
+}
+.chatPage__userList {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.chatPage__userCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: white;
+  border-bottom: 1px solid #e9edef;
+  cursor: pointer;
+}
+
+.chatPage__userCard:hover {
+  background: #f5f6f6;
+}
+
+.chatPage__avatar {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  position: relative;
+}
+
+.chatPage__onlineDot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #25d366;
+  border: 2px solid white;
+}
+
+.chatPage__content {
+  flex: 1;
+}
+
+.chatPage__name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #111b21;
+  text-align: left;
+}
+
+
+
+
+
+
+
+
+.chatPage__container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+/* RIGHT SIDE FIX */
+.right_side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
+.right_side img {
+  width: 190px;
+  max-width: 80%;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+
+.right_side p {
+  font-size: 16px;
+  color: #667781;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .chatPage__container {
+    flex-direction: column;
+  }
+
+  .chatPage {
+    width: 100%;
+    height: 60vh;
+  }
+
+  .right_side {
+    height: 40vh;
+  }
+}
