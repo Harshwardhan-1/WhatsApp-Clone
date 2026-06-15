@@ -24,7 +24,9 @@ const RegisterPage = () => {
       }
     } catch (err) {
       showApiError(err);
-    } 
+    }finally{
+        setLoading(false);
+    }
   };
 
   return (
@@ -35,7 +37,7 @@ const RegisterPage = () => {
 
       <div className="wa-auth-card">
         <div className="wa-auth-logo-wrap">
-          <img src="../public/WhatsApp.svg"alt="WhatsApp" className="wa-auth-logo"/>
+          <img src="/WhatsApp.svg"alt="WhatsApp" className="wa-auth-logo"/>
          </div>
 
         <h1 className="wa-auth-title">Create account</h1>

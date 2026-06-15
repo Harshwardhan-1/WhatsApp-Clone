@@ -34,7 +34,7 @@ const Login=()=>{
   </div>
 
   <div className="wa-auth-card">
-    <img src="../public/WhatsApp.svg"alt="WhatsApp"className="wa-signin"/>
+    <img src="/WhatsApp.svg"alt="WhatsApp"className="wa-signin"/>
     <h1 className="wa-auth-title">Welcome Back</h1>
     <p className="wa-auth-subtitle">
       Sign in to continue chatting
