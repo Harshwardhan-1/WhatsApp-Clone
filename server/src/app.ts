@@ -6,6 +6,7 @@ import { FRONTEND_URL } from './configs/env.config';
 import { ErrorMiddleware } from './middleware/error.middleware';
 
 const app=express();
+app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     origin:FRONTEND_URL,

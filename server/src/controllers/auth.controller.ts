@@ -1,7 +1,7 @@
 import {Request,Response,NextFunction} from 'express';
 import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
-import { SALT_ROUND,JWT_SECRET,JWT_EXPIRES_IN } from '../configs/env.config';
+import { JWT_SECRET,JWT_EXPIRES_IN } from '../configs/env.config';
 import jwt,{Secret,SignOptions} from 'jsonwebtoken';
 
 //it tells the type of it
@@ -34,8 +34,9 @@ export const signup=async(req:Request,res:Response,next:NextFunction):Promise<vo
                 success:false,
                 message:"user already exist",
             });
+            return;
         }
-        const hashPassword=await bcrypt.hash(password,SALT_ROUND!);
+        const hashPassword=await bcrypt.hash(password,10);
         const user=await User.create({
             name,
             email,
@@ -59,6 +60,7 @@ export const signup=async(req:Request,res:Response,next:NextFunction):Promise<vo
             token,
         })
     }catch(err){
+        console.log(err);
         next(err);
     }
 }
@@ -102,7 +104,7 @@ export const signin=async(req:Request,res:Response,next:NextFunction):Promise<vo
         });
         res.status(200).json({
             success:true,
-            message:"succcessfullu verified",
+            message:"succcessfully verified",
         });
     }catch(err){
         next(err);

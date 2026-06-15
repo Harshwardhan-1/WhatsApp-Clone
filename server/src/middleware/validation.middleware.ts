@@ -7,7 +7,7 @@ export const validate=(schema:z.ZodObject<any>)=>(req:Request,res:Response,next:
         const issue=result.error.issues[0]
         res.status(400).json({
             success:false,
-            error:issue,
+            errors:issue.message,
         });
         return;
     }
