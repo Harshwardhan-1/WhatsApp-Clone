@@ -5,7 +5,7 @@ import "./App.css";
 const RegisterPage=lazy(()=>import("./pages/Auth/signup"));
 const Login=lazy(()=>import("./pages/Auth/login"));
 const HomePage=lazy(()=>import("./pages/HomePage/HomePage"));
-const ChatPage=lazy(()=>import("./pages/Chat/ChatListPage"));
+const ChatPage=lazy(()=>import("./pages/ChatList/ChatListPage"));
 
 
 
