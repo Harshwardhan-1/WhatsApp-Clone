@@ -54,14 +54,9 @@ useEffect(()=>{
 
       <div className="chatPage__userList">
      {
-  data.filter((user:User)=>
-    user.name.toLowerCase().includes(search.toLowerCase())
-  ).length===0 ?(
-    <div className="noChatsFound">No records found</div>
-  ):(
-    data.filter((user: User)=>
-      user.name.toLowerCase().includes(search.toLowerCase())
-    )
+  data.filter((user:User)=>user.name.toLowerCase().includes(search.toLowerCase())).length===0 ?(
+    <div className="noChatsFound">No records found</div>):
+    (data.filter((user: User)=>user.name.toLowerCase().includes(search.toLowerCase()))
     .map((all:User,index:number)=>(
       <div className="chatPage__userCard" key={all._id} onClick={()=>handleClick(all)}>
         <div className="chatPage__avatar"style={{ backgroundColor: colors[index % colors.length] }}>
