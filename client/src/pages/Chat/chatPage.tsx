@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { FiPaperclip, FiSmile } from "react-icons/fi";
 import { useState } from "react";
-import { chatTalk } from "../../hooks/use.chatTalk";
+import { ChatTalk } from "../../hooks/use.chatTalk";
 import "./chatPage.css";
 
 const ChatPage=()=>{
@@ -11,7 +11,7 @@ const ChatPage=()=>{
   const [msg,setMsg]=useState<string>("");
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
-  const {userMessage}=chatTalk();
+  const {userMessage,allMessages}=ChatTalk();
 
   const handleSubmit=async(e:React.FormEvent)=>{
     e.preventDefault();
@@ -41,6 +41,20 @@ const ChatPage=()=>{
         <p>jisko message bhejna ha uska email {data?.email}</p>
         <p>jo message karenga uski id {data2.loginUserId}</p> 
         <p>jo message karenga uska email {data2.email}</p>
+
+
+        <div className="chat-body">
+          {allMessages.map((all,index)=>{
+            const isMe=all.senderId===data2.loginUserId;
+            return(
+              <div key={index} className={isMe?"myMessage":"otherMessage"}>
+                {all.message}
+              </div>
+            );
+          })}
+        </div>
+
+
       </div>
       <div className="chatFooter">
         <FiSmile className="footerIcon" />
