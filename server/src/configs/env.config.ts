@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config({path:`.env.${process.env.NODE_ENV || 'devlopment'}.local`});
+dotenv.config({path:`.env.${process.env.NODE_ENV || 'development'}.local`});
 
 export const{
     MONGO_URI,
@@ -8,4 +8,4 @@ export const{
     SALT_ROUND,
     PORT,
     JWT_EXPIRES_IN,
-}=process.env
+}=process.env 
