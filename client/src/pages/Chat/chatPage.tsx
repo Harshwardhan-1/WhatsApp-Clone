@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { FiPaperclip, FiSmile } from "react-icons/fi";
 import "./chatPage.css";
 
-const ChatPage = () => {
+const ChatPage=()=>{
   const location = useLocation();
   const data = location.state?.data;
   const data2=location.state?.data2;

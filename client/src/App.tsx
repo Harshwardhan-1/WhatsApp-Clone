@@ -1,18 +1,14 @@
 import {Routes,Route} from 'react-router-dom';
 import { lazy,Suspense } from 'react';
+import { useEffect } from 'react';
+import { socket } from './utils/socket';
 import "./App.css";
 
 const RegisterPage=lazy(()=>import("./pages/Auth/signup"));
 const Login=lazy(()=>import("./pages/Auth/login"));
 const HomePage=lazy(()=>import("./pages/HomePage/HomePage"));
 const ChatListPage=lazy(()=>import("./pages/ChatList/ChatListPage"));
-const ChatPage=lazy(()=>import("./pages/Chat/ChatPage"));
-
-
-
-
-
-
+const ChatPage=lazy(()=>import("./pages/Chat/chatPage"));
 const LoadingScreen = () => (
   <div className="ap-loading-container">
     <div className="ap-loading-logo">
@@ -28,7 +24,17 @@ const LoadingScreen = () => (
   </div>
 );
 
+
 function App() {
+
+  useEffect(()=>{
+    if(!socket.connected){
+      socket.connect();
+    }
+    return()=>{
+      socket.disconnect();
+    }
+  },[]);
   return (
     <>
     <Suspense fallback={<LoadingScreen />}>

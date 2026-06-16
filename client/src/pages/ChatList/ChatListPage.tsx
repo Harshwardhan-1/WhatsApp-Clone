@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { ShowAllUser } from "../../hooks/usechat.hooks";
 import { useNavigate } from "react-router-dom";
+import { socket } from "../../utils/socket";
 import "./ChatListPage.css";
 
 interface User {
@@ -8,20 +9,30 @@ interface User {
   name: string;
   email:string;
 }
-
 const colors: string[]=["#22c55e","#ef4444", "#3b82f6", "#f59e0b",  "#ec4899", "#8b5cf6", "#06b6d4", "#14b8a6",];
 
-const ChatPage =()=>{
+const ChatListPage=()=>{
   const navigate=useNavigate();
-  const {data,userData}=ShowAllUser();
+  const {data,userData}=ShowAllUser();//hook
   const [search, setSearch] = useState<string>("");
   const getInitials=(name: string):string=>{return name.split(" ").map((word) => word[0]).slice(0, 2).join("").toUpperCase();};
+  const handleClick=async(all:User)=>{navigate("/ChatPage",{state:{data:all,data2:userData}});}
+  
+  
+  
+  
+useEffect(()=>{
+  const userId=userData?.loginUserId;
+  if(!userId)return;
+     socket.emit("join",userId);        
+     return()=>{
+      socket.disconnect();
+     }
+},[userData?.loginUserId]);
 
+  
+  
 
-
-  const handleClick=async(all:User)=>{
-    navigate("/ChatPage",{state:{data:all,data2:userData}});
-  }
   return (
     <>
     <div className="chatPage__container">
@@ -82,4 +93,5 @@ const ChatPage =()=>{
   );
 };
 
-export default ChatPage;
+
+export default ChatListPage;
