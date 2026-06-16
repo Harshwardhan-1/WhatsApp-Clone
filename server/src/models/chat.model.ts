@@ -48,6 +48,6 @@ const chatSchema=new mongoose.Schema<IChat>({
 },
 {timestamps:true},
 )
+   
 
-
-export const personalChat=mongoose.model<IChat>("personalchat",chatSchema);
+export const personalChat=mongoose.model<IChat>("personalchat",chatSchema);     
