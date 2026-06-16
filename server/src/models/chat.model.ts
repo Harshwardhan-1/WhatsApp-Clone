@@ -33,7 +33,9 @@ const chatSchema=new mongoose.Schema<IChat>({
     },
     fileUrl:{
         type:String,
-        default:null
+        default:null,
+        fileSize:String,
+        mimetype:String,
     },
     isSeen:{
         type:Boolean,
