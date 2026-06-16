@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import {Server as httpServer} from "http";
+import { PersonalChat } from "../controllers/chat.controller";
 
 export const userChat=(server:httpServer,FRONTEND_URL:string)=>{
 const io=new Server(server,{
@@ -15,10 +16,13 @@ io.on('connection',(socket)=>{
 
     socket.on("join",(userId:string)=>{
         users[userId]=userId;
-        console.log("joined",userId)
+        console.log("joined",userId)  
+    })
+    socket.on("send_message",(data)=>{
+        PersonalChat(data);
     })
     socket.on('disconnect',()=>{
         console.log("disconnected:",socket.id); 
-    })
+    }) 
 });
 }

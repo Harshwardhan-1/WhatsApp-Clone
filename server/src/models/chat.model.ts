@@ -50,4 +50,4 @@ const chatSchema=new mongoose.Schema<IChat>({
 )
 
 
-export const Chat=mongoose.model<IChat>("users chat",chatSchema);
+export const personalChat=mongoose.model<IChat>("personalchat",chatSchema);

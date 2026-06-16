@@ -1,14 +1,25 @@
 import { useLocation } from "react-router-dom";
 import { FiPaperclip, FiSmile } from "react-icons/fi";
+import { useState } from "react";
+import { chatTalk } from "../../hooks/use.chatTalk";
 import "./chatPage.css";
 
 const ChatPage=()=>{
   const location = useLocation();
   const data = location.state?.data;
   const data2=location.state?.data2;
+  const [msg,setMsg]=useState<string>("");
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
+  const {userMessage}=chatTalk();
 
+  const handleSubmit=async(e:React.FormEvent)=>{
+    e.preventDefault();
+    if(!data._id || !data2.loginUserId)return;
+    if(msg.trim()=== '')alert(('input field is empty'));
+      const senderId=data2.loginUserId; const receiverId=data._id;
+      userMessage({senderId,receiverId,msg});
+  }
   return (
     <div className="chat">
       <div className="chatHeader">
@@ -35,8 +46,10 @@ const ChatPage=()=>{
         <FiSmile className="footerIcon" />
         <FiPaperclip className="footerIcon" />
 
-        <input type="text" placeholder="Type a message" />
-        <button>send</button>
+        <form onSubmit={handleSubmit}>
+          <input type="text" placeholder="type your message here"  value={msg} onChange={(e)=>setMsg(e.target.value)}/>
+          <button type="submit">send</button>
+        </form>
       </div>
     </div>
   );
