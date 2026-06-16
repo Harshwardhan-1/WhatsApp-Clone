@@ -37,3 +37,9 @@ coverage/
 
 #imp  
 imp.txt
+
+
+#Environment Variables
+.env
+.env.local
+.env.*.local
