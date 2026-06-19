@@ -154,7 +154,6 @@
   width: 100%;
 }
 
-/* RIGHT SIDE FIX */
 .right_side {
   flex: 1;
   display: flex;
@@ -165,7 +164,7 @@
 }
 
 .right_side img {
-  width: 130px;
+  width: 100px;
   max-width: 80%;
   margin-bottom: 20px;
   opacity: 0.9;

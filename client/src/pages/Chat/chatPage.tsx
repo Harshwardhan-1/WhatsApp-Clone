@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import { FiPaperclip, FiSmile } from "react-icons/fi";
 import { useState } from "react";
 import { ChatTalk } from "../../hooks/use.chatTalk";
+import { showApiError } from "../../utils/showApiError";
 import "./chatPage.css";
 
 const ChatPage=()=>{
@@ -16,13 +17,14 @@ const ChatPage=()=>{
   const handleSubmit=async(e:React.FormEvent)=>{
     e.preventDefault();
     if(!data._id || !data2.loginUserId){
-      alert("missing");
-     return;
+      showApiError("any id is missing");
+      return;
     }
 
     if(msg.trim()=== ''){
-      alert(('input field is empty'));
-     return;
+      showApiError("input field can't be empty");
+      console.log('called');
+      return;
     }
       const senderId=data2.loginUserId; 
       const receiverId=data._id;

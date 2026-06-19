@@ -61,7 +61,7 @@
 .chatBody {
     flex: 1;
     overflow-y: auto;
-    /* background-image: url('whatappback.jpg'); */
+    background-image: url('whatappback.jpg');
     background-repeat: repeat;
     padding: 14px 8%;
     background-size: 412px auto;
@@ -124,7 +124,7 @@
 
 .message {
   max-width: 60%;
-  padding: 8px 12px;
+  padding: 4px 10px;
   border-radius: 8px;
   margin: 4px 0;
   width: fit-content;
@@ -173,17 +173,21 @@
 .chatFooter button:hover {
     background: #008f72;
 }
+
+
+
+
 .sender {
   background-color: #d9fdd3;
   margin-left: auto;
-  border-radius: 7px 0px 7px 7px; 
+  border-radius: 11px 0px 11px 11px; 
   box-shadow: 0 1px 1px rgba(0,0,0,0.13);
 }
 
 .receiver {
   background-color: #ffffff;
   margin-right: auto;
-  border-radius: 0px 7px 7px 7px; 
+  border-radius: 0px 11px 11px 11px; 
   box-shadow: 0 1px 1px rgba(0,0,0,0.13);
 }
 .chat-body {
