@@ -38,7 +38,10 @@ export function ChatTalk(){
 
 
     const userMessage=(data:{senderId:string,receiverId:string,msg:string})=>{
-        if(!data.senderId || !data.receiverId)return;
+        if(!data.senderId || !data.receiverId){
+            alert("some field is missing");
+            return;
+        }
         socket.emit("send_message",data);
     };
     return {userMessage,allMessages};

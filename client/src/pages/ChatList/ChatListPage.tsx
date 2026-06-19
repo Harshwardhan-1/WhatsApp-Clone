@@ -25,9 +25,6 @@ useEffect(()=>{
   const userId=userData?.loginUserId;
   if(!userId)return;
      socket.emit("join",userId);        
-     return()=>{
-      socket.disconnect();
-     }
 },[userData?.loginUserId]);
 
   

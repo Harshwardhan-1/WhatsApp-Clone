@@ -15,10 +15,19 @@ const ChatPage=()=>{
 
   const handleSubmit=async(e:React.FormEvent)=>{
     e.preventDefault();
-    if(!data._id || !data2.loginUserId)return;
-    if(msg.trim()=== '')alert(('input field is empty'));
-      const senderId=data2.loginUserId; const receiverId=data._id;
+    if(!data._id || !data2.loginUserId){
+      alert("missing");
+     return;
+    }
+
+    if(msg.trim()=== ''){
+      alert(('input field is empty'));
+     return;
+    }
+      const senderId=data2.loginUserId; 
+      const receiverId=data._id;
       userMessage({senderId,receiverId,msg});
+      setMsg('');
   }
   return (
     <div className="chat">
@@ -44,14 +53,11 @@ const ChatPage=()=>{
 
 
         <div className="chat-body">
-          {allMessages.map((all,index)=>{
-            const isMe=all.senderId===data2.loginUserId;
-            return(
-              <div key={index} className={isMe?"myMessage":"otherMessage"}>
-                {all.message}
-              </div>
-            );
-          })}
+          {allMessages.map((all, index) => (
+    <div key={index} className={`message ${all.senderId === data2.loginUserId ? 'sender' : 'receiver'}`}>
+      {all.message}
+    </div>
+))}
         </div>
 
 
