@@ -11,4 +11,4 @@ userChat(server,FRONTEND_URL!)
 server.listen(PORT,async()=>{
     console.log(`server is listening to http://localhost:${PORT}`);
     await connectDb();
-})   
+})     

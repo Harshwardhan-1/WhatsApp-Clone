@@ -19,9 +19,9 @@ io.on('connection',(socket)=>{
         users[userId]=socket.id;
         console.log("joined",userId)  
     })
-    socket.on("send_message",(data)=>{
+    socket.on("send_message",async(data)=>{
         try{
-        const savedMessage=PersonalChat(data);
+        const savedMessage=await PersonalChat(data);
         const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
             io.to(receiverSocketId).emit("receive_message",savedMessage);
@@ -35,10 +35,11 @@ io.on('connection',(socket)=>{
         }
     })
     socket.on('disconnect',()=>{
+        console.log("disconected",socket.id);
         let disconnectUserId="";
         for(const id in users){
             if(users[id]===socket.id){
-                disconnectUserId=users[id];
+                disconnectUserId=id;
                 delete users[disconnectUserId];
                 break;
             }
