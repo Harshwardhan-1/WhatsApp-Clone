@@ -28,10 +28,8 @@ io.on('connection',(socket)=>{
         }
         socket.emit("receive_message",savedMessage);
         }catch(err){
-            const error=err instanceof Error ? err.message:"Unknown Error";
-            socket.emit("chat_error",{
-              message:"message sent failed",  
-            })
+            const error=err instanceof Error ?err.message:"Unknown Error"
+            socket.emit("error_msg",error);
         }
     })
     socket.on('disconnect',()=>{

@@ -2,6 +2,7 @@
 import { useState,useEffect } from "react";
 import { socket } from "../utils/socket";
 import { PrevMsg } from "../services/chat.service";
+import { showApiError } from "../utils/showApiError";
 
 
 interface MessageItem{
@@ -18,9 +19,17 @@ interface Message{
     createdAt:Date,
     updatedAt:Date,
 }
+interface error{
+    msg:string,
+}
+
 export function ChatTalk(){
     const {messages}=PrevMsg();
     const [message,setMessage]=useState<MessageItem[]>([]);
+
+    const handleError=(err:error)=>{
+        showApiError(err);
+    }
 
 
 
@@ -29,6 +38,7 @@ export function ChatTalk(){
         socket.on('receive_message',(data:Message)=>{
             setMessage(prev=>[...prev,{senderId:data.senderId,receiverId:data.receiverId,message:data.message,createdAt:data.createdAt,updatedAt:data.updatedAt}]);
         });
+        socket.on('error_msg',handleError);
         return()=>{
          socket.off("receive_message");
         };

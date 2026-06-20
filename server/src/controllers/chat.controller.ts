@@ -9,6 +9,8 @@ interface personalMsg{
 
 export const PersonalChat=async(data:personalMsg)=>  {
 try{
+    //this is for testing whether it is working correctly or not
+    // throw new Error("Test Error");
     const createIt=await personalChat.create({
         senderId:data.senderId,     
         receiverId:data.receiverId,
@@ -17,7 +19,7 @@ try{
     return createIt;
 }catch(err){
 console.log(err);
-throw err;
+throw new Error("error saving chat in db");
 }
 }
 
