@@ -35,6 +35,11 @@
   font-weight: 600;
 }
 
+.userInfo{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .userInfo h4 {
     margin: 0;
     font-size: 16px;
@@ -61,7 +66,7 @@
 .chatBody {
     flex: 1;
     overflow-y: auto;
-    background-image: url('whatappback.jpg');
+    /* background-image: url('whatappback.jpg'); */
     background-repeat: repeat;
     padding: 14px 8%;
     background-size: 412px auto;

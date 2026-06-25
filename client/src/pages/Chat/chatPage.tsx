@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { FiPaperclip, FiSmile } from "react-icons/fi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatTalk } from "../../hooks/use.chatTalk";
 import { showApiError } from "../../utils/showApiError";
 import "./chatPage.css";
@@ -12,7 +12,14 @@ const ChatPage=()=>{
   const [msg,setMsg]=useState<string>("");
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
-  const {userMessage,allMessages}=ChatTalk();
+
+  const {userMessage,allMessages,userpresence,status,presence}=ChatTalk();
+
+
+  useEffect(()=>{
+    if(!data._id)return;
+     userpresence(data._id);
+  },[data._id]);
 
   const handleSubmit=async(e:React.FormEvent)=>{
     e.preventDefault();
@@ -39,7 +46,9 @@ const ChatPage=()=>{
               {data?.name?.charAt(0).toUpperCase()}
                 </div>
 
-          <div className="userInfo"><h4>{data?.name}</h4></div>
+          <div className="userInfo"><h4>{data?.name}</h4>
+          <p>{status=== "online" ? "🟢online":presence?presence:"⚫offline"}</p>
+        </div>
         </div>
       </div>
 
