@@ -1,10 +1,16 @@
 import {Request,Response,NextFunction} from 'express';
 import { personalChat } from '../models/chat.model';
+import { userlastpresence } from '../models/user.lastpresence.model';
 
 interface personalMsg{
     senderId:string,
     receiverId:string,
     msg:string,
+}
+
+
+interface lastpresence{
+    userId:string,
 }
 
 export const PersonalChat=async(data:personalMsg)=>  {
@@ -45,7 +51,7 @@ export const prevChat=async(req:Request,res:Response,next:NextFunction)=>{
                 senderId:receiverId,
                 receiverId:senderId,
             }],
-        }).sort({createAt:1});
+        }).sort({createdAt:1});
         return res.status(200).json({
             success:true,
             message:"got all chat",
@@ -54,4 +60,33 @@ export const prevChat=async(req:Request,res:Response,next:NextFunction)=>{
     }catch(err){
         next(err);
     }    
+}
+
+
+
+
+
+
+
+
+
+
+export const userlastVisit=async(data:lastpresence)=>{
+    try{
+        const findIt=await userlastpresence.findOne({userId:data.userId});
+        if(findIt){
+           findIt.date=new Date(Date.now()),
+           await findIt.save();
+           return findIt;
+        }else{
+            const createPresence=await userlastpresence.create({
+                userId:data.userId,
+                date:new Date(Date.now()),
+            });
+            return createPresence;
+        }
+    }catch(err){
+        console.log(err);
+        throw new Error("error saving last presence");
+    }
 }
