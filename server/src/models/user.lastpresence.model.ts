@@ -3,15 +3,15 @@ import { Document,Types } from 'mongoose';
 
 export interface IPresence extends Document{
     userId:string,
-    Date:Date,
+    date:Date,
 }
 
 const userlastvisit=new mongoose.Schema<IPresence>({
     userId:{
         type:String,
-        required:[true,'something is missing'],
+        required:[true,'something went wrong'],
     },
-    Date:{
+    date:{
         type:Date,
     },
 },{timestamps:true});
