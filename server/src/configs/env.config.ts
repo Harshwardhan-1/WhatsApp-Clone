@@ -8,4 +8,4 @@ export const{
     SALT_ROUND,
     PORT,
     JWT_EXPIRES_IN,
-}=process.env 
+}=process.env  
