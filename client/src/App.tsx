@@ -54,8 +54,7 @@ export default App
 
 
 
-//next task 
-// 1show error alert 
-// 2show online offline status
-//3 last time message on dashboard
-//4 show time of message deleiver
+//new task
+//1 implement isSeen and deliever
+//2 typing indicator
+//3 chat list update as new data arrives
