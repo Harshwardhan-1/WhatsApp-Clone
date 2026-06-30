@@ -1,12 +1,13 @@
 import { useState,useEffect } from "react";
 import { socket } from "../utils/socket";
-import { PrevMsg } from "../services/chat.service";
+import { prevMsg } from "../services/chat.service";
 import { useLocation } from "react-router-dom";
 import { showApiError } from "../utils/showApiError";
 import { userPresence } from "../services/user.presence.service";
 
 
 interface MessageItem{
+    _id:string,
     senderId:string,
     receiverId:string,
     message:string,
@@ -14,6 +15,7 @@ interface MessageItem{
     updatedAt:Date,
 }
 interface Message{
+    _id:string,
     senderId:string,
     receiverId:string,
     message:string,
@@ -34,11 +36,13 @@ interface handleData{
 
 export function ChatTalk(){
     const location=useLocation();
-    const {messages}=PrevMsg();
-    const [message,setMessage]=useState<MessageItem[]>([]);
+    const [allmessages,setAllMessages]=useState<MessageItem[]>([]);
     const [status,setStatus]=useState("offline");
     const [presence,setPresence]=useState<string>("");
     const locadata=location.state?.data;
+    const data=location.state?.data;const data2=location.state?.data2;
+    const senderId=data2.loginUserId;
+    const receiverId=data._id;
 
     const handleError=(err:error)=>{
         showApiError(err);
@@ -58,8 +62,18 @@ export function ChatTalk(){
 
 
     useEffect(()=>{
+        //calling old message
+        const loadMessage=async()=>{
+            if(!senderId || !receiverId)return;
+            const data=await prevMsg(senderId,receiverId);
+            if(data){
+                setAllMessages(data);
+            }
+        };
+        loadMessage();
+        //end of fetch of old message
         socket.on('receive_message',(data:Message)=>{
-            setMessage(prev=>[...prev,{senderId:data.senderId,receiverId:data.receiverId,message:data.message,createdAt:data.createdAt,updatedAt:data.updatedAt}]);
+           setAllMessages(prev => [...prev, data]);
         });
         socket.on('error_msg',handleError);
         socket.on("trigger_status",handleStatus);
@@ -70,9 +84,9 @@ export function ChatTalk(){
          socket.off("trigger_status");
          socket.off("user_presence");
          socket.off("user_last_visit");
+         socket.off("error_msg");
         };
-    },[]);
-    const allMessages=[...messages,...message];
+    },[locadata?._id,senderId,receiverId]);
 
 
 
@@ -87,5 +101,5 @@ export function ChatTalk(){
     const userpresence=(receiverId:string)=>{
         socket.emit("check_status",receiverId);
     }
-    return {userMessage,allMessages,userpresence,status,presence};
+    return {userMessage,allmessages,userpresence,status,presence};
 }
