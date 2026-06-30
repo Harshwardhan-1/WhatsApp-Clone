@@ -10,6 +10,7 @@ const ChatPage=()=>{
   const data = location.state?.data;
   const data2=location.state?.data2;
   const [msg,setMsg]=useState<string>("");
+  const [openMenu, setOpenMenu] = useState<number | null>(null);
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
 
@@ -62,15 +63,40 @@ const ChatPage=()=>{
         <p>jo message karenga uski id {data2.loginUserId}</p> 
         <p>jo message karenga uska email {data2.email}</p>
 
+<div className="chat-body">
+  {allMessages.map((all, index) => {
+    const isSender = all.senderId === data2.loginUserId;
 
-        <div className="chat-body">
-          {allMessages.map((all, index) => (
-    <div key={index} className={`message ${all.senderId === data2.loginUserId ? 'sender' : 'receiver'}`}>
-      {all.message}
-    </div>
-))}
+    return (
+      <div
+        key={index}
+        className={`message ${isSender ? "sender" : "receiver"}`}
+      >
+        {all.message}
+        <div className="menu-container">
+        <button className="menu-btn"onClick={() =>setOpenMenu(openMenu === index ? null : index)}>⋮</button>
+
+          {openMenu === index && (
+            <div className="menu-dropdown">
+              {isSender ? (
+                <>
+                  <div className="menu-item" onClick={() => {console.log("Edit", all); setOpenMenu(null);}}>✏️ Edit</div>
+                  <div className="menu-item"onClick={() => {console.log("Delete For Me", all); setOpenMenu(null);}}> 🗑️ Delete For Me  </div>
+                  <div className="menu-item" onClick={() => {console.log("Delete For Everyone", all); setOpenMenu(null);}}> 🌍 Delete For Everyone </div>
+                </>
+              ):(
+                <div
+                  className="menu-item"onClick={() => {console.log("Delete For Me", all);setOpenMenu(null);}}> 🗑️ Delete For Me </div>
+              )}
+            </div>
+          )}
         </div>
+      </div>
+    );
+  })}
+</div>
 
+      
 
       </div>
       <div className="chatFooter">
