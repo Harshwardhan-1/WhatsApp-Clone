@@ -6,6 +6,7 @@ import { env } from "../configs/env.config";
 
 
 interface prevMsg{
+    _id:string,
     senderId:string,
     receiverId:string,
     message:string,
