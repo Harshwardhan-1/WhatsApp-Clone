@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import {Document,Types} from 'mongoose';
 
+
+
+
 export interface IChat extends Document{
     senderId:string,
     receiverId:string,
@@ -8,6 +11,7 @@ export interface IChat extends Document{
     fileUrl?:string,
     isSeen:boolean,
     isDelivered:boolean,
+    hideIt:string[],
     createdAt:Date,
     updatedAt:Date,
 }
@@ -42,9 +46,13 @@ const chatSchema=new mongoose.Schema<IChat>({
     isDelivered:{
         type:Boolean,
         default:false,
+    },
+    hideIt:{
+        type:[String],
+        default:[],
     }
 },
-{timestamps:true},
+{timestamps:true}, 
 )
    
 
