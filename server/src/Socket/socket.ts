@@ -3,6 +3,7 @@ import {Server as httpServer} from "http";
 import { PersonalChat } from "../controllers/chat.controller";
 import { userlastVisit } from "../controllers/chat.controller";
 import { userlastpresence } from "../models/user.lastpresence.model";
+import {edit,delete_from_me,delete_from_everyone } from "../controllers/chat.controller";
 
 
 
@@ -46,7 +47,7 @@ io.on('connection',(socket)=>{
      }
     });
 
-    //we receiver receiver id here
+    //we receive receiver id here
     socket.on('user_last_visit',async(userId)=>{
         const lastvisit=await userlastpresence.findOne({userId});
         if(lastvisit){
@@ -54,7 +55,53 @@ io.on('connection',(socket)=>{
         }
     })
 
+    //operations
 
+    //delete for everyone logic
+    socket.on("delete_from_everyone",async(data:{_id:string,senderId:string,receiverId:string})=>{
+        try{
+        await delete_from_everyone(data._id);
+        const receiverSocketId=users[data.receiverId];
+        if(receiverSocketId){
+            io.to(receiverSocketId).emit("deleted_everyone",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId})
+        }
+        socket.emit("deleted_everyone",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId});
+        }catch(err){
+            socket.emit("error_msg",err);
+        }
+    });
+
+    //update/edit 
+    socket.on("edit_message",async(data:{_id:string,senderId:string,receiverId:string,msg:string})=>{
+        try{
+        const editData=await edit({_id:data._id,msg:data.msg});
+        const receiverSocketId=users[data.receiverId];
+        if(receiverSocketId){
+            io.to(receiverSocketId).emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message});
+        }
+        socket.emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message});
+        }catch(err){
+            socket.emit("error_msg",{msg:"fail it edit message"});
+        } 
+    });
+
+    //delete for me
+    socket.on("delete_from_me",async(data:{_id:string,senderId:string,receiverId:string})=>{
+        try{
+          await delete_from_me({_id:data._id,senderId:data.senderId,receiverId:data.receiverId});
+            const currentUserSocketId=users[data.senderId];
+            if(currentUserSocketId){
+                io.to(currentUserSocketId).emit("delete",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId});
+            }
+            socket.emit('delete',{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId});
+        }catch(err){
+            socket.emit("error_msg",{msg:"error in deleting message"});
+        }
+    });
+
+
+
+    //operations end
     socket.on('disconnect',async()=>{
         console.log("disconected",socket.id);
         let disconnectUserId="";
