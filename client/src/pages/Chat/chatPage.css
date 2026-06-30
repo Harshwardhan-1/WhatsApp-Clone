@@ -257,3 +257,32 @@
 .menu-item:not(:last-child) {
   border-bottom: 1px solid #eee;
 }
+
+
+.editBox {
+  margin-top: 6px;
+  background: #f3f4f6;
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.editInput {
+  width: 100%;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.editActions button {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+}

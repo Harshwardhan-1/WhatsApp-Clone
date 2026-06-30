@@ -14,7 +14,7 @@ interface MessageItem{
     createdAt:Date,
     updatedAt:Date,
 }
-interface Message{
+export interface Message{
     _id:string,
     senderId:string,
     receiverId:string,
@@ -60,7 +60,19 @@ export function ChatTalk(){
         setPresence(userPresence(data.updatedAt));
     }
 
+    const handleDeleteEveryone=async(data:{messageId:string,senderId:string,receiverId:string})=>{
+        setAllMessages(prev=>prev.filter(msg=>msg._id!==data.messageId));
+    }
 
+    const handleDelete=async(data:{messageId:string,senderId:string,receiverId:string})=>{
+          setAllMessages(prev=>prev.filter(msg=>msg._id !== data.messageId));
+
+    }
+
+    const handleEdit=(data:{messageId:string,senderId:string,receiverId:string,msg:string})=>{
+        setAllMessages(prev=>prev.map(msg=>msg._id === data.messageId? { ...msg, message: data.msg }:msg)
+    );}
+ 
     useEffect(()=>{
         //calling old message
         const loadMessage=async()=>{
@@ -79,12 +91,18 @@ export function ChatTalk(){
         socket.on("trigger_status",handleStatus);
         socket.emit("user_last_visit",(locadata?._id));
         socket.on("user_presence",handlePresence);
+        socket.on("deleted_everyone",handleDeleteEveryone);
+        socket.on("delete",handleDelete);
+        socket.on("message_edited",handleEdit);
         return()=>{
          socket.off("receive_message");
-         socket.off("trigger_status");
-         socket.off("user_presence");
+         socket.off("trigger_status",handleStatus);
+         socket.off("user_presence",handlePresence);
          socket.off("user_last_visit");
-         socket.off("error_msg");
+         socket.off("error_msg",handleError);
+         socket.off("deleted_everyone",handleDeleteEveryone);
+         socket.off("delete",handleDelete);
+         socket.off("message_edited",handleEdit);
         };
     },[locadata?._id,senderId,receiverId]);
 
