@@ -1,9 +1,10 @@
 import { Server } from "socket.io";
 import {Server as httpServer} from "http";
-import { PersonalChat } from "../controllers/chat.controller";
+import { isSend,isDelievered, PersonalChat } from "../controllers/chat.controller";
 import { userlastVisit } from "../controllers/chat.controller";
 import { userlastpresence } from "../models/user.lastpresence.model";
 import {edit,delete_from_me,delete_from_everyone } from "../controllers/chat.controller";
+import { user_online,user_open_chat,markIsSeen } from "../controllers/chat.controller";
 
 
 
@@ -17,6 +18,7 @@ const io=new Server(server,{
   }  
 });
 const users:{[key:string]:string}={};
+let activeChats:Record<string,string>={};
 io.on('connection',(socket)=>{
     console.log("connected:",socket.id);
 
@@ -24,13 +26,42 @@ io.on('connection',(socket)=>{
         users[userId]=socket.id;
         io.emit("trigger_status",{userId,status:"online"});
         console.log("joined",userId)  
+    });
+
+
+
+
+
+
+
+
+
+
+
+    socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
+        activeChats[data.senderId]=data.receiverId;
+    });
+    socket.on("not_active_user",(data:{senderId:string,receiverId:string})=>{
+        delete activeChats[data.senderId];
     })
     socket.on("send_message",async(data)=>{
         try{
         const savedMessage=await PersonalChat(data);
         const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
-            io.to(receiverSocketId).emit("receive_message",savedMessage);
+            io.to(receiverSocketId).emit("receive_message",savedMessage); 
+            if(activeChats[data.receiverId]===data.senderId){
+               const mark=await markIsSeen({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
+               io.to(users[data.senderId]).emit("real_time_isSeen",mark);
+            }else{
+            const msgDeliveredTick=await isDelievered({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
+            if(users[data.senderId]){
+            io.to(users[data.senderId]).emit("isDelivered",msgDeliveredTick);
+            }
+            }
+        }else{
+          const assignIsSend=await isSend({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
+          socket.emit("isSend",assignIsSend);
         }
         socket.emit("receive_message",savedMessage);
         }catch(err){
@@ -38,7 +69,51 @@ io.on('connection',(socket)=>{
             socket.emit("error_msg",error);
         }
     });
-    
+
+
+  
+
+   //in data it contains userId
+  socket.on("user_online",async(data:{userId:string})=>{
+    try{
+        const messages=await user_online({userId:data.userId});
+        const grouped:Record<string,string[]>={};
+        for(const message of messages){
+            //make a box of it if it not exists
+            if(!grouped[message.senderId]){
+                grouped[message.senderId]=[];
+            }
+            grouped[message.senderId].push(message._id.toString());
+        }
+        for(const senderId in grouped){
+            const senderSocketId=users[senderId];
+            if(senderSocketId){
+                //all message of particular user will be send to it
+                io.to(senderSocketId).emit("isDelivered_mark",{messageIds:grouped[senderId]});
+            }
+        }
+    }catch(err){
+        const error=err instanceof Error ?err.message:"Unknown Error"
+        socket.emit("error_msg",error);
+    }
+  });
+
+
+
+  socket.on("user_open_chat",async(data:{senderId:string,receiverId:string})=>{
+    const message=await user_open_chat({senderId:data.senderId,receiverId:data.receiverId});
+    const receiverSocketId=users[data.receiverId];
+    if(receiverSocketId){
+        io.to(receiverSocketId).emit("isSeenStatus",message);
+    }
+  })
+
+
+
+
+
+
+
     socket.on("check_status",(receiverId)=>{
      if(users[receiverId]){
         socket.emit("trigger_status",{userId:receiverId,status:"online"});
