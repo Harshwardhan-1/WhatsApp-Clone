@@ -9,6 +9,7 @@ export interface IChat extends Document{
     receiverId:string,
     message:string,
     fileUrl?:string,
+    IsSend:boolean,
     isSeen:boolean,
     isDelivered:boolean,
     hideIt:string[],
@@ -38,6 +39,10 @@ const chatSchema=new mongoose.Schema<IChat>({
     fileUrl:{
         type:String,
         default:null,
+    },
+    IsSend:{
+        type:Boolean,
+        default:false,
     },
     isSeen:{
         type:Boolean,
