@@ -55,6 +55,6 @@ export default App
 
 
 //new task
-//1 implement isSeen and deliever
-//2 typing indicator
-//3 chat list update as new data arrives
+//1 show real time isSeen,send,deleiver
+//2 show real time update to chatlist
+//3 typing indicator
