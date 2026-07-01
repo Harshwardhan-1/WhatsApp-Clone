@@ -1,6 +1,7 @@
 import {Request,Response,NextFunction} from 'express';
 import { personalChat } from '../models/chat.model';
 import { userlastpresence } from '../models/user.lastpresence.model';
+import { Types } from 'mongoose';
 
 interface personalMsg{
     senderId:string,
@@ -149,4 +150,110 @@ export const delete_from_me=async(data:{_id:string,senderId:string,receiverId:st
     }catch(err){
         throw new Error("error in deleting");
     }
+}
+
+
+
+
+
+
+//isSent isDelievered isSeen
+
+export const isSend=async(data:{_id:Types.ObjectId,senderId:string,receiverId:string})=>{
+    try{
+        const assignIsSend=await personalChat.findById({_id:data._id});
+        if(!assignIsSend){
+            throw new Error("something went wrong");
+        }
+        assignIsSend.IsSend=true;
+        await assignIsSend.save();
+        return assignIsSend;
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+export const isDelievered=async(data:{_id:Types.ObjectId,senderId:string,receiverId:string})=>{
+try{
+    const assignItDelievered=await personalChat.findById({_id:data._id});
+    if(!assignItDelievered){
+        throw new Error("message not found");
+    }
+    assignItDelievered.isDelivered=true;
+    await assignItDelievered.save();
+    return assignItDelievered;
+}catch(err){
+    throw new Error("failed to delievered message");
+}
+}
+
+
+
+
+
+
+
+
+
+
+export const user_online=async(data:{userId:string})=>{
+    try{
+       const messages=await personalChat.find({receiverId:data.userId,isDelivered:false});
+       for(const msg of messages){
+        msg.isDelivered=true;
+        await msg.save();
+       }
+       return messages;
+    }catch(err){
+        throw new Error("something went wrong");
+    }
+}
+
+
+
+
+
+export const user_open_chat=async(data:{senderId:string,receiverId:string})=>{
+    try{
+        const messages=await personalChat.find({senderId:data.receiverId,receiverId:data.senderId,isSeen:false}).select("_id");
+        const markSeen=messages.map(msg=>msg._id.toString());
+       await personalChat.updateMany(
+        {
+            senderId:data.receiverId,receiverId:data.senderId,isSeen:false
+        },
+            {
+              $set:{
+                isSeen:true,
+              }  
+            },
+        );
+        return markSeen;
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+export const markIsSeen=async(data:{_id:Types.ObjectId,senderId:string,receiverId:string})=>{
+   try{
+    const findIt=await personalChat.findOne({_id:data._id});
+    if(findIt){
+        findIt.IsSend=true;
+        findIt.isDelivered=true;
+        findIt.isSeen=true;
+        await findIt.save();
+    }
+    return findIt;
+   }catch(err){
+    throw new Error("something went wrong");
+   } 
 }
