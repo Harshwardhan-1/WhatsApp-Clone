@@ -1,5 +1,3 @@
-// import { useLocation } from "react-router-dom";
-// import { useState,useEffect } from "react";
 import axios from 'axios';
 import { showApiError } from "../utils/showApiError";
 import { env } from "../configs/env.config";
