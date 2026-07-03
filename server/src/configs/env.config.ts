@@ -6,6 +6,7 @@ export const{
     FRONTEND_URL,
     JWT_SECRET,
     SALT_ROUND,
+    NODE_ENV,
     PORT,
     JWT_EXPIRES_IN,
 }=process.env  
