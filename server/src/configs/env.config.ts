@@ -9,4 +9,4 @@ export const{
     NODE_ENV,
     PORT,
     JWT_EXPIRES_IN,
-}=process.env  
+}=process.env     
