@@ -286,3 +286,21 @@
   padding: 4px 10px;
   border-radius: 6px;
 }
+
+
+
+.message-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.seen {
+    color: #34b7f1;
+}
+
+.delivered,
+.sent {
+    color: gray;
+}
