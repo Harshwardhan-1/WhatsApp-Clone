@@ -1,10 +1,12 @@
 import { Server } from "socket.io";
 import {Server as httpServer} from "http";
-import { isSend,isDelievered, PersonalChat } from "../controllers/chat.controller";
+import { isSend,isDelivered, PersonalChat } from "../controllers/chat.controller";
 import { userlastVisit } from "../controllers/chat.controller";
 import { userlastpresence } from "../models/user.lastpresence.model";
 import {edit,delete_from_me,delete_from_everyone } from "../controllers/chat.controller";
 import { user_online,user_open_chat,markIsSeen } from "../controllers/chat.controller";
+import { get_last_message, update_chat_list } from "../controllers/last.message.controller";
+import { store_last_message } from "../controllers/last.message.controller";
 
 
 
@@ -47,23 +49,29 @@ io.on('connection',(socket)=>{
     socket.on("send_message",async(data)=>{
         try{
         const savedMessage=await PersonalChat(data);
-        const receiverSocketId=users[data.receiverId];
+       const update_last_message=await store_last_message({senderId:data.senderId,receiverId:data.receiverId,msg:data.msg,messageType:data.messageType});
+       const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
             io.to(receiverSocketId).emit("receive_message",savedMessage); 
             if(activeChats[data.receiverId]===data.senderId){
-               const mark=await markIsSeen({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
-               io.to(users[data.senderId]).emit("real_time_isSeen",mark);
+                socket.emit("receive_message",savedMessage);
+               const markSeen=await markIsSeen({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
+               socket.emit("real_time_isSeen",{messageId:markSeen?._id,senderId:markSeen?.senderId,receiverId:markSeen?.receiverId,isSeen:markSeen?.isSeen});
             }else{
-            const msgDeliveredTick=await isDelievered({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
-            if(users[data.senderId]){
-            io.to(users[data.senderId]).emit("isDelivered",msgDeliveredTick);
+            socket.emit("receive_message",savedMessage);
+            const msgDeliveredTick=await isDelivered({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
+            socket.emit("isDelivered",{messageId:msgDeliveredTick._id,senderId:msgDeliveredTick.senderId,receiverId:msgDeliveredTick.receiverId,isDelivered:msgDeliveredTick.isDelivered})
             }
-            }
+            //chat list update
+            io.to(receiverSocketId).emit("chat_list_update",update_last_message);
+            socket.emit("chat_list_update",update_last_message);
+            //chat list update end
         }else{
+          socket.emit("receive_message",savedMessage);
           const assignIsSend=await isSend({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
-          socket.emit("isSend",assignIsSend);
+          socket.emit("isSend",{messageId:assignIsSend._id,senderId:assignIsSend.senderId,receiverId:assignIsSend.receiverId,isSend:assignIsSend.IsSend});
+          socket.emit("chat_list_update",update_last_message);
         }
-        socket.emit("receive_message",savedMessage);
         }catch(err){
             const error=err instanceof Error ?err.message:"Unknown Error"
             socket.emit("error_msg",error);
@@ -81,7 +89,7 @@ io.on('connection',(socket)=>{
         for(const message of messages){
             //make a box of it if it not exists
             if(!grouped[message.senderId]){
-                grouped[message.senderId]=[];
+                grouped[message.senderId]=[];   
             }
             grouped[message.senderId].push(message._id.toString());
         }
@@ -89,7 +97,7 @@ io.on('connection',(socket)=>{
             const senderSocketId=users[senderId];
             if(senderSocketId){
                 //all message of particular user will be send to it
-                io.to(senderSocketId).emit("isDelivered_mark",{messageIds:grouped[senderId]});
+                io.to(senderSocketId).emit("isDelivered_mark",{messageIds:grouped[senderId],isDeliverd:true});
             }
         }
     }catch(err){
@@ -101,12 +109,16 @@ io.on('connection',(socket)=>{
 
 
   socket.on("user_open_chat",async(data:{senderId:string,receiverId:string})=>{
+    try{
     const message=await user_open_chat({senderId:data.senderId,receiverId:data.receiverId});
     const receiverSocketId=users[data.receiverId];
     if(receiverSocketId){
-        io.to(receiverSocketId).emit("isSeenStatus",message);
+        io.to(receiverSocketId).emit("isSeenStatus",{messageId:message,isSeen:true});
     }
-  })
+}catch(err){
+      socket.emit("error_message",{message: "Something went wrong",});
+}
+  });
 
 
 
@@ -136,12 +148,15 @@ io.on('connection',(socket)=>{
     socket.on("delete_from_everyone",async(data:{_id:string,senderId:string,receiverId:string})=>{
         try{
         await delete_from_everyone(data._id);
+        const updateChatList=await update_chat_list({senderId:data.senderId,receiverId:data.receiverId});
         const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
             io.to(receiverSocketId).emit("deleted_everyone",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId})
+            io.to(receiverSocketId).emit("chat_list_update",updateChatList);
         }
         socket.emit("deleted_everyone",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId});
-        }catch(err){
+        socket.emit("chat_list_update",updateChatList);
+    }catch(err){
             socket.emit("error_msg",err);
         }
     });
@@ -173,10 +188,41 @@ io.on('connection',(socket)=>{
             socket.emit("error_msg",{msg:"error in deleting message"});
         }
     });
-
-
-
     //operations end
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //last_message_start
+    socket.on("last_message",async(data:{userId:string})=>{
+        try{
+            const allLastMessage=await get_last_message({userId:data.userId});
+            socket.emit("all_last_message",allLastMessage);
+        }catch(err){
+        const error=err instanceof Error ?err.message:"Unknown Error"
+        socket.emit("error_msg",error);
+        }
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+//last_message_end
+
+
     socket.on('disconnect',async()=>{
         console.log("disconected",socket.id);
         let disconnectUserId="";
