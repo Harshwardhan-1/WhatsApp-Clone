@@ -16,14 +16,23 @@ const ChatPage=()=>{
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
 
-  const {userMessage,allmessages,userpresence,status,presence}=ChatTalk();
+  const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat}=ChatTalk();
   const {deleteForEveryone,delete_from_me,update_message}=MessageAction();
 
 
   useEffect(()=>{
     if(!data._id)return;
      userpresence(data._id);
-  },[data._id]);
+     if(!data2.loginUserId || !data._id)return;
+     activeChats({senderId:data2.loginUserId,receiverId:data._id});
+     user_open_chat({senderId:data2.loginUserId,receiverId:data._id});
+     return()=>{
+      notActiveChats({senderId:data2.loginUserId,receiverId:data._id});
+     }
+
+  },[data._id,data2.loginUserId]);
+
+
 
   const handleSubmit=async(e:React.FormEvent)=>{
     e.preventDefault();
@@ -31,10 +40,8 @@ const ChatPage=()=>{
       showApiError("any id is missing");
       return;
     }
-
     if(msg.trim()=== ''){
       showApiError("input field can't be empty");
-      console.log('called');
       return;
     }
       const senderId=data2.loginUserId; 
@@ -92,7 +99,14 @@ const ChatPage=()=>{
 
   </div>
 ) : (
+  <>
   <div>{all.message}</div>
+  <div className="message-time">{new Date(all.createdAt).toLocaleTimeString([], {hour: "numeric",minute: "2-digit",hour12: true,})}
+</div>
+  {isSender && (<div className="message-status">
+        {all.isSeen ? (
+         <span style={{ color: "blue" }}>✓✓</span>):all.isDelivered ? (<span>✓✓</span>) : all.IsSend ? (<span>✓</span> ) : null}</div>)}
+  </>
 )}
         <div className="menu-container">
         <button className="menu-btn"onClick={() =>setOpenMenu(openMenu === index ? null : index)}>⋮</button>

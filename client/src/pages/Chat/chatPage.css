@@ -304,3 +304,10 @@
 .sent {
     color: gray;
 }
+
+.message-time {
+    font-size: 11px;
+    color: gray;
+    text-align: right;
+    margin-top: 4px;
+}
