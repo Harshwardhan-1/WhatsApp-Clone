@@ -175,12 +175,13 @@ export const isSend=async(data:{_id:Types.ObjectId,senderId:string,receiverId:st
 
 
 
-export const isDelievered=async(data:{_id:Types.ObjectId,senderId:string,receiverId:string})=>{
+export const isDelivered=async(data:{_id:Types.ObjectId,senderId:string,receiverId:string})=>{
 try{
     const assignItDelievered=await personalChat.findById({_id:data._id});
     if(!assignItDelievered){
         throw new Error("message not found");
     }
+    assignItDelievered.IsSend=true;
     assignItDelievered.isDelivered=true;
     await assignItDelievered.save();
     return assignItDelievered;
@@ -202,6 +203,7 @@ export const user_online=async(data:{userId:string})=>{
     try{
        const messages=await personalChat.find({receiverId:data.userId,isDelivered:false});
        for(const msg of messages){
+        msg.IsSend=true;
         msg.isDelivered=true;
         await msg.save();
        }
@@ -225,6 +227,8 @@ export const user_open_chat=async(data:{senderId:string,receiverId:string})=>{
         },
             {
               $set:{
+                IsSend:true,
+                isDelivered:true,
                 isSeen:true,
               }  
             },
