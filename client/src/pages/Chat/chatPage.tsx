@@ -1,4 +1,3 @@
-import { useLocation } from "react-router-dom";
 import { FiPaperclip, FiSmile } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import { ChatTalk } from "../../hooks/use.chatTalk";
@@ -7,16 +6,30 @@ import { MessageAction } from "../../actions/message.action";
 import type { Message } from "../../hooks/use.chatTalk";
 import "./chatPage.css";
 
-const ChatPage=()=>{
-  const location = useLocation();
-  const data = location.state?.data;
-  const data2=location.state?.data2;
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+}
+
+interface CurrentUser {
+    loginUserId: string;
+    email: string;
+}
+
+interface Props {
+    data: User;
+    data2: CurrentUser;
+}
+
+
+const ChatPage = ({ data, data2 }: Props) => {
   const [msg,setMsg]=useState<string>("");
   const [openMenu, setOpenMenu] = useState<number | null>(null);
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
 
-  const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat}=ChatTalk();
+  const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat}=ChatTalk(data, data2);
   const {deleteForEveryone,delete_from_me,update_message}=MessageAction();
 
 
@@ -30,7 +43,7 @@ const ChatPage=()=>{
       notActiveChats({senderId:data2.loginUserId,receiverId:data._id});
      }
 
-  },[data._id,data2.loginUserId]);
+  },[data._id,data2.loginUserId,activeChats,notActiveChats,user_open_chat,userpresence]);
 
 
 
@@ -46,7 +59,8 @@ const ChatPage=()=>{
     }
       const senderId=data2.loginUserId; 
       const receiverId=data._id;
-      userMessage({senderId,receiverId,msg});
+      const messageType="text"
+      userMessage({senderId,receiverId,msg,messageType});
       setMsg('');
   }
 
@@ -115,7 +129,7 @@ const ChatPage=()=>{
             <div className="menu-dropdown">{isSender ? (
                 <>
                   <div className="menu-item" onClick={() => {handleEdit(all); setOpenMenu(null);}}>Edit</div>
-                  <div className="menu-item" onClick={() => {delete_from_me({_id:all._id,senderId:data2.senderId,receiverId:all.receiverId}); setOpenMenu(null);}}>Delete For Me  </div>
+                  <div className="menu-item" onClick={() => {delete_from_me({_id:all._id,senderId:data2.loginUserId,receiverId:all.receiverId}); setOpenMenu(null);}}>Delete For Me  </div>
                   <div className="menu-item" onClick={() => {deleteForEveryone({_id:all._id,senderId:all.senderId,receiverId:all.receiverId}); setOpenMenu(null);}}>Delete For Everyone </div>
                 </>
               ):(
