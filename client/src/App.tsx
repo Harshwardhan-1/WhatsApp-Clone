@@ -7,8 +7,7 @@ import "./App.css";
 const RegisterPage=lazy(()=>import("./pages/Auth/signup"));
 const Login=lazy(()=>import("./pages/Auth/login"));
 const HomePage=lazy(()=>import("./pages/HomePage/HomePage"));
-const ChatListPage=lazy(()=>import("./pages/ChatList/ChatListPage"));
-const ChatPage=lazy(()=>import("./pages/Chat/chatPage"));
+import ChatLayout from './pages/chatLayout/chatLayout';
 const LoadingScreen = () => (
   <div className="ap-loading-container">
     <div className="ap-loading-logo">
@@ -42,8 +41,7 @@ function App() {
         <Route path='/signup' element={<RegisterPage/>}></Route>
         <Route path='/login' element={<Login/>}></Route>
         <Route path='/' element={<HomePage />}></Route>
-        <Route path='/ChatListPage' element={<ChatListPage />}></Route>
-        <Route path='/ChatPage' element={<ChatPage />}></Route>
+        <Route path='/chat' element={<ChatLayout />}></Route>
       </Routes>
       </Suspense>
     </>
