@@ -66,6 +66,10 @@ try{
         const findLastChat=await personalChat.findOne({
             $or:[{senderId:senderId,receiverId:receiverId},{senderId:receiverId,receiverId:senderId},]
         }).sort({createdAt:-1});
+
+        if(!findLastChat){
+            continue;
+        }
         response.push({
         senderId,
         receiverId,
@@ -109,8 +113,8 @@ export const  update_chat_list=async(data:{senderId:string,receiverId:string})=>
             receiverId:data.senderId,
         },]
         }).sort({createdAt:-1});
+        
 
-        if(findLastMessage){
             const findLastConversation=await lastMessage.findOne({
                 $or:[{
                     senderId:data.senderId,
@@ -122,8 +126,27 @@ export const  update_chat_list=async(data:{senderId:string,receiverId:string})=>
                 },
             ]
             });
-            if(findLastConversation){
+            if(!findLastConversation){
+                return null;
+            }
+
+        if (!findLastMessage) {
+            const previousUpdatedAt=findLastConversation.updatedAt;
+            findLastConversation.lastmessage = "";
+            findLastConversation.messageType = "text";
+            await findLastConversation.save();
+            return {
+                senderId: findLastConversation.senderId,
+                receiverId: findLastConversation.receiverId,
+                lastmessage: "",
+                messageType: findLastConversation.messageType,
+                createdAt:findLastConversation.createdAt,
+                updatedAt: previousUpdatedAt,
+            };
+        }
+
                 findLastConversation.lastmessage=findLastMessage.message;
+                findLastConversation.messageType=findLastMessage?.messageType;
                 await findLastConversation.save();
                 return{
                     senderId: findLastConversation.senderId,
@@ -133,9 +156,80 @@ export const  update_chat_list=async(data:{senderId:string,receiverId:string})=>
                     createdAt:findLastMessage.createdAt,
                     updatedAt: findLastMessage.updatedAt,
                 }
-            }
-    }
     }catch(err){
+        console.log(err);
         throw new Error("failed to delete and update last message");
     }
+}
+
+
+
+
+
+
+//for edit user edit it
+export const update_chat_list_edit=async(data:{_id:string,senderId:string,receiverId:string,msg:string})=>{
+try{
+    console.log(data);
+    const findLastMessage=await personalChat.findOne({
+        $or:[{
+            senderId:data.senderId,
+            receiverId:data.receiverId,
+        },
+        {
+            senderId:data.receiverId,
+            receiverId:data.senderId,
+        },
+    ]
+}).sort({createdAt:-1});
+console.log(findLastMessage);
+    const messageId=findLastMessage?._id.toString();
+    if(messageId===data._id.toString()){
+        //latest message only it is we need to update chat list now
+        const findLastConversation=await lastMessage.findOne({
+            $or:[{
+                senderId:data.senderId,
+                receiverId:data.receiverId,
+            },
+            {
+                senderId:data.receiverId,
+                receiverId:data.senderId,
+            },
+        ]});
+        if(!findLastConversation){
+            return null;
+        }
+        if (!findLastMessage) {
+            const previousUpdatedAt=findLastConversation.updatedAt;
+            findLastConversation.lastmessage = "";
+            findLastConversation.messageType = "text";
+            await findLastConversation.save();
+            return {
+                senderId: findLastConversation.senderId,
+                receiverId: findLastConversation.receiverId,
+                lastmessage: "",
+                messageType: findLastConversation.messageType,
+                createdAt:findLastConversation.createdAt,
+                updatedAt: previousUpdatedAt,
+            };
+        }
+        if(findLastConversation){
+            console.log("finded conversation");
+            findLastConversation.lastmessage=data.msg;
+            await findLastConversation.save();
+            return{
+                senderId:findLastConversation.senderId,
+                receiverId:findLastConversation.receiverId,
+                lastmessage:findLastConversation.lastmessage,
+                messageType:findLastConversation.messageType,
+                createdAt:findLastConversation.createdAt,
+                updatedAt:findLastConversation.updatedAt,
+        }
+   }else{
+    return null;
+   }
+}
+}catch(err){
+    throw new Error("error occured in saving");
+}
 }
