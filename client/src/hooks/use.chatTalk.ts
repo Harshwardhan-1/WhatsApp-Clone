@@ -1,7 +1,6 @@
 import { useState,useEffect } from "react";
 import { socket } from "../utils/socket";
 import { prevMsg } from "../services/chat.service";
-import { useLocation } from "react-router-dom";
 import { showApiError } from "../utils/showApiError";
 import { userPresence } from "../services/user.presence.service";
 
@@ -39,16 +38,25 @@ interface handleData{
     updatedAt:string,
 }
 
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+}
 
-export function ChatTalk(){
-    const location=useLocation();
+interface CurrentUser {
+    loginUserId: string;
+    email: string;
+}
+
+
+export function ChatTalk(data: User, data2: CurrentUser) {
     const [allmessages,setAllMessages]=useState<MessageItem[]>([]);
     const [status,setStatus]=useState("offline");
     const [presence,setPresence]=useState<string>("");
-    const locadata=location.state?.data;
-    const data=location.state?.data;const data2=location.state?.data2;
-    const senderId=data2.loginUserId;
-    const receiverId=data._id;
+    const senderId = data2.loginUserId;
+const receiverId = data._id;
+const locadata = data;
 
     const handleError=(err:error)=>{
         showApiError(err);
@@ -104,6 +112,8 @@ export function ChatTalk(){
     }
 
 
+  
+
  
     useEffect(()=>{
         //calling old message
@@ -150,7 +160,7 @@ export function ChatTalk(){
 
 
 
-    const userMessage=(data:{senderId:string,receiverId:string,msg:string})=>{
+    const userMessage=(data:{senderId:string,receiverId:string,msg:string,messageType:string})=>{
         if(!data.senderId || !data.receiverId){
             alert("some field is missing");
             return;
@@ -170,5 +180,7 @@ export function ChatTalk(){
     const user_open_chat=(data:{senderId:string,receiverId:string})=>{
         socket.emit("user_open_chat",data);
     }
+
+ 
     return {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat};
 }
