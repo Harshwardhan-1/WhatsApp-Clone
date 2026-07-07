@@ -30,3 +30,10 @@ app.use(express.urlencoded({extended:true}));
 app.use(ErrorMiddleware);
 
 export default app;
+
+
+
+
+
+//add task
+//show input icon for image upload and video upload
