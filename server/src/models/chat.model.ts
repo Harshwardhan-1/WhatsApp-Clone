@@ -8,6 +8,7 @@ export interface IChat extends Document{
     senderId:string,
     receiverId:string,
     message:string,
+    messageType:string,
     fileUrl?:string,
     IsSend:boolean,
     isSeen:boolean,
@@ -35,6 +36,11 @@ const chatSchema=new mongoose.Schema<IChat>({
         required:[true,'message field cant be empty '],
         trim:true,   
         minLength:[1,'atleast have 1 characters'],
+    },
+    messageType:{
+        type:String,
+        required:true,
+        default:"text",
     },
     fileUrl:{
         type:String,
