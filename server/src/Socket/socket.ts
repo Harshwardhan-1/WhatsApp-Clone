@@ -5,7 +5,7 @@ import { userlastVisit } from "../controllers/chat.controller";
 import { userlastpresence } from "../models/user.lastpresence.model";
 import {edit,delete_from_me,delete_from_everyone } from "../controllers/chat.controller";
 import { user_online,user_open_chat,markIsSeen } from "../controllers/chat.controller";
-import { get_last_message, update_chat_list } from "../controllers/last.message.controller";
+import { get_last_message, update_chat_list, update_chat_list_edit } from "../controllers/last.message.controller";
 import { store_last_message } from "../controllers/last.message.controller";
 
 
@@ -63,14 +63,20 @@ io.on('connection',(socket)=>{
             socket.emit("isDelivered",{messageId:msgDeliveredTick._id,senderId:msgDeliveredTick.senderId,receiverId:msgDeliveredTick.receiverId,isDelivered:msgDeliveredTick.isDelivered})
             }
             //chat list update
-            io.to(receiverSocketId).emit("chat_list_update",update_last_message);
-            socket.emit("chat_list_update",update_last_message);
+            if(update_last_message){
+                io.to(receiverSocketId).emit("chat_list_update",update_last_message);
+            }
+            if(update_last_message){
+                socket.emit("chat_list_update",update_last_message);
+            }
             //chat list update end
         }else{
           socket.emit("receive_message",savedMessage);
           const assignIsSend=await isSend({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
           socket.emit("isSend",{messageId:assignIsSend._id,senderId:assignIsSend.senderId,receiverId:assignIsSend.receiverId,isSend:assignIsSend.IsSend});
-          socket.emit("chat_list_update",update_last_message);
+          if(update_last_message){
+            socket.emit("chat_list_update",update_last_message);
+          }
         }
         }catch(err){
             const error=err instanceof Error ?err.message:"Unknown Error"
@@ -152,11 +158,16 @@ io.on('connection',(socket)=>{
         const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
             io.to(receiverSocketId).emit("deleted_everyone",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId})
-            io.to(receiverSocketId).emit("chat_list_update",updateChatList);
+            if(updateChatList){
+                io.to(receiverSocketId).emit("chat_list_update",updateChatList);
+            }
         }
         socket.emit("deleted_everyone",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId});
-        socket.emit("chat_list_update",updateChatList);
+        if(updateChatList){
+           socket.emit("chat_list_update",updateChatList);
+        }
     }catch(err){
+        console.log(err);
             socket.emit("error_msg",err);
         }
     });
@@ -164,13 +175,21 @@ io.on('connection',(socket)=>{
     //update/edit 
     socket.on("edit_message",async(data:{_id:string,senderId:string,receiverId:string,msg:string})=>{
         try{
+            console.log(data._id);
         const editData=await edit({_id:data._id,msg:data.msg});
+        const edittedData=await update_chat_list_edit({_id:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:data.msg});
         const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
             io.to(receiverSocketId).emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message});
+        if(edittedData){
+            io.to(receiverSocketId).emit("chat_list_update",edittedData);
+        }
         }
         socket.emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message});
-        }catch(err){
+        if(edittedData){
+            socket.emit("chat_list_update",edittedData);
+        }    
+    }catch(err){
             socket.emit("error_msg",{msg:"fail it edit message"});
         } 
     });
