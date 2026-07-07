@@ -67,10 +67,14 @@ const ChatPage = ({ data, data2 }: Props) => {
 
   const [editingId,setEditingId]=useState<string | null>(null);
   const [editText,setEditText]=useState<string>("");
+  const [senderId,setSenderId]=useState<string>("");
+  const [receiverId,setReceiverId]=useState<string>("");
   //edit logic
   const handleEdit=(all:Message)=>{
     setEditText(all.message);
     setEditingId(all._id);
+    setSenderId(all.senderId);
+    setReceiverId(all.receiverId);
   }
 
   
@@ -108,7 +112,7 @@ const ChatPage = ({ data, data2 }: Props) => {
     <input value={editText}onChange={(e) => setEditText(e.target.value)}className="editInput"/>
     <div className="editActions">
       <button onClick={() => {setEditingId(null);}}>Cancel</button>
-      <button onClick={() => {update_message({_id: all._id,senderId: data2.loginUserId,receiverId: data._id,msg: editText}); setEditingId(null);}}>Save </button>
+      <button onClick={() => {update_message({_id: editingId,senderId: senderId,receiverId: receiverId,msg: editText}); setEditingId(null);}}>Save </button>
     </div>
 
   </div>

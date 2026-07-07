@@ -47,11 +47,26 @@ const ChatListPage = ({  setSelectedUser }: Props) => {
         setLastMessage(data);
     }
 
-    const handleChatListUpdate = (data: chatlistUpdate) => {
-  setLastMessage((prev) => {const index = prev.findIndex((msg) =>(msg.senderId === data.senderId &&msg.receiverId === data.receiverId) ||(msg.senderId === data.receiverId &&msg.receiverId === data.senderId));
-    if (index !== -1) {const temp = [...prev];temp[index] = {...temp[index],lastmessage: data.lastmessage, messageType: data.messageType,updatedAt: data.updatedAt,}; return temp;}
-    return [{senderId: data.senderId,receiverId: data.receiverId,lastmessage: data.lastmessage,messageType: data.messageType,IsSend: false,isDelivered: false,isSeen: false,updatedAt: data.updatedAt,},...prev,];});};
-
+const handleChatListUpdate = (data: chatlistUpdate) => {
+  setLastMessage((prev) => {
+    const index = prev.findIndex((msg) => (msg.senderId === data?.senderId && msg.receiverId === data?.receiverId) || (msg.senderId === data?.receiverId && msg.receiverId === data?.senderId));
+    if (!data?.lastmessage) {if (index !== -1) {const temp = [...prev];temp.splice(index, 1);return temp;}return prev;}
+if (index !== -1) {const temp = [...prev];temp[index] = {...temp[index],lastmessage: data?.lastmessage, messageType: data?.messageType,updatedAt: data?.updatedAt,};return temp;}
+    return [
+      {
+        senderId: data?.senderId,
+        receiverId: data?.receiverId,
+        lastmessage: data?.lastmessage,
+        messageType: data?.messageType,
+        IsSend: false,
+        isDelivered: false,
+        isSeen: false,
+        updatedAt: data?.updatedAt,
+      },
+      ...prev,
+    ];
+  });
+};
   
 useEffect(()=>{
   const userId=userData?.loginUserId;
@@ -70,7 +85,7 @@ useEffect(()=>{
 
 const sortedUsers = [...data].sort((a, b) => {const aLast = lastMessages.find((msg) =>(msg.senderId === userData?.loginUserId &&msg.receiverId === a._id) ||(msg.receiverId === userData?.loginUserId &&msg.senderId === a._id));
 const bLast = lastMessages.find((msg) =>(msg.senderId === userData?.loginUserId &&msg.receiverId === b._id) ||(msg.receiverId === userData?.loginUserId &&msg.senderId === b._id));
-const aTime = aLast ? new Date(aLast.updatedAt).getTime() : 0;const bTime = bLast ? new Date(bLast.updatedAt).getTime() : 0;
+const aTime = aLast ? new Date(aLast?.updatedAt).getTime() : 0;const bTime = bLast ? new Date(bLast?.updatedAt).getTime() : 0;
   return bTime - aTime;
 });
   
@@ -125,7 +140,7 @@ const aTime = aLast ? new Date(aLast.updatedAt).getTime() : 0;const bTime = bLas
             case "image":message = "📷 Image";  break;
             case "video":message = "🎥 Video";break;
             case "pdf":message="pdf";break;
-            default:message = last.lastmessage;}}
+            default:message = last?.lastmessage;}}
 
     return (
         <>
