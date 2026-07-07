@@ -7,6 +7,7 @@ interface personalMsg{
     senderId:string,
     receiverId:string,
     msg:string,
+    messageType:string,
 }
 
 
@@ -24,6 +25,7 @@ try{
         senderId:data.senderId,     
         receiverId:data.receiverId,
         message:data.msg,
+        messageType:data.messageType,
     });
     return createIt;
 }catch(err){
