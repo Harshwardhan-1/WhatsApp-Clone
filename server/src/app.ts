@@ -16,15 +16,17 @@ app.use(cors({
 
 import { authRouter } from './routes/auth.routes';
 import { chatpageRoutes } from './routes/chat.routes';
+import { fileuploadRouter } from './routes/file.upload.routes';
 
 app.get("/",(req,res)=>{
     res.send("hii harsh here");
 })
-
+app.use("/uploads",express.static("uploads"));
 
 
 app.use("/api/v1/auth",authRouter);
 app.use("/api/v1/chat",chatpageRoutes);
+app.use("/api/v1/",fileuploadRouter);
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(ErrorMiddleware);
