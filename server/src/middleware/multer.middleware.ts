@@ -32,7 +32,7 @@ const fileFilter:multer.Options['fileFilter']=(_req,file,cb)=>{
 
 
 //max 50 mb not more than 50 mb
-export const upload=({
+export const upload=multer({
     storage,
     fileFilter,
     limits:{
