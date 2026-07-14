@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { ChatTalk } from "../../hooks/use.chatTalk";
 import { showApiError } from "../../utils/showApiError";
 import { MessageAction } from "../../actions/message.action";
+import {socket} from "../../utils/socket";
 import type { Message } from "../../hooks/use.chatTalk";
+import {useRef} from 'react';
 import "./chatPage.css";
 
 interface User {
@@ -23,6 +25,7 @@ interface Props {
 }
 
 
+
 const ChatPage = ({ data, data2 }: Props) => {
   const [msg,setMsg]=useState<string>("");
   const [openMenu, setOpenMenu] = useState<number | null>(null);
@@ -33,15 +36,41 @@ const ChatPage = ({ data, data2 }: Props) => {
   const {deleteForEveryone,delete_from_me,update_message}=MessageAction();
 
 
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleTyping=(senderId:string,receiverId:string)=>{
+    socket.emit("user_typing",{senderId,receiverId});
+    if(typingTimeout.current!==null){
+      clearTimeout(typingTimeout.current);
+    }
+    typingTimeout.current=setTimeout(()=>{
+      socket.emit("stop_typing",{senderId,receiverId});
+    },2000);
+  }
+  
+
+  const [typing,setTyping]=useState(false);
   useEffect(()=>{
     if(!data._id)return;
      userpresence(data._id);
      if(!data2.loginUserId || !data._id)return;
      activeChats({senderId:data2.loginUserId,receiverId:data._id});
      user_open_chat({senderId:data2.loginUserId,receiverId:data._id});
+     socket.on("user_start_typing",({senderId})=>{
+      if(data._id==senderId){
+        setTyping(true);
+      }
+     });
+     socket.on("user_stop_typing",({senderId})=>{
+      if(data._id==senderId){
+        setTyping(false);
+      }
+     })
+
      return()=>{
       notActiveChats({senderId:data2.loginUserId,receiverId:data._id});
-     }
+      socket.off("user_start_typing");
+      socket.off("user_stop_typing");
+}
 
   },[data._id,data2.loginUserId,activeChats,notActiveChats,user_open_chat,userpresence]);
 
@@ -62,6 +91,7 @@ const ChatPage = ({ data, data2 }: Props) => {
       const messageType="text"
       userMessage({senderId,receiverId,msg,messageType});
       setMsg('');
+      socket.emit("stop_typing",{senderId:data2.loginUserId,receiverId:data._id});
   }
 
 
@@ -119,7 +149,7 @@ const ChatPage = ({ data, data2 }: Props) => {
 ) : (
   <>
   <div>{all.message}</div>
-  <div className="message-time">{new Date(all.createdAt).toLocaleTimeString([], {hour: "numeric",minute: "2-digit",hour12: true,})}
+  <div className="message-time"> {all.isEdited && <span>Edited </span>}{new Date(all.createdAt).toLocaleTimeString([], {hour: "numeric",minute: "2-digit",hour12: true,})}
 </div>
   {isSender && (<div className="message-status">
         {all.isSeen ? (
@@ -147,16 +177,23 @@ const ChatPage = ({ data, data2 }: Props) => {
     );
   })}
 </div>
-
-      
-
+{typing && (
+  <div className="typing-indicator">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+)}
       </div>
       <div className="chatFooter">
         <FiSmile className="footerIcon" />
         <FiPaperclip className="footerIcon" />
-
         <form onSubmit={handleSubmit}>
-          <input type="text" placeholder="type your message here"  value={msg} onChange={(e)=>setMsg(e.target.value)}/>
+          <input type="text" placeholder="type your message here"  value={msg}  onChange={(e)=>{setMsg(e.target.value);
+            if(data2.loginUserId && data._id){
+              handleTyping(data2.loginUserId,data._id);
+            }
+          }}/>
           <button type="submit">send</button>
         </form>
       </div>

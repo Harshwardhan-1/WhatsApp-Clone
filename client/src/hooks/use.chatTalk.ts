@@ -13,6 +13,7 @@ interface MessageItem{
     IsSend:boolean,
     isDelivered:boolean,
     isSeen:boolean,
+    isEdited:boolean,
     createdAt:Date,
     updatedAt:Date,
 }
@@ -24,6 +25,7 @@ export interface Message{
     IsSend:boolean,
     isDelivered:boolean,
     isSeen:boolean,
+    isEdited:boolean,
     createdAt:Date,
     updatedAt:Date,
 }
@@ -55,8 +57,8 @@ export function ChatTalk(data: User, data2: CurrentUser) {
     const [status,setStatus]=useState("offline");
     const [presence,setPresence]=useState<string>("");
     const senderId = data2.loginUserId;
-const receiverId = data._id;
-const locadata = data;
+    const receiverId = data._id;
+    const locadata = data;
 
     const handleError=(err:error)=>{
         showApiError(err);
@@ -84,7 +86,7 @@ const locadata = data;
     }
 
     const handleEdit=(data:{messageId:string,senderId:string,receiverId:string,msg:string})=>{
-        setAllMessages(prev=>prev.map(msg=>msg._id === data.messageId? { ...msg, message: data.msg }:msg)
+        setAllMessages(prev=>prev.map(msg=>msg._id === data.messageId? { ...msg, message: data.msg,isEdited:true }:msg)
     );}
 
 
@@ -107,12 +109,12 @@ const locadata = data;
     }
 
     
-    const handleIsDeliveredMark=(data:{messageId:string[],isDeliverd:boolean})=>{
-        setAllMessages(prev=>prev.map(msg=>data.messageId.includes(msg._id)?{...msg, isDelivered: data.isDeliverd}:msg));
+    const handleIsDeliveredMark=(data:{messageIds:string[],isDeliverd:boolean})=>{
+        setAllMessages(prev=>prev.map(msg=>data.messageIds.includes(msg._id)?{...msg, isDelivered: data.isDeliverd}:msg));
     }
 
-
-  
+    
+    
 
  
     useEffect(()=>{
@@ -126,9 +128,11 @@ const locadata = data;
         };
         loadMessage();
         //end of fetch of old message
-        socket.on('receive_message',(data:Message)=>{
-           setAllMessages(prev => [...prev, data]);
-        });
+        socket.on("receive_message", (message: Message) => {
+          const isCurrentChat =(message.senderId === senderId && message.receiverId === receiverId) ||
+        (message.senderId === receiverId && message.receiverId === senderId);
+        if(isCurrentChat) {setAllMessages(prev => [...prev, message]);}
+});
         socket.on('error_msg',handleError);
         socket.on("trigger_status",handleStatus);
         socket.emit("user_last_visit",(locadata?._id));

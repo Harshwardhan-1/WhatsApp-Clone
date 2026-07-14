@@ -30,6 +30,12 @@ createdAt:string,
 updatedAt:string
 }
 
+
+interface UnseenCount{
+  senderId:string,
+  count:number,
+}
+
 const colors: string[]=["#22c55e","#ef4444", "#3b82f6", "#f59e0b",  "#ec4899", "#8b5cf6", "#06b6d4", "#14b8a6",];
 interface Props {
   selectedUser: User | null;
@@ -39,6 +45,7 @@ interface Props {
 const ChatListPage = ({  setSelectedUser }: Props) => {
   const {data,userData}=ShowAllUser();//hook
   const [search, setSearch] = useState<string>("");
+  const [unseenCountNumber,setUnseenCountNumber]=useState<UnseenCount[]>([]);
   const getInitials=(name: string):string=>{return name.split(" ").map((word) => word[0]).slice(0, 2).join("").toUpperCase();};
   const handleClick=async(all:User)=>{setSelectedUser(all)}
   const [lastMessages,setLastMessage]=useState<lastMessage[]>([]);
@@ -67,19 +74,45 @@ if (index !== -1) {const temp = [...prev];temp[index] = {...temp[index],lastmess
     ];
   });
 };
+
+
+const handleUnseenMessage=(data:UnseenCount[])=>{
+  setUnseenCountNumber(data);
+}
+const handleUnseenCountZero=(data:{senderId:string,count:0})=>{
+  setUnseenCountNumber(prev=>prev.map(item=>item.senderId===data.senderId?{...item,count:data.count}:item))
+}
+
+const handleIncreaseUnseenCount = (data:{senderId:string}) => {
+    setUnseenCountNumber(prev => {
+        const exists = prev.find(item => item.senderId === data.senderId);
+        if (exists) {
+            return prev.map(item=>item.senderId===data.senderId?{...item,count:item.count+1}:item);
+          }
+        return [...prev,{senderId:data.senderId,count:1}];
+    });
+};
   
+
 useEffect(()=>{
   const userId=userData?.loginUserId;
   if(!userId)return;
      socket.emit("join",userId);
      socket.emit("user_online",{userId:userId}); 
      socket.emit("last_message",{userId:userId});
+      socket.emit("unseen_message",{senderId:userId});
      socket.on("all_last_message",handleAllLastMessage);
      socket.on("chat_list_update",handleChatListUpdate);
+     socket.on("unseen_message_count",handleUnseenMessage);
+     socket.on("unseen_count_zero",handleUnseenCountZero);
+     socket.on("increase_unseen_count",handleIncreaseUnseenCount);
      return()=>{
       socket.off("user_online");
       socket.off("all_last_message",handleAllLastMessage);
       socket.off("chat_list_update",handleChatListUpdate);
+      socket.off("unseen_message_count",handleUnseenMessage);
+      socket.off("unseen_count_zero",handleUnseenCountZero);
+      socket.off("increase_unseen_count",handleIncreaseUnseenCount);
      }
 },[userData?.loginUserId]);
 
@@ -127,13 +160,7 @@ const aTime = aLast ? new Date(aLast?.updatedAt).getTime() : 0;const bTime = bLa
         <div className="chatPage__content">{(()=>{
     const last = lastMessages.find(
         (msg) =>(msg.senderId === userData?.loginUserId &&msg.receiverId === all._id) ||(msg.receiverId === userData?.loginUserId &&msg.senderId === all._id));
-        // let tick = "";
-        if (last?.senderId === userData?.loginUserId) {
-        // if (last?.isSeen) {tick = "✓✓";}
-        // else if (last?.isDelivered) { tick = "✓✓";} 
-        // else if (last?.IsSend) {tick = "✓";}
-    }
-
+        
     let message = "";
     if (last) {
         switch (last.messageType) {
@@ -141,13 +168,16 @@ const aTime = aLast ? new Date(aLast?.updatedAt).getTime() : 0;const bTime = bLa
             case "video":message = "🎥 Video";break;
             case "pdf":message="pdf";break;
             default:message = last?.lastmessage;}}
-
+            const unseen=unseenCountNumber.find(
+              (item)=>item.senderId===all._id
+            );
     return (
         <>
             <div style={{ display: "flex",justifyContent: "space-between", alignItems: "center",}}>
                 <h4 className="chatPage__name">{all.name}</h4>
                 <span style={{ fontSize: "12px", color: "#667781" }}>
                     { last ? new Date(last.updatedAt).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit",}):""}
+                {unseen && unseen?.count > 0 && (<span className="unread-badge">{unseen.count > 99 ? "99+" : unseen.count}</span>)}
                 </span>
             </div>
             <div style={{ display: "flex",  alignItems: "center",gap: "5px",}}>
