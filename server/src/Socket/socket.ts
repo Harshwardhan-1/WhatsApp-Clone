@@ -7,6 +7,7 @@ import {edit,delete_from_me,delete_from_everyone } from "../controllers/chat.con
 import { user_online,user_open_chat,markIsSeen } from "../controllers/chat.controller";
 import { get_last_message, update_chat_list, update_chat_list_edit } from "../controllers/last.message.controller";
 import { store_last_message } from "../controllers/last.message.controller";
+import { totalPendingMessage } from "../controllers/chat.controller";
 
 
 
@@ -52,7 +53,8 @@ io.on('connection',(socket)=>{
        const update_last_message=await store_last_message({senderId:data.senderId,receiverId:data.receiverId,msg:data.msg,messageType:data.messageType});
        const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
-            io.to(receiverSocketId).emit("receive_message",savedMessage); 
+            io.to(receiverSocketId).emit("receive_message",savedMessage);
+            //check if user is on current receiverId char or not 
             if(activeChats[data.receiverId]===data.senderId){
                 socket.emit("receive_message",savedMessage);
                const markSeen=await markIsSeen({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
@@ -60,8 +62,10 @@ io.on('connection',(socket)=>{
             }else{
             socket.emit("receive_message",savedMessage);
             const msgDeliveredTick=await isDelivered({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
-            socket.emit("isDelivered",{messageId:msgDeliveredTick._id,senderId:msgDeliveredTick.senderId,receiverId:msgDeliveredTick.receiverId,isDelivered:msgDeliveredTick.isDelivered})
-            }
+            socket.emit("isDelivered",{messageId:msgDeliveredTick._id,senderId:msgDeliveredTick.senderId,receiverId:msgDeliveredTick.receiverId,isDelivered:msgDeliveredTick.isDelivered})    
+            // to increase unseen count number 
+            io.to(receiverSocketId).emit("increase_unseen_count",{senderId:data.senderId});
+        }
             //chat list update
             if(update_last_message){
                 io.to(receiverSocketId).emit("chat_list_update",update_last_message);
@@ -119,7 +123,11 @@ io.on('connection',(socket)=>{
     const message=await user_open_chat({senderId:data.senderId,receiverId:data.receiverId});
     const receiverSocketId=users[data.receiverId];
     if(receiverSocketId){
-        io.to(receiverSocketId).emit("isSeenStatus",{messageId:message,isSeen:true});
+        io.to(receiverSocketId).emit("isSeenStatus",{messageId:message,isSeen:true})
+    }
+    const senderSocketId=users[data.senderId];
+    if(senderSocketId){
+        socket.emit("unseen_count_zero",{senderId:data.receiverId,count:0});
     }
 }catch(err){
       socket.emit("error_message",{message: "Something went wrong",});
@@ -175,17 +183,16 @@ io.on('connection',(socket)=>{
     //update/edit 
     socket.on("edit_message",async(data:{_id:string,senderId:string,receiverId:string,msg:string})=>{
         try{
-            console.log(data._id);
         const editData=await edit({_id:data._id,msg:data.msg});
         const edittedData=await update_chat_list_edit({_id:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:data.msg});
         const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
-            io.to(receiverSocketId).emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message});
+            io.to(receiverSocketId).emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message,isEdited:editData.isEdited});
         if(edittedData){
             io.to(receiverSocketId).emit("chat_list_update",edittedData);
         }
         }
-        socket.emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message});
+        socket.emit("message_edited",{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId,msg:editData.message,isEdited:editData.isEdited});
         if(edittedData){
             socket.emit("chat_list_update",edittedData);
         }    
@@ -205,7 +212,7 @@ io.on('connection',(socket)=>{
             socket.emit('delete',{messageId:data._id,senderId:data.senderId,receiverId:data.receiverId});
         }catch(err){
             socket.emit("error_msg",{msg:"error in deleting message"});
-        }
+        }   
     });
     //operations end
     
@@ -227,20 +234,33 @@ io.on('connection',(socket)=>{
         socket.emit("error_msg",error);
         }
     });
-
-
-
-
-
-
-
-
-
-
-
-
 //last_message_end
 
+
+     socket.on("unseen_message",async(data:{senderId:string})=>{
+        const unseenMessage=await totalPendingMessage({userId:data.senderId});
+        const senderId=users[data.senderId];
+        if(senderId){  
+            socket.emit("unseen_message_count",unseenMessage);
+        }
+     });
+
+
+
+
+//typing
+     socket.on("user_typing",(data:{senderId:string,receiverId:string})=>{
+        const receiverSocketId=users[data.receiverId];
+        if(receiverSocketId){
+            io.to(receiverSocketId).emit("user_start_typing",{senderId:data.senderId,receiverId:data.receiverId});
+        }
+     });
+     socket.on("stop_typing",(data:{senderId:string,receiverId:string})=>{
+        const receiverId=users[data.receiverId];
+        if(receiverId){
+            io.to(receiverId).emit("user_stop_typing",{senderId:data.senderId,receiverId:data.receiverId});
+        }
+     })
 
     socket.on('disconnect',async()=>{
         console.log("disconected",socket.id);

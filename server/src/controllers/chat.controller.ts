@@ -124,7 +124,7 @@ try{
 
 export const edit=async(data:{_id:string,msg:string})=>{
     try{
-        const editIt=await personalChat.findByIdAndUpdate(data._id,{message:data.msg},{returnDocument:"after"});
+        const editIt=await personalChat.findByIdAndUpdate(data._id,{message:data.msg,isEdited:true},{returnDocument:"after"});
         if(!editIt){
             throw new Error("fail to edit message");
         }
@@ -262,4 +262,43 @@ export const markIsSeen=async(data:{_id:Types.ObjectId,senderId:string,receiverI
    }catch(err){
     throw new Error("something went wrong");
    } 
+}
+
+
+
+
+
+
+
+
+
+//total pending message
+//basically it is sender Id mongo db pipeline
+export const totalPendingMessage=async(data:{userId:string})=>{
+    try{
+        const messages=await personalChat.aggregate([
+            {
+                $match:{
+                    receiverId:data.userId,
+                    isSeen:false,
+                },
+            },
+            {
+                $group:{
+                    _id:"$senderId",
+                    count:{$sum:1},
+                },
+            },
+            {
+                $project:{
+                    _id:0,
+                    senderId:"$_id",
+                    count:1,
+                }
+            },
+        ]);
+        return messages;
+    }catch(err){
+        throw new Error("fail to show pending message");
+    }
 }
