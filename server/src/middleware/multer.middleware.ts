@@ -2,7 +2,6 @@ import {Request,Response,NextFunction} from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import { mime } from 'zod';
 
 
 const uploaddir=path.join(process.cwd(),"uploads");
@@ -43,7 +42,9 @@ export const upload=multer({
 
 
 
-
-
-
-
+//  if (file.mimetype.startsWith("image/")) {
+//         cb(null, true);
+//     } else {
+//         cb(new Error("Only image files are allowed"));
+//     }  
+//    console.log(req.file);
