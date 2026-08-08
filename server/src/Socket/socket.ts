@@ -45,7 +45,7 @@ io.on('connection',(socket)=>{
     socket.on("send_message",async(data)=>{
         try{
         const savedMessage=await PersonalChat(data);
-       const update_last_message=await store_last_message({senderId:data.senderId,receiverId:data.receiverId,msg:data.msg,messageType:data.messageType});
+       const update_last_message=await store_last_message({senderId:data.senderId,receiverId:data.receiverId,msg:data.msg,messageType:data.messageType,originalname:savedMessage?.originalname});
        const receiverSocketId=users[data.receiverId];
         if(receiverSocketId){
             io.to(receiverSocketId).emit("receive_message",savedMessage);

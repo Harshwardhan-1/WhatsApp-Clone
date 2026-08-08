@@ -139,6 +139,7 @@ const ChatPage = ({ data, data2 }: Props) => {
         filename: fileData.name,
         sizeInKb: fileData.sizeInKb,
         sizeInMb: fileData.sizeInMb,
+        originalname:fileData.originalname,
       });
       }
     }catch(err){
@@ -216,7 +217,7 @@ const ChatPage = ({ data, data2 }: Props) => {
             <span className="fileIcon">📄</span>
             <div className="fileDetails">
               <span>{all.filename}</span>
-              <span>{all.sizeInKb} KB · {all.sizeInMb} MB</span>
+              <span>{all.sizeInKb} KB</span>
             </div>
             <a href={`${env.backendUrl}${all.message}`} target="_blank" rel="noopener noreferrer">Open</a>
           </div>

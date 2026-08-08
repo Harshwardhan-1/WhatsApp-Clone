@@ -23,6 +23,7 @@ export const fileupload=async(req:Request,res:Response,next:NextFunction)=>{
                 name:file.originalname,
                 sizeInKb:sizeInKb,
                 sizeInMb:sizeInMb,
+                originalname:file?.originalname,
             }
         });
     }catch(err){

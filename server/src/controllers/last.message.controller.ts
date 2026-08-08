@@ -2,7 +2,7 @@ import {Request,Response,NextFunction} from 'express';
 import { lastMessage } from '../models/conversion.model';
 import { personalChat } from '../models/chat.model';
 
-export const store_last_message=async(data:{senderId:string,receiverId:string,msg:string,messageType:string})=>{
+export const store_last_message=async(data:{senderId:string,receiverId:string,msg:string,messageType:string,originalname?:string})=>{
     try{
         const findLastMessage=await lastMessage.findOne({
             $or:[
@@ -16,12 +16,18 @@ export const store_last_message=async(data:{senderId:string,receiverId:string,ms
                 },
             ],
         });
+        let lastmessage="";
+        if(data?.messageType==="file"){
+            lastmessage=data?.originalname || "";
+        }else{
+            lastmessage=data.msg;
+        }
         if(findLastMessage){
-            findLastMessage.lastmessage=data.msg;
+            findLastMessage.lastmessage=lastmessage;
             findLastMessage.messageType=data.messageType;
             await findLastMessage.save();
             return findLastMessage;
-        }else{   
+        }else{
             const createLastMessage=await lastMessage.create({
                 senderId:data.senderId,
                 receiverId:data.receiverId,

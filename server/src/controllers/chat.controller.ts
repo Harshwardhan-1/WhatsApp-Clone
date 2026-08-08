@@ -12,6 +12,7 @@ interface personalMsg{
     filename:string,
     sizeInKb:number,
     sizeInMb:number,
+    originalname:string,
 }
 
 
@@ -34,6 +35,7 @@ try{
         filename:data?.filename,
         sizeInKb:data?.sizeInKb,
         sizeInMb:data?.sizeInMb,
+        originalname:data?.originalname,
     });
     return createIt;
 }catch(err){

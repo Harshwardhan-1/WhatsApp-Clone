@@ -182,7 +182,7 @@ export function ChatTalk(data: User, data2: CurrentUser) {
         socket.emit("send_message",data);
     };
 
-    const userfileData=(data:{senderId:string,receiverId:string,msg:string,messageType:string,mimetype:string,filename:string,sizeInKb:number,sizeInMb:number})=>{
+    const userfileData=(data:{senderId:string,receiverId:string,msg:string,messageType:string,mimetype:string,filename:string,sizeInKb:number,sizeInMb:number,originalname:string})=>{
         if(!data.senderId || !data.receiverId){
             alert('login again');
             return;
