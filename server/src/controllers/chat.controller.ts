@@ -71,7 +71,7 @@ export const prevChat=async(req:Request,res:Response,next:NextFunction)=>{
     }catch(err){
         next(err);
     }    
-}
+}  
 
 
 

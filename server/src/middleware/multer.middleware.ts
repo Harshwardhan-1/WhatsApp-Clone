@@ -39,3 +39,11 @@ export const upload=multer({
         fileSize:50*1024*1024
     },
 })
+
+
+
+
+
+
+
+
