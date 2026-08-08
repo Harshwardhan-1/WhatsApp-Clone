@@ -33,20 +33,15 @@ io.on('connection',(socket)=>{
 
 
 
-
-
-
-
-
-
-
-
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;
     });
     socket.on("not_active_user",(data:{senderId:string,receiverId:string})=>{
         delete activeChats[data.senderId];
     })
+
+
+
     socket.on("send_message",async(data)=>{
         try{
         const savedMessage=await PersonalChat(data);
@@ -263,7 +258,7 @@ io.on('connection',(socket)=>{
      })
 
     socket.on('disconnect',async()=>{
-        console.log("disconected",socket.id);
+        console.log("disconnected",socket.id);
         let disconnectUserId="";
         for(const id in users){
             if(users[id]===socket.id){

@@ -7,6 +7,8 @@ import {socket} from "../../utils/socket";
 import type { Message } from "../../hooks/use.chatTalk";
 import {useRef} from 'react';
 import "./chatPage.css";
+import axios from 'axios';
+import {env} from '../../configs/env.config';
 
 interface User {
     _id: string;
@@ -26,13 +28,14 @@ interface Props {
 
 
 
+
 const ChatPage = ({ data, data2 }: Props) => {
   const [msg,setMsg]=useState<string>("");
-  const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const [openMenu, setOpenMenu] = useState<number | null>(null);  
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
 
-  const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat}=ChatTalk(data, data2);
+  const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat,userfileData}=ChatTalk(data, data2);
   const {deleteForEveryone,delete_from_me,update_message}=MessageAction();
 
 
@@ -76,6 +79,10 @@ const ChatPage = ({ data, data2 }: Props) => {
 
 
 
+
+
+
+
   const handleSubmit=async(e:React.FormEvent)=>{
     e.preventDefault();
     if(!data._id || !data2.loginUserId){
@@ -107,6 +114,39 @@ const ChatPage = ({ data, data2 }: Props) => {
     setReceiverId(all.receiverId);
   }
 
+
+  const [file,setFile]=useState<File>();
+
+
+  const handleFileSubmit=async(e:React.FormEvent)=>{
+    e.preventDefault();
+    try{
+      if(!file){
+        alert("select a file");
+        return;
+      }
+      const formData=new FormData();
+      formData.append("file",file);
+      const response=await axios.post(`${env.backendUrl}/api/v1/upload`,formData,{withCredentials:true});
+      if(response.data.success){
+        const fileData=response.data.data;
+         userfileData({
+        senderId: data2.loginUserId,
+        receiverId: data._id,
+        msg: fileData.path,
+        messageType: "file",
+        mimetype: fileData.mimetype,
+        filename: fileData.name,
+        sizeInKb: fileData.sizeInKb,
+        sizeInMb: fileData.sizeInMb,
+      });
+      }
+    }catch(err){
+      showApiError(err);
+    }finally{
+      setFile(undefined);
+    }
+  }
   
   return (
     <div className="chat">
@@ -138,39 +178,103 @@ const ChatPage = ({ data, data2 }: Props) => {
 
     return (
       <div key={index}className={`message ${isSender ? "sender" : "receiver"}`}>
-        {editingId === all._id ? (<div className="editBox">
-    <input value={editText}onChange={(e) => setEditText(e.target.value)}className="editInput"/>
+        {editingId === all._id ? (
+  <div className="editBox">
+    <input value={editText} onChange={(e) => setEditText(e.target.value)} className="editInput" />
     <div className="editActions">
-      <button onClick={() => {setEditingId(null);}}>Cancel</button>
-      <button onClick={() => {update_message({_id: editingId,senderId: senderId,receiverId: receiverId,msg: editText}); setEditingId(null);}}>Save </button>
+      <button onClick={() => { setEditingId(null); }}>Cancel</button>
+      <button onClick={() => { update_message({ _id: editingId, senderId: senderId, receiverId: receiverId, msg: editText }); setEditingId(null); }}>Save</button>
     </div>
-
   </div>
 ) : (
   <>
-  <div>{all.message}</div>
-  <div className="message-time"> {all.isEdited && <span>Edited </span>}{new Date(all.createdAt).toLocaleTimeString([], {hour: "numeric",minute: "2-digit",hour12: true,})}
-</div>
-  {isSender && (<div className="message-status">
+    {/* TEXT MESSAGE */}
+    {all.messageType !== "file" && (
+      <div className="message-text">{all.message}</div>
+    )}
+
+    {/* FILE MESSAGE — ab normal flow mein hai, absolute nahi */}
+    {all.messageType === "file" && (
+      <div className="fileMessage">
+        {/* IMAGE */}
+        {all.mimetype?.startsWith("image/") && (
+          <div className="imageMessage">
+            <img src={`${env.backendUrl}${all.message}`} alt={all.filename} />
+          </div>
+        )}
+
+        {/* VIDEO */}
+        {all.mimetype?.startsWith("video/") && (
+          <div className="videoMessage">
+            <video src={`${env.backendUrl}${all.message}`} controls preload="metadata" />
+          </div>
+        )}
+
+        {/* PDF */}
+        {all.mimetype === "application/pdf" && (
+          <div className="documentMessage">
+            <span className="fileIcon">📄</span>
+            <div className="fileDetails">
+              <span>{all.filename}</span>
+              <span>{all.sizeInKb} KB · {all.sizeInMb} MB</span>
+            </div>
+            <a href={`${env.backendUrl}${all.message}`} target="_blank" rel="noopener noreferrer">Open</a>
+          </div>
+        )}
+
+        {/* OTHER FILE */}
+        {!all.mimetype?.startsWith("image/") &&
+          !all.mimetype?.startsWith("video/") &&
+          all.mimetype !== "application/pdf" && (
+            <div className="documentMessage">
+              <span className="fileIcon">📎</span>
+              <div className="fileDetails">
+                <span>{all.filename}</span>
+                <span>{all.sizeInKb} KB · {all.sizeInMb} MB</span>
+              </div>
+              <a href={`${env.backendUrl}${all.message}`} target="_blank" rel="noopener noreferrer">Open</a>
+            </div>
+          )}
+      </div>
+    )}
+
+    <div className="message-time">
+      {all.isEdited && <span>Edited </span>}
+      {new Date(all.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
+    </div>
+
+    {isSender && (
+      <div className="message-status">
         {all.isSeen ? (
-         <span style={{ color: "blue" }}>✓✓</span>):all.isDelivered ? (<span>✓✓</span>) : all.IsSend ? (<span>✓</span> ) : null}</div>)}
+          <span style={{ color: "blue" }}>✓✓</span>
+        ) : all.isDelivered ? (
+          <span>✓✓</span>
+        ) : all.IsSend ? (
+          <span>✓</span>
+        ) : null}
+      </div>
+    )}
   </>
 )}
-        <div className="menu-container">
-        <button className="menu-btn"onClick={() =>setOpenMenu(openMenu === index ? null : index)}>⋮</button>
 
-          {openMenu === index && (
-            <div className="menu-dropdown">{isSender ? (
-                <>
-                  <div className="menu-item" onClick={() => {handleEdit(all); setOpenMenu(null);}}>Edit</div>
-                  <div className="menu-item" onClick={() => {delete_from_me({_id:all._id,senderId:data2.loginUserId,receiverId:all.receiverId}); setOpenMenu(null);}}>Delete For Me  </div>
-                  <div className="menu-item" onClick={() => {deleteForEveryone({_id:all._id,senderId:all.senderId,receiverId:all.receiverId}); setOpenMenu(null);}}>Delete For Everyone </div>
-                </>
-              ):(
-                <div
-                  className="menu-item"onClick={() => {delete_from_me({_id:all._id,senderId:data2.loginUserId,receiverId:all.receiverId});setOpenMenu(null);}}>Delete For Me </div>
-              )}
-            </div>
+{/* SIRF MENU — ab isme fileMessage nahi hai */}
+<div className="menu-container">
+  <button className="menu-btn" onClick={() => setOpenMenu(openMenu === index ? null : index)}>⋮</button>
+
+  {openMenu === index && (
+    <div className="menu-dropdown">
+      {isSender ? (
+        <>
+          {all.messageType !== "file" && (
+            <div className="menu-item" onClick={() => { handleEdit(all); setOpenMenu(null); }}>Edit</div>
+          )}
+          <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
+          <div className="menu-item" onClick={() => { deleteForEveryone({ _id: all._id, senderId: all.senderId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Everyone</div>
+        </>
+      ) : (
+        <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
+      )}
+    </div>
           )}
         </div>
       </div>
@@ -194,6 +298,11 @@ const ChatPage = ({ data, data2 }: Props) => {
               handleTyping(data2.loginUserId,data._id);
             }
           }}/>
+          <button type="submit">send</button>
+        </form>
+        
+        <form onSubmit={handleFileSubmit}>
+          <input type="file" placeholder="upload your file here" onChange={(e)=>setFile(e.target.files?.[0])} />
           <button type="submit">send</button>
         </form>
       </div>

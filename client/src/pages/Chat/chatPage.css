@@ -341,6 +341,112 @@
   animation-delay: 0.4s;
 }
 
+
+/* ---- File / Image / Video Messages ---- */
+
+.fileMessage {
+  margin-top: 6px;
+  max-width: 280px;
+}
+
+.imageMessage {
+  width: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.imageMessage img {
+  width: 250px;
+  height: 250px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+}
+
+/* VIDEO */
+.videoMessage {
+  width: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.videoMessage video {
+  width: 250px;
+  height: 250px;
+  display: block;
+  object-fit: contain;
+  background: #000;
+}
+
+/* PDF / OTHER DOCUMENT */
+.documentMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f0f2f5;
+  border-radius: 10px;
+  max-width: 260px;
+}
+
+.documentMessage .fileIcon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.documentMessage .fileDetails {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1;
+}
+
+.documentMessage .fileDetails span:first-child {
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.documentMessage .fileDetails span:last-child {
+  font-size: 11px;
+  color: #667;
+}
+
+.documentMessage a {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.documentMessage a:hover {
+  text-decoration: underline;
+}
+
+
+
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .fileMessage {
+    max-width: 260px;
+  }
+
+  .imageMessage img,
+  .videoMessage video {
+    max-width: 260px;
+    max-height: 300px;
+  }
+
+  .documentMessage {
+    min-width: 210px;
+    max-width: 260px;
+  }
+}
+
 @keyframes typingBounce {
   0%,
   80%,

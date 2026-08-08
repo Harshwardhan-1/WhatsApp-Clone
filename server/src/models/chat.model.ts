@@ -9,6 +9,10 @@ export interface IChat extends Document{
     receiverId:string,
     message:string,
     messageType:string,
+    mimetype?:string,
+    filename?:string,
+    sizeInKb?:number,
+    sizeInMb?:number,
     fileUrl?:string,
     IsSend:boolean,
     isSeen:boolean,
@@ -42,6 +46,22 @@ const chatSchema=new mongoose.Schema<IChat>({
         type:String,
         required:true,
         default:"text",
+    },
+    mimetype:{
+        type:String,
+        default:"image",
+    },
+    filename:{
+        type:String,
+        default:"",
+    },
+    sizeInKb:{
+        type:Number,
+        default:0,
+    },
+    sizeInMb:{
+        type:Number,
+        default:0,
     },
     fileUrl:{
         type:String,

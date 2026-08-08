@@ -43,3 +43,6 @@ imp.txt
 .env
 .env.local
 .env.*.local
+
+#uploads folder
+/uploads

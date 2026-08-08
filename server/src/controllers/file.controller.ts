@@ -11,19 +11,20 @@ export const fileupload=async(req:Request,res:Response,next:NextFunction)=>{
                 message:"file is missing",
             });
         }
-        const sizeInKb=(file.size/1024).toFixed(2);
-        const sizeInMb=(file.size/1024*1024).toFixed(2);
+        console.log(req.file);
+        const sizeInKb=Number(file.size/1024).toFixed(2);
+        const sizeInMb=Number(file.size/1024*1024).toFixed(2);
         return res.status(200).json({
             success:true,
             message:"file uploaded successfully",
             data:{
-                path:file.path,
-                mimeType:file.mimetype,
+                path:`/uploads/${file.filename}`,
+                mimetype:file.mimetype,
                 name:file.originalname,
                 sizeInKb:sizeInKb,
                 sizeInMb:sizeInMb,
             }
-        })
+        });
     }catch(err){
         next(err);
     }

@@ -10,6 +10,11 @@ interface MessageItem{
     senderId:string,
     receiverId:string,
     message:string,
+    messageType:string,
+    mimetype:string,
+    filename:string,
+    sizeInKb:number,
+    sizeInMb:number,
     IsSend:boolean,
     isDelivered:boolean,
     isSeen:boolean,
@@ -22,6 +27,11 @@ export interface Message{
     senderId:string,
     receiverId:string,
     message:string,
+     messageType:string,
+    mimetype:string,
+    filename:string,
+    sizeInKb:number,
+    sizeInMb:number,
     IsSend:boolean,
     isDelivered:boolean,
     isSeen:boolean,
@@ -166,11 +176,20 @@ export function ChatTalk(data: User, data2: CurrentUser) {
 
     const userMessage=(data:{senderId:string,receiverId:string,msg:string,messageType:string})=>{
         if(!data.senderId || !data.receiverId){
-            alert("some field is missing");
+            alert("login again");
             return;
         }
         socket.emit("send_message",data);
     };
+
+    const userfileData=(data:{senderId:string,receiverId:string,msg:string,messageType:string,mimetype:string,filename:string,sizeInKb:number,sizeInMb:number})=>{
+        if(!data.senderId || !data.receiverId){
+            alert('login again');
+            return;
+        }
+        socket.emit("send_message",data);
+    };
+
 
     const userpresence=(receiverId:string)=>{
         socket.emit("check_status",receiverId);
@@ -186,5 +205,5 @@ export function ChatTalk(data: User, data2: CurrentUser) {
     }
 
  
-    return {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat};
+    return {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat,userfileData};
 }

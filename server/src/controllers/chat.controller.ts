@@ -8,6 +8,10 @@ interface personalMsg{
     receiverId:string,
     msg:string,
     messageType:string,
+    mimetype:string,
+    filename:string,
+    sizeInKb:number,
+    sizeInMb:number,
 }
 
 
@@ -26,6 +30,10 @@ try{
         receiverId:data.receiverId,
         message:data.msg,
         messageType:data.messageType,
+        mimetype:data?.mimetype,
+        filename:data?.filename,
+        sizeInKb:data?.sizeInKb,
+        sizeInMb:data?.sizeInMb,
     });
     return createIt;
 }catch(err){

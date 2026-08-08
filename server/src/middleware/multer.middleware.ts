@@ -17,8 +17,8 @@ const storage=multer.diskStorage({
         cb(null,uploaddir);
     },
     filename:(_req,file,cb)=>{
-        const uniqueName=`${Date.now()}+'-'+${Math.round(Math.random()*1e9)}+${path.extname(file.originalname)}`;
-        cb(null,uniqueName);
+     const uniqueName=`${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;      
+      cb(null,uniqueName);
     }
 })
 
