@@ -10,6 +10,7 @@ import "./chatPage.css";
 import axios from 'axios';
 import {env} from '../../configs/env.config';
 import { chatPageOption } from "../../actions/chatpage.action";
+import { DisappearingMessage } from "../../components/disapperingMessage/disappearing.message";
 
 
 interface User {
@@ -160,17 +161,36 @@ const ChatPage = ({ data, data2 }: Props) => {
   }
 
 
+  //option side screen show
+  const [activeOption, setActiveOption] = useState<string | null>(null);
 
 
-  const handleSelect=async(e:any)=>{
-    const value=e.target.value;
-    if(value== "clear chat"){
+
+  //side screen show off
+
+  
+
+
+
+   const [showMenu,setShowMenu]=useState(false);
+
+  const handleSelect=async(value:string)=>{
+    if(value=== "clear chat"){
       if(!window.confirm('confirm you want to delete all chat')){
         return;
       }
       clearChat({senderId:data2.loginUserId,receiverId:data._id});
       setSelectChange('');
     }
+    if(value==="disappearing message"){
+      setActiveOption("disappearing");
+      setShowMenu(false);
+    }
+    if(value=== "mute notification"){
+      setActiveOption("mute");
+      setShowMenu(false);
+    }
+    setShowMenu(false);
   }
   
   return (
@@ -180,24 +200,33 @@ const ChatPage = ({ data, data2 }: Props) => {
           <div className="avat"style={{backgroundColor:colors[(data?.name?.charCodeAt(0) || 0) % colors.length]}}>
               {data?.name?.charAt(0).toUpperCase()}
                 </div>
-                
-                
-                <div>
-                  {/* here we will show chat opttions */}
-                  <select value={selectChange} onClick={handleSelect} onChange={(e)=>setSelectChange(e.target.value)}>
-                    <option value="">Select option</option>
-                    <option value="clear chat">clear chat</option>
-                    <option value="mute notification">mute notification</option>
-                  </select>
-                </div>
-         
          
          
           <div className="userInfo"><h4>{data?.name}</h4>
           <p>{status=== "online" ? "🟢online":presence?presence:"⚫offline"}</p>
         </div>
-        </div>
+
+
       </div>
+          <div className="chatOptions">
+        <button className="threeDotBtn"onClick={() => setShowMenu(prev => !prev)}>⋮</button>
+        {showMenu && (
+            <div className="optionsMenu">
+                <button onClick={() => handleSelect("clear chat")}>Clear chat</button>
+                <button onClick={() => handleSelect("disappearing message")}>Disappearing messages</button>
+                <button  onClick={() => handleSelect("mute notification")}>Mute notifications</button>
+            </div>
+        )}
+    </div>
+      </div>
+
+
+{activeOption === "disappearing" && (
+    <DisappearingMessage
+        onBack={() => setActiveOption(null)}
+    />
+)}
+
 
       <div className="chatBody">
         <div className="encryptBox">

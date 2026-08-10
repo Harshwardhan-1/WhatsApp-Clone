@@ -427,6 +427,52 @@
 }
 
 
+.chatHeader {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.chatOptions {
+    margin-left: auto;
+    position: relative;
+}
+
+.threeDotBtn {
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.optionsMenu {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    width: 210px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 8px 0;
+    z-index: 1000;
+}
+
+.optionsMenu button {
+    width: 100%;
+    border: none;
+    background: white;
+    text-align: left;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.optionsMenu button:hover {
+    background: #f2f2f2;
+}
+
+
 
 
 /* MOBILE */

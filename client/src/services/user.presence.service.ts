@@ -27,3 +27,42 @@ return lastVisit.toLocaleDateString();
         return "";
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+export const userChatListPresence=(date:string)=>{
+    try{
+        //converts it into object
+        const curr=new Date();
+        const lastVisit = new Date(date);
+
+const diff = curr.getTime()-lastVisit.getTime();
+const days = Math.floor(diff/(1000 * 60 * 60 * 24));
+const time = lastVisit.toLocaleTimeString([], {
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+if (days === 0) {return `${time}`;}
+if (days === 1) {return `yesterday`;}
+if (days < 7) {
+  const dayName = lastVisit.toLocaleDateString([], {weekday: "long",});
+  return `${dayName}`;
+}
+return lastVisit.toLocaleDateString();
+    }catch(err){
+        showApiError(err);
+        console.log(err);
+        return "";
+    }
+}

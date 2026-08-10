@@ -3,6 +3,7 @@ import { ShowAllUser } from "../../hooks/usechat.hooks";
 import { socket } from "../../utils/socket";
 import "./ChatListPage.css";
 import {motion,AnimatePresence} from 'framer-motion';
+import { userChatListPresence } from "../../services/user.presence.service";
 
 interface User {
   _id: string;
@@ -176,7 +177,7 @@ const aTime = aLast ? new Date(aLast?.updatedAt).getTime() : 0;const bTime = bLa
             <div style={{ display: "flex",justifyContent: "space-between", alignItems: "center",}}>
                 <h4 className="chatPage__name">{all.name}</h4>
                 <span style={{ fontSize: "12px", color: "#667781" }}>
-                    { last ? new Date(last.updatedAt).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit",}):""}
+                    { last ? userChatListPresence(last?.updatedAt):""}
                 {unseen && unseen?.count > 0 && (<span className="unread-badge">{unseen.count > 99 ? "99+" : unseen.count}</span>)}
                 </span>
             </div>
