@@ -12,6 +12,8 @@ export interface ILastMessage extends Document{
     updatedAt:Date,
     image?:string,
     video?:string,
+    clearBy:string[],
+
 }
 
 
@@ -48,7 +50,11 @@ const lastmessage=new mongoose.Schema<ILastMessage>({
     video:{
         type:String,
         default:null,
-    }
+    },
+    clearBy:{
+        type:[String],
+        default:[],
+    },
 },{timestamps:true});
 
 

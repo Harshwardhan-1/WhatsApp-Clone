@@ -9,6 +9,8 @@ import {useRef} from 'react';
 import "./chatPage.css";
 import axios from 'axios';
 import {env} from '../../configs/env.config';
+import { chatPageOption } from "../../actions/chatpage.action";
+
 
 interface User {
     _id: string;
@@ -36,8 +38,15 @@ const ChatPage = ({ data, data2 }: Props) => {
 
 
   const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat,userfileData}=ChatTalk(data, data2);
+  //delete edit delete for everyone action
   const {deleteForEveryone,delete_from_me,update_message}=MessageAction();
 
+
+  
+
+
+  //chat page option
+  const {clearChat}=chatPageOption();
 
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleTyping=(senderId:string,receiverId:string)=>{
@@ -106,6 +115,7 @@ const ChatPage = ({ data, data2 }: Props) => {
   const [editText,setEditText]=useState<string>("");
   const [senderId,setSenderId]=useState<string>("");
   const [receiverId,setReceiverId]=useState<string>("");
+  const [selectChange,setSelectChange]=useState<string>("");
   //edit logic
   const handleEdit=(all:Message)=>{
     setEditText(all.message);
@@ -148,6 +158,20 @@ const ChatPage = ({ data, data2 }: Props) => {
       setFile(undefined);
     }
   }
+
+
+
+
+  const handleSelect=async(e:any)=>{
+    const value=e.target.value;
+    if(value== "clear chat"){
+      if(!window.confirm('confirm you want to delete all chat')){
+        return;
+      }
+      clearChat({senderId:data2.loginUserId,receiverId:data._id});
+      setSelectChange('');
+    }
+  }
   
   return (
     <div className="chat">
@@ -156,7 +180,19 @@ const ChatPage = ({ data, data2 }: Props) => {
           <div className="avat"style={{backgroundColor:colors[(data?.name?.charCodeAt(0) || 0) % colors.length]}}>
               {data?.name?.charAt(0).toUpperCase()}
                 </div>
-
+                
+                
+                <div>
+                  {/* here we will show chat opttions */}
+                  <select value={selectChange} onClick={handleSelect} onChange={(e)=>setSelectChange(e.target.value)}>
+                    <option value="">Select option</option>
+                    <option value="clear chat">clear chat</option>
+                    <option value="mute notification">mute notification</option>
+                  </select>
+                </div>
+         
+         
+         
           <div className="userInfo"><h4>{data?.name}</h4>
           <p>{status=== "online" ? "🟢online":presence?presence:"⚫offline"}</p>
         </div>

@@ -155,6 +155,10 @@ export function ChatTalk(data: User, data2: CurrentUser) {
         socket.on("real_time_isSeen",handleIsSeen);
         socket.on("isSeenStatus",handleIsMarkSeen);
         socket.on("isDelivered_mark",handleIsDeliveredMark);
+        socket.on("chat_cleared",(data:{senderId:string,receiverId:string})=>{
+            loadMessage();
+            
+        });
         return()=>{
          socket.off("receive_message");
          socket.off("trigger_status",handleStatus);
@@ -169,6 +173,7 @@ export function ChatTalk(data: User, data2: CurrentUser) {
          socket.off("real_time_isSeen",handleIsSeen);
          socket.off("isSeenStatus",handleIsMarkSeen);
          socket.off("isDelivered_mark",handleIsDeliveredMark);
+         socket.off("chat_cleared");
         };
     },[locadata?._id,senderId,receiverId]);
 

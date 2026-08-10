@@ -70,7 +70,10 @@ export const prevChat=async(req:Request,res:Response,next:NextFunction)=>{
             }],
             hideIt:{
                 $nin:[senderId],
-            }
+            },
+            isClear:{
+                $nin:[senderId],
+            },
         }).sort({createdAt:1});
          res.status(200).json({
             success:true,

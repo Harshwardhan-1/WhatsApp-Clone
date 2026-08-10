@@ -25,6 +25,7 @@ export const store_last_message=async(data:{senderId:string,receiverId:string,ms
         if(findLastMessage){
             findLastMessage.lastmessage=lastmessage;
             findLastMessage.messageType=data.messageType;
+            findLastMessage.clearBy=[],
             await findLastMessage.save();
             return findLastMessage;
         }else{
@@ -76,10 +77,11 @@ try{
         if(!findLastChat){
             continue;
         }
+        const isClearByThisUser=findLastMessage[i].clearBy?.includes(data.userId);
         response.push({
         senderId,
         receiverId,
-        lastmessage: findLastMessage[i].lastmessage,
+        lastmessage: isClearByThisUser?"":findLastMessage[i].lastmessage,
         messageType:findLastMessage[i].messageType,
         IsSend: findLastChat?.IsSend,
         isDelivered: findLastChat?.isDelivered,
@@ -238,4 +240,34 @@ console.log(findLastMessage);
 }catch(err){
     throw new Error("error occured in saving");
 }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+//this one is for after chat cleared after this is
+export const updateLastMessage=async(data:{senderId:string,receiverId:string})=>{
+    try{
+        const lastmsg=await lastMessage.findOne({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ]
+        });
+        if(!lastmsg){
+            return;
+        }
+        lastmsg.clearBy.push(data.senderId);
+        await lastmsg.save();
+    }catch(err){
+        throw new Error("something went wrong");
+    }
 }

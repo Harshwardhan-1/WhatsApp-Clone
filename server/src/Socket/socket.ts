@@ -8,6 +8,7 @@ import { user_online,user_open_chat,markIsSeen } from "../controllers/chat.contr
 import { get_last_message, update_chat_list, update_chat_list_edit } from "../controllers/last.message.controller";
 import { store_last_message } from "../controllers/last.message.controller";
 import { totalPendingMessage } from "../controllers/chat.controller";
+import { profileSocket } from "./profile.socket";
 
 
 
@@ -30,7 +31,7 @@ io.on('connection',(socket)=>{
         io.emit("trigger_status",{userId,status:"online"});
         console.log("joined",userId)  
     });
-
+    profileSocket(socket);
 
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
