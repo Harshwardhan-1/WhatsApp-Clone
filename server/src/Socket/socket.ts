@@ -31,7 +31,7 @@ io.on('connection',(socket)=>{
         io.emit("trigger_status",{userId,status:"online"});
         console.log("joined",userId)  
     });
-    profileSocket(socket);
+    profileSocket(socket,users,io);
 
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
