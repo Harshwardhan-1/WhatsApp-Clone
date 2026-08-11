@@ -1,18 +1,21 @@
 import {Request,Response,NextFunction} from 'express';
 import { personalChat } from '../models/chat.model';
 import { userlastpresence } from '../models/user.lastpresence.model';
+import { disappearingMessageValidator } from '../validators/disappearing.message.validator';
 import { Types } from 'mongoose';
+import { disappearingModel } from '../models/disappearing.message.model';
+import { durationtoMs } from '../helper/durationtoMs';
 
 interface personalMsg{
     senderId:string,
     receiverId:string,
     msg:string,
     messageType:string,
-    mimetype:string,
-    filename:string,
-    sizeInKb:number,
-    sizeInMb:number,
-    originalname:string,
+    mimetype?:string,
+    filename?:string,
+    sizeInKb?:number,
+    sizeInMb?:number,
+    originalname?:string,
 }
 
 
@@ -22,10 +25,25 @@ interface lastpresence{
 
 
 
+const disappearingMessageDuration=async(senderId:string,receiverId:string)=>{
+    const disappearDuration=await disappearingModel.findOne({
+        $or:[
+            {senderId:senderId,receiverId:receiverId},
+            {senderId:receiverId,receiverId:senderId},
+        ]
+    });
+    if(disappearDuration){
+      const duration=durationtoMs(disappearDuration?.duration);
+        return duration;
+    }
+}
+
 export const PersonalChat=async(data:personalMsg)=>  {
 try{
     //this is for testing whether it is working correctly or not
     // throw new Error("Test Error");
+    const duration=await disappearingMessageDuration(data.senderId,data.receiverId);
+
     const createIt=await personalChat.create({
         senderId:data.senderId,     
         receiverId:data.receiverId,
@@ -33,9 +51,10 @@ try{
         messageType:data.messageType,
         mimetype:data?.mimetype,
         filename:data?.filename,
-        sizeInKb:data?.sizeInKb,
+        sizeInKb:data?.sizeInKb,    
         sizeInMb:data?.sizeInMb,
         originalname:data?.originalname,
+        expiresAt:duration?new Date(Date.now()+duration):null,
     });
     return createIt;
 }catch(err){
@@ -313,5 +332,60 @@ export const totalPendingMessage=async(data:{userId:string})=>{
         return messages;
     }catch(err){
         throw new Error("fail to show pending message");
+    }
+}
+
+
+
+
+
+//disappearing 
+export const disappearingMessage=async(data:{senderId:string,receiverId:string,duration:string})=>{
+    const parse=disappearingMessageValidator.safeParse(data);
+    if(!parse.success){
+        throw new Error(`${parse.error.issues[0].message}`);
+    }
+    try{
+        const disappearMsg=await disappearingModel.findOne({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+        });
+        if(disappearMsg){
+            disappearMsg.duration=parse.data.duration;
+            await disappearMsg.save();
+            return disappearMsg;
+        }
+        const create=await disappearingModel.create({
+            senderId:data.senderId,
+            receiverId:data.receiverId,
+            duration:parse.data.duration,
+        });
+        if(!create){
+            throw new Error("fail to update disappear message timer");
+        }
+        return create;
+    }catch(err){
+        throw new Error("something went wrong");
+    }
+}
+
+
+
+
+export const currentDisapperingVal=async(data:{senderId:string,receiverId:string})=>{
+    try{
+        const msg=await disappearingModel.findOne({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+        });
+        if(msg){
+            return msg.duration;
+        }
+    }catch(err){
+        throw new Error("failed to get message");
     }
 }

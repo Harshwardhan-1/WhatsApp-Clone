@@ -78,10 +78,11 @@ try{
             continue;
         }
         const isClearByThisUser=findLastMessage[i].clearBy?.includes(data.userId);
+        const displayMsg=findLastChat.messageType==="file"?findLastChat?.originalname || "":findLastChat.message;
         response.push({
         senderId,
         receiverId,
-        lastmessage: isClearByThisUser?"":findLastMessage[i].lastmessage,
+        lastmessage: isClearByThisUser?"":displayMsg,
         messageType:findLastMessage[i].messageType,
         IsSend: findLastChat?.IsSend,
         isDelivered: findLastChat?.isDelivered,
