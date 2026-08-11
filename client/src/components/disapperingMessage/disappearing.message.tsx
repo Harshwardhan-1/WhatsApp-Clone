@@ -1,13 +1,42 @@
 import { useState } from "react";
 import "./disappearing.message.css";
+import { showApiError } from "../../utils/showApiError";
+import { socket } from "../../utils/socket";
+import {useEffect} from 'react';
+
 
 interface prop{
     onBack:()=>void;
+    senderId:string,
+    receiverId:string,
 }
 
 
-export function DisappearingMessage({onBack}:prop){
+export function DisappearingMessage({onBack,senderId,receiverId}:prop){
     const [disappearMessage, setDisappearMessage] = useState("off");
+
+    useEffect(()=>{
+        socket.emit("current_disappearing_val",({senderId,receiverId}));
+        socket.on("disappearing_val",(duration:string)=>{
+            setDisappearMessage(duration);
+        });
+        return()=>{
+            socket.off("disappearing_val");
+            socket.off("current_disappearing_val");
+        }
+    },[]);
+
+
+    const handleChange=async(e:React.ChangeEvent<HTMLInputElement>)=>{
+        try{
+        const value=e.target.value;
+        setDisappearMessage(value);
+        socket.emit("disappear_message",{senderId,receiverId,duration:value});
+        }catch(err){
+            showApiError(err);
+        }
+    }
+
 
     return (
         <div className="disappearingPage">
@@ -33,26 +62,26 @@ export function DisappearingMessage({onBack}:prop){
 
                 <label>
                     <input type="radio"name="disappearing"value="24hrs" checked={disappearMessage === "24hrs"}
-                     onChange={(e)=>setDisappearMessage(e.target.value)}/>
+                     onChange={handleChange}/>
                     <span>24 hours</span>
                 </label>
 
                 <label>
                     <input  type="radio"name="disappearing"value="7days" checked={disappearMessage === "7days"}
-                     onChange={(e)=>setDisappearMessage(e.target.value)}/>
+                     onChange={handleChange}/>
                     <span>7 days</span>
                 </label>
 
                 <label>
                     <input
                         type="radio" name="disappearing"value="90days"checked={disappearMessage === "90days"}
-                        onChange={(e)=>setDisappearMessage(e.target.value)}/>
+                        onChange={handleChange}/>
                         <span>90 days</span>
                 </label>
 
                 <label>
                     <input type="radio"name="disappearing"value="off" checked={disappearMessage === "off"}
-                        onChange={(e) =>setDisappearMessage(e.target.value)}/>
+                        onChange={handleChange}/>
                     <span>Off</span>
                 </label>
             </div>

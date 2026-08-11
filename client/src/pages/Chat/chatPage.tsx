@@ -224,8 +224,16 @@ const ChatPage = ({ data, data2 }: Props) => {
 {activeOption === "disappearing" && (
     <DisappearingMessage
         onBack={() => setActiveOption(null)}
+        senderId={(data2.loginUserId)}
+        receiverId={(data._id)}
     />
 )}
+
+
+
+
+
+
 
 
       <div className="chatBody">
@@ -254,10 +262,17 @@ const ChatPage = ({ data, data2 }: Props) => {
   </div>
 ) : (
   <>
+  
     {/* TEXT MESSAGE */}
-    {all.messageType !== "file" && (
+    {all.messageType !== "file" && all.messageType!=="system" && (
       <div className="message-text">{all.message}</div>
     )}
+    
+    {all.messageType === "system" && (
+  <div className="system-message">
+    {isSender ? `${all.message}` : `${all.message}`}
+  </div>
+)}
 
     {/* FILE MESSAGE — ab normal flow mein hai, absolute nahi */}
     {all.messageType === "file" && (
@@ -324,25 +339,29 @@ const ChatPage = ({ data, data2 }: Props) => {
 )}
 
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
-<div className="menu-container">
-  <button className="menu-btn" onClick={() => setOpenMenu(openMenu === index ? null : index)}>⋮</button>
+{/* SIRF MENU — ab isme fileMessage nahi hai */}
+{all.messageType !== "system" && (
+  <div className="menu-container">
+    <button className="menu-btn" onClick={() => setOpenMenu(openMenu === index ? null : index)}>⋮</button>
 
-  {openMenu === index && (
-    <div className="menu-dropdown">
-      {isSender ? (
-        <>
-          {all.messageType !== "file" && (
-            <div className="menu-item" onClick={() => { handleEdit(all); setOpenMenu(null); }}>Edit</div>
-          )}
+
+    {openMenu === index && (
+      <div className="menu-dropdown">
+        {isSender ? (
+          <>
+            {all.messageType !== "file" && (
+              <div className="menu-item" onClick={() => { handleEdit(all); setOpenMenu(null); }}>Edit</div>
+            )}
+            <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
+            <div className="menu-item" onClick={() => { deleteForEveryone({ _id: all._id, senderId: all.senderId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Everyone</div>
+          </>
+        ) : (
           <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
-          <div className="menu-item" onClick={() => { deleteForEveryone({ _id: all._id, senderId: all.senderId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Everyone</div>
-        </>
-      ) : (
-        <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
-      )}
-    </div>
-          )}
-        </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
       </div>
     );
   })}

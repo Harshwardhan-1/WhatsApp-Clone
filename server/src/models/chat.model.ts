@@ -25,6 +25,7 @@ export interface IChat extends Document{
     isEdited:boolean,
     createdAt:Date,
     updatedAt:Date,
+    expiresAt?:Date | null,
 }
 
 
@@ -99,9 +100,17 @@ const chatSchema=new mongoose.Schema<IChat>({
         type:Boolean,
         default:false,
     },
+    expiresAt:{
+        type:Date,
+        default:null,
+    },
 },
 {timestamps:true}, 
 )
-   
+
+
+//expireAfterSecondsecond matlab itna samay baad delete kardo es document ko 
+//mongodb internally check after every seconds whether to delete it or not
+chatSchema.index({expiresAt:1},{expireAfterSeconds:0});
 
 export const personalChat=mongoose.model<IChat>("personalchat",chatSchema);     

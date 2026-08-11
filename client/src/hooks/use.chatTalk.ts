@@ -123,6 +123,26 @@ export function ChatTalk(data: User, data2: CurrentUser) {
         setAllMessages(prev=>prev.map(msg=>data.messageIds.includes(msg._id)?{...msg, isDelivered: data.isDeliverd}:msg));
     }
 
+
+    const handleDisappearMsg=(data:{senderId:string,receiverId:string,msg:string,messageType:string
+        createdAt:Date,updatedAt:Date,
+    })=>{
+        const isCurrentChat =(data.senderId === senderId && data.receiverId === receiverId) ||
+        (data.senderId === receiverId && data.receiverId === senderId);
+        if(isCurrentChat){
+        const newMessage: any = { 
+            _id: Date.now().toString(),
+             senderId: data.senderId, 
+             receiverId: data.receiverId,
+             message: data.msg, messageType: 
+             data.messageType,
+            createdAt: new Date(data.createdAt),
+            updatedAt: new Date(data.updatedAt),
+      }
+      setAllMessages(prev => [...prev, newMessage]);
+   }
+}
+
     
     
 
@@ -155,9 +175,9 @@ export function ChatTalk(data: User, data2: CurrentUser) {
         socket.on("real_time_isSeen",handleIsSeen);
         socket.on("isSeenStatus",handleIsMarkSeen);
         socket.on("isDelivered_mark",handleIsDeliveredMark);
+        socket.on("disappear_message",handleDisappearMsg);
         socket.on("chat_cleared",(data:{senderId:string,receiverId:string})=>{
             loadMessage();
-            
         });
         return()=>{
          socket.off("receive_message");
@@ -174,6 +194,7 @@ export function ChatTalk(data: User, data2: CurrentUser) {
          socket.off("isSeenStatus",handleIsMarkSeen);
          socket.off("isDelivered_mark",handleIsDeliveredMark);
          socket.off("chat_cleared");
+         socket.off("disappear_message",handleDisappearMsg);
         };
     },[locadata?._id,senderId,receiverId]);
 
