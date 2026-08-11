@@ -1,0 +1,142 @@
+.muteNotificationPage {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 99%;
+    background: white;
+    z-index: 1000;
+}
+
+/* Header */
+
+.muteNotificationHeader {
+    height: 60px;
+    background: #008069;
+    color: white;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+    gap: 20px;
+}
+
+.muteNotificationHeader h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.backArrow {
+    font-size: 30px;
+    cursor: pointer;
+}
+
+
+/* Image */
+
+.muteNotificationImage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 35px 20px 20px;
+}
+
+.muteNotificationImage img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+}
+
+
+/* Description */
+
+.muteNotificationDescription {
+    padding: 0 30px 25px;
+    text-align: center;
+}
+
+.muteNotificationDescription h3 {
+    margin: 0 0 12px;
+
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.muteNotificationDescription p {
+    margin: 0 auto;
+
+    max-width: 500px;
+
+    color: #667781;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* Options */
+
+.muteNotificationOptions {
+    border-top: 1px solid #e9edef;
+}
+
+.muteNotificationOptions label {
+    height: 65px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 30px;
+
+    border-bottom: 1px solid #e9edef;
+
+    cursor: pointer;
+
+    font-size: 16px;
+}
+
+.muteNotificationOptions label:hover {
+    background: #f5f6f6;
+}
+
+.muteNotificationOptions input {
+    appearance: none;
+
+    width: 22px;
+    height: 22px;
+
+    border: 2px solid #8696a0;
+    border-radius: 50%;
+
+    margin: 0 25px 0 0;
+
+    position: relative;
+
+    cursor: pointer;
+}
+
+.muteNotificationOptions input:checked {
+    border-color: #00a884;
+}
+
+.muteNotificationOptions input:checked::after {
+    content: "";
+
+    position: absolute;
+
+    width: 12px;
+    height: 12px;
+
+    background: #00a884;
+
+    border-radius: 50%;
+
+    top: 3px;
+    left: 3px;
+}
+
+.muteNotificationOptions span {
+    color: #111b21;
+}

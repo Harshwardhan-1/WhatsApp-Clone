@@ -1,8 +1,8 @@
 import { useState } from "react";
 import "./disappearing.message.css";
-import { showApiError } from "../../utils/showApiError";
 import { socket } from "../../utils/socket";
 import {useEffect} from 'react';
+import { showMessage } from "../../utils/messageToast";
 
 
 interface prop{
@@ -30,10 +30,11 @@ export function DisappearingMessage({onBack,senderId,receiverId}:prop){
     const handleChange=async(e:React.ChangeEvent<HTMLInputElement>)=>{
         try{
         const value=e.target.value;
+        console.log(value);
         setDisappearMessage(value);
         socket.emit("disappear_message",{senderId,receiverId,duration:value});
-        }catch(err){
-            showApiError(err);
+        }catch(err:any){
+            showMessage(err);
         }
     }
 
