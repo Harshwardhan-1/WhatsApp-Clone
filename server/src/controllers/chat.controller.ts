@@ -120,13 +120,13 @@ export const userlastVisit=async(data:lastpresence)=>{
         if(findIt){
            findIt.date=new Date(Date.now()),
            await findIt.save();
-           return findIt;
+           return { userId: findIt.userId, updatedAt: findIt.date };
         }else{
             const createPresence=await userlastpresence.create({
                 userId:data.userId,
                 date:new Date(Date.now()),
             });
-            return createPresence;
+            return { userId: createPresence.userId, updatedAt: createPresence.date }
         }
     }catch(err){
         console.log(err);

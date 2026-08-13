@@ -11,6 +11,7 @@ import axios from 'axios';
 import {env} from '../../configs/env.config';
 import { chatPageOption } from "../../actions/chatpage.action";
 import { DisappearingMessage } from "../../components/disapperingMessage/disappearing.message";
+import { MuteNotification } from "../../components/muteNotification/mute.notification";
 
 
 interface User {
@@ -187,7 +188,7 @@ const ChatPage = ({ data, data2 }: Props) => {
       setShowMenu(false);
     }
     if(value=== "mute notification"){
-      setActiveOption("mute");
+      setActiveOption("mute notification");
       setShowMenu(false);
     }
     setShowMenu(false);
@@ -226,6 +227,14 @@ const ChatPage = ({ data, data2 }: Props) => {
         onBack={() => setActiveOption(null)}
         senderId={(data2.loginUserId)}
         receiverId={(data._id)}
+    />
+)}
+
+{activeOption==="mute notification" && (
+  <MuteNotification
+  onBack={()=>setActiveOption(null)}
+  senderId={(data2.loginUserId)}
+  receiverId={(data._id)}
     />
 )}
 

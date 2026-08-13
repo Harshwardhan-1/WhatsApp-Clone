@@ -3,6 +3,7 @@ import { socket } from "../utils/socket";
 import { prevMsg } from "../services/chat.service";
 import { showApiError } from "../utils/showApiError";
 import { userPresence } from "../services/user.presence.service";
+import { notificationSound } from "../notification/notification.sound";
 
 
 interface MessageItem{
@@ -161,7 +162,12 @@ export function ChatTalk(data: User, data2: CurrentUser) {
         socket.on("receive_message", (message: Message) => {
           const isCurrentChat =(message.senderId === senderId && message.receiverId === receiverId) ||
         (message.senderId === receiverId && message.receiverId === senderId);
-        if(isCurrentChat) {setAllMessages(prev => [...prev, message]);}
+        if(isCurrentChat) {
+            setAllMessages(prev => [...prev, message]);
+            if(message.senderId!==data2.loginUserId){
+                notificationSound();
+            }
+        }
 });
         socket.on('error_msg',handleError);
         socket.on("trigger_status",handleStatus);

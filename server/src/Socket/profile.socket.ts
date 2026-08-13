@@ -5,6 +5,7 @@ import { get_last_message } from "../controllers/last.message.controller";
 import { disappearingMessage } from "../controllers/chat.controller";
 import { currentDisapperingVal } from "../controllers/chat.controller";
 import { PersonalChat } from "../controllers/chat.controller";
+import { changeNotificationSetting, prev_mark_notification } from "../controllers/notification.controller";
 
 
 
@@ -61,6 +62,35 @@ try{
         }catch(err){
             const error=err instanceof Error ?err.message:"Unknown Error"
            socket.emit("error_msg",error);
+        }
+    });
+
+
+
+    //notification
+    socket.on("prev_mark_notification",async(data:{senderId:string,receiverId:string})=>{
+        try{
+          const prev_duration=await prev_mark_notification({senderId:data.senderId,receiverId:data.receiverId});
+          const isSenderOnline=users[data.senderId];
+          if(isSenderOnline){
+            const duration=prev_duration;
+            socket.emit("already_mark_notification",(duration));
+          }
+        }catch(err){
+            const error=err instanceof Error ?err.message:"Unknown Error"
+             socket.emit("error_msg",error);
+        }
+    });
+
+
+    socket.on("change_notification",async(data:{senderId:string,receiverId:string,duration:string})=>{
+        try{
+           await changeNotificationSetting({senderId:data.senderId,receiverId:data.receiverId,duration:data.duration});
+           const duration=data.duration;
+           socket.emit("notification_change",(duration));
+        }catch(err){
+            const error=err instanceof Error ?err.message:"Unknown Error";
+            socket.emit("error_msg",error);
         }
     });
 }catch(err){

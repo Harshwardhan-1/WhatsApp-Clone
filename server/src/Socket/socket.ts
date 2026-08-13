@@ -146,11 +146,11 @@ io.on('connection',(socket)=>{
 
     //we receive receiver id here
     socket.on('user_last_visit',async(userId)=>{
-        const lastvisit=await userlastpresence.findOne({userId});
-        if(lastvisit){
-            socket.emit("user_presence",lastvisit);
-        }
-    })
+    const lastvisit=await userlastpresence.findOne({userId});
+    if (lastvisit){
+        socket.emit("user_presence",{userId:lastvisit.userId,updatedAt:lastvisit.date});
+    }
+});
 
     //operations
 
