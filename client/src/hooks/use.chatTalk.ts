@@ -39,6 +39,7 @@ export interface Message{
     isEdited:boolean,
     createdAt:Date,
     updatedAt:Date,
+    notificationSound?:string | null,
 }
 interface error{
     msg:string,
@@ -164,7 +165,7 @@ export function ChatTalk(data: User, data2: CurrentUser) {
         (message.senderId === receiverId && message.receiverId === senderId);
         if(isCurrentChat) {
             setAllMessages(prev => [...prev, message]);
-            if(message.senderId!==data2.loginUserId){
+            if(message.senderId!==data2.loginUserId  && message?.notificationSound=== "off"){
                 notificationSound();
             }
         }
