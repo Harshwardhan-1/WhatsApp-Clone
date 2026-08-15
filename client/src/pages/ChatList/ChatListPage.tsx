@@ -140,7 +140,7 @@ const aTime = aLast ? new Date(aLast?.updatedAt).getTime() : 0;const bTime = bLa
         <input type="text" placeholder="Search or start new chat" value={search}onChange={(e)=>setSearch(e.target.value)}className="chatPage__searchInput"/>
         <button>All</button>
         <button>Unread</button>
-        <button>Favorites</button>
+        <button >Favorites</button>
         <button>Groups</button>
       </div>
 

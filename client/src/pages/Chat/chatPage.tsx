@@ -16,6 +16,9 @@ import { Media } from "../../components/ChatMedia/media/media";
 import { Docs } from "../../components/ChatMedia/docs/docs";
 import { ShowLinks } from "../../components/ChatMedia/links/link";
 import { renderMessageWithLinks } from "../../utils/linkify/linkify";
+import { addToFavourites } from "../../components/addToFavourites/addToFavourites";
+import { Bell,BellOff } from "lucide-react";
+
 
 
 interface User {
@@ -46,6 +49,9 @@ const ChatPage = ({ data, data2 }: Props) => {
   const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat,userfileData}=ChatTalk(data, data2);
   //delete edit delete for everyone action
   const {deleteForEveryone,delete_from_me,update_message}=MessageAction();
+  
+  //already markFavourites
+  const {alreadyMarked,markAsFavourites,unmarkAsFavourites}=addToFavourites(data2.loginUserId,data._id);
 
 
   
@@ -209,6 +215,21 @@ const ChatPage = ({ data, data2 }: Props) => {
     }
     setShowMenu(false);
   }
+
+
+
+
+
+  const toggleFavourite=async()=>{
+    if(alreadyMarked=== "Add To Favourites"){
+      markAsFavourites({senderId:data2.loginUserId,receiverId:data._id});
+    }else{
+      unmarkAsFavourites({senderId:data2.loginUserId,receiverId:data._id});
+    }
+  }
+
+
+
   
   return (
     <div className="chat">
@@ -235,6 +256,10 @@ const ChatPage = ({ data, data2 }: Props) => {
                 <button onClick={() => handleSelect("media")}>Media</button>
                 <button onClick={()=>handleSelect("docs")}>Docs</button>
                 <button onClick={()=>handleSelect("links")}>Links</button>
+                <button onClick={toggleFavourite}>
+    {alreadyMarked === "Remove From Favourites" ? <BellOff size={18}/> : <Bell size={18}/>}
+    <span>{alreadyMarked}</span>
+</button>
             </div>
         )}
     </div>
