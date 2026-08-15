@@ -430,11 +430,13 @@ const ChatPage = ({ data, data2 }: Props) => {
               <div className="menu-item" onClick={() => { handleEdit(all); setOpenMenu(null); }}>Edit</div>
             )}
             <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
-            <div className="menu-item" onClick={() => { deleteForEveryone({ _id: all._id, senderId: all.senderId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Everyone</div>
+            <div className="menu-item" onClick={() => { deleteForEveryone({ _id: all._id, senderId: all.senderId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Everyone</div> 
           </>
         ) : (
           <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
         )}
+        {all.messageType === "text" && (<div onClick={()=>{navigator.clipboard.writeText(all.message);setOpenMenu(null);}} className="menu-item">Copy</div>)}
+
       </div>
     )}
   </div>

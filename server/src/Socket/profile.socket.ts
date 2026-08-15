@@ -1,12 +1,12 @@
 import { Socket,Server } from "socket.io";
-import { clear_chat } from "../controllers/profile.controller";
+import { check_favourites, clear_chat, mark_as_favourites } from "../controllers/profile.controller";
 import { updateLastMessage } from "../controllers/last.message.controller";
 import { get_last_message } from "../controllers/last.message.controller";
-import { alldocs, allLinks, disappearingMessage, media } from "../controllers/chat.controller";
-import { currentDisapperingVal } from "../controllers/chat.controller";
+import { alldocs,allLinks,disappearingMessage,media } from "../controllers/profile.controller";
+import { currentDisapperingVal } from "../controllers/profile.controller";
 import { PersonalChat } from "../controllers/chat.controller";
 import { changeNotificationSetting, prev_mark_notification } from "../controllers/notification.controller";
-
+import { unmarked_as_favourites } from "../controllers/profile.controller";
 
 
 export const profileSocket=(socket:Socket,users:{[key:string]:string},io:Server)=>{
@@ -122,6 +122,37 @@ try{
             if(senderId){
                 socket.emit("all_links",links);
             }
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("error_msg",error);
+        }
+    });
+
+    socket.on("check_favourites",async(data:{senderId:string,receiverId:string})=>{
+        try{
+         const favourites=await check_favourites({senderId:data.senderId,receiverId:data.receiverId});
+         socket.emit("checked_as_favourites",(favourites));
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("error_msg",error);
+        }
+    });
+
+
+    socket.on("mark_as_favourites",async(data:{senderId:string,receiverId:string})=>{
+        try{
+            await mark_as_favourites({senderId:data.senderId,receiverId:data.receiverId});
+            socket.emit("toggle_favourites",("Remove From Favourites"));
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("error_msg",error);
+        }
+    });
+
+    socket.on("unmark_as_favourites",async(data:{senderId:string,receiverId:string})=>{
+        try{
+            await unmarked_as_favourites({senderId:data.senderId,receiverId:data.receiverId});
+            socket.emit("toggle_favourites",("Add To Favourites"));
         }catch(err){
             const error=err instanceof Error?err.message:"Unknown Error";
             socket.emit("error_msg",error);
