@@ -12,6 +12,10 @@ import {env} from '../../configs/env.config';
 import { chatPageOption } from "../../actions/chatpage.action";
 import { DisappearingMessage } from "../../components/disapperingMessage/disappearing.message";
 import { MuteNotification } from "../../components/muteNotification/mute.notification";
+import { Media } from "../../components/ChatMedia/media/media";
+import { Docs } from "../../components/ChatMedia/docs/docs";
+import { ShowLinks } from "../../components/ChatMedia/links/link";
+import { renderMessageWithLinks } from "../../utils/linkify/linkify";
 
 
 interface User {
@@ -191,6 +195,18 @@ const ChatPage = ({ data, data2 }: Props) => {
       setActiveOption("mute notification");
       setShowMenu(false);
     }
+    if(value==="media"){
+      setActiveOption("media");
+      setShowMenu(false);
+    }
+    if(value==="docs"){
+      setActiveOption("docs");
+      setShowMenu(false);
+    }
+    if(value==="links"){
+      setActiveOption("links");
+      setShowMenu(false);
+    }
     setShowMenu(false);
   }
   
@@ -215,7 +231,10 @@ const ChatPage = ({ data, data2 }: Props) => {
             <div className="optionsMenu">
                 <button onClick={() => handleSelect("clear chat")}>Clear chat</button>
                 <button onClick={() => handleSelect("disappearing message")}>Disappearing messages</button>
-                <button  onClick={() => handleSelect("mute notification")}>Mute notifications</button>
+                <button onClick={() => handleSelect("mute notification")}>Mute notifications</button>
+                <button onClick={() => handleSelect("media")}>Media</button>
+                <button onClick={()=>handleSelect("docs")}>Docs</button>
+                <button onClick={()=>handleSelect("links")}>Links</button>
             </div>
         )}
     </div>
@@ -238,6 +257,30 @@ const ChatPage = ({ data, data2 }: Props) => {
     />
 )}
 
+{
+  activeOption==="media" && (
+    <Media 
+    onBack={()=>setActiveOption(null)}
+    senderId={(data2.loginUserId)}
+    receiverId={(data._id)}
+    />
+  )}
+
+  {activeOption=== "docs" && (
+      <Docs 
+      onBack={()=>setActiveOption(null)}
+      senderId={(data2.loginUserId)}
+      receiverId={(data._id)}
+      />
+    )}
+
+  {activeOption=== "links"&& (
+    <ShowLinks 
+    onBack={()=>setActiveOption(null)}
+    senderId={(data2.loginUserId)}
+    receiverId={(data._id)}
+    />
+    )}
 
 
 
@@ -274,7 +317,7 @@ const ChatPage = ({ data, data2 }: Props) => {
   
     {/* TEXT MESSAGE */}
     {all.messageType !== "file" && all.messageType!=="system" && (
-      <div className="message-text">{all.message}</div>
+      <div className="message-text">{renderMessageWithLinks(all.message)}</div>
     )}
     
     {all.messageType === "system" && (

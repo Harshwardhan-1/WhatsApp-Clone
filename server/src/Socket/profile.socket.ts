@@ -2,7 +2,7 @@ import { Socket,Server } from "socket.io";
 import { clear_chat } from "../controllers/profile.controller";
 import { updateLastMessage } from "../controllers/last.message.controller";
 import { get_last_message } from "../controllers/last.message.controller";
-import { disappearingMessage } from "../controllers/chat.controller";
+import { alldocs, allLinks, disappearingMessage, media } from "../controllers/chat.controller";
 import { currentDisapperingVal } from "../controllers/chat.controller";
 import { PersonalChat } from "../controllers/chat.controller";
 import { changeNotificationSetting, prev_mark_notification } from "../controllers/notification.controller";
@@ -90,6 +90,40 @@ try{
            socket.emit("notification_change",(duration));
         }catch(err){
             const error=err instanceof Error ?err.message:"Unknown Error";
+            socket.emit("error_msg",error);
+        }
+    });
+    socket.on("all_media",async(data:{senderId:string,receiverId:string})=>{
+        try{
+         const allMedia=await media({senderId:data.senderId,receiverId:data.receiverId});
+         if(allMedia){
+            socket.emit("found_allMedia",(allMedia));
+         }
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("error_msg",error);
+        }
+    });
+
+    socket.on("all_docs",async(data:{senderId:string,receiverId:string})=>{
+        try{
+          const allDocs=await alldocs({senderId:data.senderId,receiverId:data.receiverId});
+          socket.emit("get_all_docs",(allDocs));
+        }catch(err){
+             const error=err instanceof Error?err.message:"Unknown Error";
+             socket.emit("error_msg",error);
+        }
+    });
+
+    socket.on("get_all_links",async(data:{senderId:string,receiverId:string})=>{
+        try{
+            const links=await allLinks({senderId:data.senderId,receiverId:data.receiverId});
+            const senderId=users[data.senderId];
+            if(senderId){
+                socket.emit("all_links",links);
+            }
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
             socket.emit("error_msg",error);
         }
     });

@@ -419,3 +419,73 @@ export const currentDisapperingVal=async(data:{senderId:string,receiverId:string
         throw new Error("failed to get message");
     }
 }
+
+
+
+
+
+
+export const media=async(data:{senderId:string,receiverId:string})=>{
+    try{
+        const find=await personalChat.find({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+            //regex means it match all the matching files starting with image/video ans options
+            //is for case sensitive
+            mimetype:{$regex:"^(image|video)",$options:"i"}
+        }).sort({createdAt:1});
+        return find;
+    }catch(err){
+        throw new Error("failed to laod media");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const alldocs=async(data:{senderId:string,receiverId:string})=>{
+    try{
+        const findDocs=await personalChat.find({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+            mimetype:{$regex:"^(application)",$options:"i"},
+        }).sort({createdAt:1});
+        return findDocs;
+    }catch(err){
+        throw new Error("failed to get docs");
+    }
+}
+
+
+
+
+export const allLinks=async(data:{senderId:string,receiverId:string})=>{
+    try{
+        const findLinks=await personalChat.find({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+            //it checks all condition using and so no order matters
+            message:{ $regex: "((https?:\\/\\/)?(www\\.)?[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(\\/[^\\s]*)?)", $options: "i" },
+            messageType:"text", 
+        }).sort({createdAt:1});
+        return findLinks;
+    }catch(err){
+        throw new Error("failed to get links");
+    }
+}

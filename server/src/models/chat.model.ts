@@ -55,7 +55,7 @@ const chatSchema=new mongoose.Schema<IChat>({
     },
     mimetype:{
         type:String,
-        default:"image",
+        default:"",
     },
     filename:{
         type:String,
