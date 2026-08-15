@@ -1,0 +1,161 @@
+.mediaPage {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 99%;
+    background: white;
+    z-index: 1000;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.mediaHeader {
+    height: 60px;
+    background: #008069;
+    color: white;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+    gap: 20px;
+
+    flex-shrink: 0;
+}
+
+.mediaHeader h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.mediaHeader .backArrow {
+    font-size: 30px;
+    cursor: pointer;
+}
+
+
+
+.mediaGrid {
+    flex: 1;
+    overflow-y: auto;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 3px;
+
+    align-content: start;
+}
+
+.mediaGrid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mediaGrid::-webkit-scrollbar-thumb {
+    background: #d1d7db;
+    border-radius: 10px;
+}
+
+.mediaThumb {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    background: #e9edef;
+}
+
+.mediaThumb img,
+.mediaThumb video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.videoThumbWrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.playIcon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    color: white;
+    font-size: 22px;
+    text-shadow: 0 0 4px rgba(0,0,0,0.8);
+}
+
+
+
+.mediaPreviewOverlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 2000;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.mediaPreviewTop {
+    height: 60px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    padding: 0 20px;
+
+    background: rgba(0,0,0,0.6);
+    color: white;
+}
+
+.mediaPreviewTop .backArrow {
+    font-size: 26px;
+    cursor: pointer;
+}
+
+.mediaPreviewName {
+    font-size: 15px;
+    color: #d1d7db;
+}
+
+.mediaPreviewContent {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+.mediaPreviewContent img,
+.mediaPreviewContent video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+
+
+.noMediaFound {
+    grid-column: 1 / -1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 300px;
+
+    color: #667781;
+    font-size: 15px;
+}

@@ -18,7 +18,7 @@ export function DisappearingMessage({onBack,senderId,receiverId}:prop){
     useEffect(()=>{
         socket.emit("current_disappearing_val",({senderId,receiverId}));
         socket.on("disappearing_val",(duration:string)=>{
-            setDisappearMessage(duration);
+            setDisappearMessage(duration || "off");
         });
         return()=>{
             socket.off("disappearing_val");
