@@ -5,6 +5,8 @@ import { disappearingMessageValidator } from '../validators/disappearing.message
 import { Types } from 'mongoose';
 import { disappearingModel } from '../models/disappearing.message.model';
 import { durationtoMs } from '../helper/durationtoMs';
+import { string } from 'zod';
+import { notification } from '../models/mute.notification.model';
 
 interface personalMsg{
     senderId:string,
@@ -38,11 +40,35 @@ const disappearingMessageDuration=async(senderId:string,receiverId:string)=>{
     }
 }
 
+
+
+
+
+
+
+
+
+const notificationSound=async(senderId:string,receiverId:string):Promise<string>=>{
+    const sound=await notification.findOne({
+        senderId:receiverId,
+        receiverId:senderId, 
+    });
+    if(sound){
+        return sound.duration;
+    }else{
+        return "off";
+    }
+}
+
 export const PersonalChat=async(data:personalMsg)=>  {
 try{
     //this is for testing whether it is working correctly or not
     // throw new Error("Test Error");
     const duration=await disappearingMessageDuration(data.senderId,data.receiverId);
+    
+    //check notification sound
+    const sound=await notificationSound(data.senderId,data.receiverId);
+
 
     const createIt=await personalChat.create({
         senderId:data.senderId,     
@@ -55,7 +81,11 @@ try{
         sizeInMb:data?.sizeInMb,
         originalname:data?.originalname,
         expiresAt:duration?new Date(Date.now()+duration):null,
+        notificationSound:sound,
     });
+    if(!createIt){
+        throw new Error("failed to send message");
+    }
     return createIt;
 }catch(err){
 console.log(err);

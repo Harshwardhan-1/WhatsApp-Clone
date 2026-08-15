@@ -26,6 +26,7 @@ export interface IChat extends Document{
     createdAt:Date,
     updatedAt:Date,
     expiresAt?:Date | null,
+    notificationSound?:string,
 }
 
 
@@ -103,6 +104,10 @@ const chatSchema=new mongoose.Schema<IChat>({
     expiresAt:{
         type:Date,
         default:null,
+    },
+    notificationSound:{
+        type:String,
+        default:"off",
     },
 },
 {timestamps:true}, 
