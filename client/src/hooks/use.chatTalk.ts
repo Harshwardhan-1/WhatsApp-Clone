@@ -6,7 +6,7 @@ import { userPresence } from "../services/user.presence.service";
 import { notificationSound } from "../notification/notification.sound";
 
 
-interface MessageItem{
+export interface MessageItem{
     _id:string,
     senderId:string,
     receiverId:string,
@@ -23,6 +23,10 @@ interface MessageItem{
     createdAt:Date,
     updatedAt:Date,
     isPinned:boolean,
+    reaction:{
+        userId:string,
+        emoji:string,
+    }[],
 }
 export interface Message{
     _id:string,
@@ -42,6 +46,10 @@ export interface Message{
     updatedAt:Date,
     notificationSound?:string | null,
     isPinned:boolean,
+    reaction:{
+        userId:string,
+        emoji:string,
+    }[],
 }
 interface error{
     msg:string,
@@ -156,7 +164,13 @@ const handleUpdatePinMessage=(message:Message)=>{
 }
 
 
-
+  const handleEmojiUpdate=async(message:Message)=>{
+         const isCurrentChat =(message.senderId === senderId && message.receiverId === receiverId) ||
+        (message.senderId === receiverId && message.receiverId === senderId);
+        if(isCurrentChat){
+            setAllMessages(prev=>prev.map(msg=>msg._id===message._id?message:msg));
+        }
+    }
     
 
  
@@ -195,6 +209,7 @@ const handleUpdatePinMessage=(message:Message)=>{
         socket.on("isDelivered_mark",handleIsDeliveredMark);
         socket.on("disappear_message",handleDisappearMsg);
         socket.on("update_pin_message",handleUpdatePinMessage);
+        socket.on("emoji_updated",handleEmojiUpdate);
         socket.on("chat_cleared",(data:{senderId:string,receiverId:string})=>{
             loadMessage();
         });
@@ -215,6 +230,8 @@ const handleUpdatePinMessage=(message:Message)=>{
          socket.off("chat_cleared");
          socket.off("disappear_message",handleDisappearMsg);
          socket.off("update_pin_message",handleUpdatePinMessage);
+        socket.off("emoji_updated",handleEmojiUpdate);
+
         };
     },[locadata?._id,senderId,receiverId]);
 

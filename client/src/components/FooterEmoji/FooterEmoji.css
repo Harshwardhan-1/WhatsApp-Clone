@@ -1,0 +1,17 @@
+.footerEmoji {
+  position: relative;
+}
+
+.footerEmojiPicker {
+  position: absolute;
+  bottom: 45px;
+  left: 0;
+  z-index: 1000;
+}
+
+.footerEmoji button {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}

@@ -5,7 +5,6 @@ import { showApiError } from "../../utils/showApiError";
 import { MessageAction } from "../../actions/message.action";
 import {socket} from "../../utils/socket";
 import type { Message } from "../../hooks/use.chatTalk";
-import {useRef} from 'react';
 import "./chatPage.css";
 import axios from 'axios';
 import {env} from '../../configs/env.config';
@@ -19,6 +18,10 @@ import { renderMessageWithLinks } from "../../utils/linkify/linkify";
 import { addToFavourites } from "../../components/addToFavourites/addToFavourites";
 import { PinMessage } from "../../components/PinMessage/pinMessage";
 import { Bell,BellOff } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
+import { useRef } from "react";
+import { emojiOnMessages } from "../../hooks/use.emoji.hook";
+import { FooterEmoji } from "../../components/FooterEmoji/FooterEmoji";
 
 
 
@@ -43,7 +46,9 @@ interface Props {
 
 const ChatPage = ({ data, data2 }: Props) => {
   const [msg,setMsg]=useState<string>("");
-  const [openMenu, setOpenMenu] = useState<number | null>(null);  
+  const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const reactionRef=useRef<HTMLDivElement | null>(null);
+  const [reactionMessage,setReactionMessage]=useState<string | null>(null);  
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
 
 
@@ -255,7 +260,70 @@ interface Pin{
 
 
 
+
+  //emoji
+  useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      reactionRef.current &&
+      !reactionRef.current.contains(event.target as Node)
+    ) {
+      setReactionMessage(null);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      reactionDetailRef.current &&
+      !reactionDetailRef.current.contains(event.target as Node)
+    ) {
+      setShowReactionDetail(null);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
+
+
+
+const [showReactionDetail, setShowReactionDetail] = useState<string | null>(null);
+const reactionDetailRef = useRef<HTMLDivElement>(null);
+
+   const {setEmoji}=emojiOnMessages(data2.loginUserId,data._id);
+
+  const handleEmojiReaction=async(data:{_id:string,senderId:string,receiverId:string,emojiData:string})=>{
+    setEmoji({_id:data._id,senderId:data.senderId,receiverId:data.receiverId,emojiData:data.emojiData});
+  }
+
+
+
+const groupReactions = (reactions: { userId: string; emoji: string }[] = []) => {
+  return reactions.reduce((acc, r) => {
+    if (!acc[r.emoji]) acc[r.emoji] = [];
+    acc[r.emoji].push(r.userId);
+    return acc;
+  }, {} as Record<string, string[]>);
+};
+
+const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
+  handleEmojiReaction({
+    _id: messageId,
+    senderId: data2.loginUserId,
+    receiverId: data._id,
+    emojiData: currentEmoji, 
+  });
+  setShowReactionDetail(null);
+};
   
+
+
   return (
     <div className="chat">
       <div className="chatHeader">
@@ -383,7 +451,104 @@ interface Pin{
     const isSender = all.senderId === data2.loginUserId;
 
     return (
+
+
+
       <div key={index} id={`message-${all._id}`} className={`message ${isSender ? "sender" : "receiver"}`}>
+     {all.messageType !== "system" &&
+ all.messageType !== "systemPinned" && (
+  <button
+    className="reaction-btn"
+    onClick={() => setReactionMessage(all._id)}
+  >
+    😊
+  </button>
+)}
+     {reactionMessage===all._id && (
+      <div className="emoji-picker-popup" ref={reactionRef}>
+        <EmojiPicker 
+        onEmojiClick={(emojiData)=>{
+          handleEmojiReaction({_id:all._id,senderId:data2.loginUserId,receiverId:data._id,emojiData:emojiData.emoji});
+          setReactionMessage(null);
+        }}
+        />
+
+      </div>
+     )}
+
+     {all.reaction && all.reaction.length > 0 && (
+       <div className="reaction-badge" onClick={() => setShowReactionDetail(all._id)}>
+         {Object.keys(groupReactions(all.reaction)).slice(0, 3).map((emoji) => (
+           <span key={emoji}>{emoji}</span>
+         ))}
+         {all.reaction.length > 1 && <span className="reaction-count">{all.reaction.length}</span>}
+       </div>
+     )}
+
+{showReactionDetail === all._id && (
+  <div className="reaction-detail-popup" ref={reactionDetailRef} >
+    <div className="reaction-detail-header">
+      {all.reaction.length} reaction{all.reaction.length > 1 ? "s" : ""}
+    </div>
+
+    <div className="reaction-pills-row">
+      <button className="add-reaction-pill" onClick={() => setReactionMessage(all._id)}>
+        😊+
+      </button>
+      {Object.entries(groupReactions(all.reaction)).map(([emoji, users]) => (
+        <div key={emoji} className="reaction-pill">
+          <span>{emoji}</span>
+          <span>{users.length}</span>
+        </div>
+      ))}
+    </div>
+
+    <div className="reaction-divider" />
+
+    <div className="reaction-user-list" >
+      {all.reaction.map((r) => {
+        const isMe = r.userId === data2.loginUserId;
+        return (
+          <div
+            key={r.userId}
+            className="reaction-user-row"
+            onClick={() => isMe && handleRemoveReaction(all._id, r.emoji)}
+          >
+            <div
+              className="reaction-avatar"
+              style={{ backgroundColor: isMe ? "#00a884" : colors[(data?.name?.charCodeAt(0) || 0) % colors.length] }}
+            >
+              {isMe ? "Y" : data?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div className="reaction-user-info">
+              <span className="reaction-user-name">{isMe ? "You" : data?.name}</span>
+              {isMe && <span className="reaction-remove-hint">Click to remove</span>}
+            </div>
+            <span className="reaction-emoji-large">{r.emoji}</span>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
         {editingId === all._id ? (
   <div className="editBox">
     <input value={editText} onChange={(e) => setEditText(e.target.value)} className="editInput" />
@@ -462,6 +627,7 @@ interface Pin{
       </div>
     )}
 
+
     <div className="message-time">
       {all.isEdited && <span>Edited </span>}
       {new Date(all.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}
@@ -480,6 +646,7 @@ interface Pin{
     )}
   </>
 )}
+
 
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
@@ -513,7 +680,9 @@ interface Pin{
       </div>
     );
   })}
+  
 </div>
+
 {typing && (
   <div className="typing-indicator">
     <span></span>
@@ -523,7 +692,7 @@ interface Pin{
 )}
       </div>
       <div className="chatFooter">
-        <FiSmile className="footerIcon" />
+        <FooterEmoji setMsg={setMsg} />
         <FiPaperclip className="footerIcon" />
         <form onSubmit={handleSubmit}>
           <input type="text" placeholder="type your message here"  value={msg}  onChange={(e)=>{setMsg(e.target.value);

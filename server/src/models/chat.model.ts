@@ -3,6 +3,10 @@ import {Document,Types} from 'mongoose';
 
 
 
+interface reaction{
+userId:Types.ObjectId,
+emoji:string,
+}
 
 export interface IChat extends Document{
     senderId:string,
@@ -28,6 +32,7 @@ export interface IChat extends Document{
     updatedAt:Date,
     expiresAt?:Date | null,
     notificationSound?:string,
+    reaction?:reaction[],
 }
 
 
@@ -114,6 +119,19 @@ const chatSchema=new mongoose.Schema<IChat>({
         type:Boolean,
         default:false,
     },
+    reaction:[
+        {
+            userId:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"user",
+            },
+            emoji:{
+                type:String,
+                default:"",
+            }
+        },
+
+    ],
 },
 {timestamps:true}, 
 )

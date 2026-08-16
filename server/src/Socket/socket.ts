@@ -9,6 +9,7 @@ import { get_last_message, update_chat_list, update_chat_list_edit } from "../co
 import { store_last_message } from "../controllers/last.message.controller";
 import { totalPendingMessage } from "../controllers/chat.controller";
 import { profileSocket } from "./profile.socket";
+import { emojiOnMessages } from "./emoji.socket";
 import { allPinnedMessage } from "../controllers/profile.controller";
 
 
@@ -33,6 +34,7 @@ io.on('connection',(socket)=>{
         console.log("joined",userId)  
     });
     profileSocket(socket,users,io);
+    emojiOnMessages(socket,users,io);
 
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
