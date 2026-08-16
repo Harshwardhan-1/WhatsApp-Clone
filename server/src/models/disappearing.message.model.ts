@@ -1,13 +1,13 @@
 import mongoose,{Document,Types} from 'mongoose';
 
-export interface Idisappering extends Document{
+export interface Idisappaering extends Document{
     senderId:string,
     receiverId:string,
     duration:string,
 };
 
 
-const disappearingSchema=new mongoose.Schema({
+const disappearingSchema=new mongoose.Schema<Idisappaering>({
     senderId:{
         type:String,
         required:[true,'senderId is missing'],
@@ -26,4 +26,4 @@ const disappearingSchema=new mongoose.Schema({
 
 );
 
-export const disappearingModel=mongoose.model("disappering",disappearingSchema);
+export const disappearingModel=mongoose.model<Idisappaering>("disappering",disappearingSchema);
