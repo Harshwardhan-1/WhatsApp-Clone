@@ -82,6 +82,7 @@ try{
         originalname:data?.originalname,
         expiresAt:duration?new Date(Date.now()+duration):null,
         notificationSound:sound,
+        isPinned:false,
     });
     if(!createIt){
         throw new Error("failed to send message");

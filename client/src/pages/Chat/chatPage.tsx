@@ -17,6 +17,7 @@ import { Docs } from "../../components/ChatMedia/docs/docs";
 import { ShowLinks } from "../../components/ChatMedia/links/link";
 import { renderMessageWithLinks } from "../../utils/linkify/linkify";
 import { addToFavourites } from "../../components/addToFavourites/addToFavourites";
+import { PinMessage } from "../../components/PinMessage/pinMessage";
 import { Bell,BellOff } from "lucide-react";
 
 
@@ -53,6 +54,8 @@ const ChatPage = ({ data, data2 }: Props) => {
   //already markFavourites
   const {alreadyMarked,markAsFavourites,unmarkAsFavourites}=addToFavourites(data2.loginUserId,data._id);
 
+  //pin message
+  const {pinMessage,unpinnedMessage,pinData}=PinMessage(data2.loginUserId,data._id);
 
   
 
@@ -73,6 +76,7 @@ const ChatPage = ({ data, data2 }: Props) => {
   
 
   const [typing,setTyping]=useState(false);
+  const [currentPin, setCurrentPin] = useState(0);
   useEffect(()=>{
     if(!data._id)return;
      userpresence(data._id);
@@ -228,6 +232,27 @@ const ChatPage = ({ data, data2 }: Props) => {
     }
   }
 
+interface Pin{
+  _id:string,
+  senderId:string,
+  receiverId:string,
+  isPinned:boolean,
+}
+
+
+
+
+
+
+
+  const handlePin=async(all:Pin)=>{
+    if(all?.isPinned===false){
+      pinMessage({_id:all._id,senderId:all.senderId,receiverId:all.receiverId});
+    }else{
+      unpinnedMessage({_id:all._id,senderId:all.senderId,receiverId:all.receiverId});
+    }
+  }
+
 
 
   
@@ -311,12 +336,42 @@ const ChatPage = ({ data, data2 }: Props) => {
 
 
 
+{pinData.length > 0 && (
+  <div className="pinned-message-bar">
 
+    <div
+      className="pinned-item"
+      onClick={() => {const pin = pinData[currentPin];
+        document.getElementById(`message-${pin._id}`)?.scrollIntoView({behavior: "smooth",block: "center",
+          });
+      }}
+    >
+      <span className="pin-symbol">📌</span>
+      <div className="pinned-content">
+        <span className="pinned-title">Pinned message</span>
+        <span className="pinned-preview">
+          {pinData[currentPin].message}
+        </span>
+      </div>
+    </div>
 
+    {pinData.length > 1 && (
+      <div className="pinned-navigation">
+        <button onClick={() => setCurrentPin( currentPin === 0? pinData.length - 1:currentPin - 1)}>
+          ‹</button>
+        <span> {currentPin + 1}/{pinData.length}</span>
+        <button onClick={() =>setCurrentPin(currentPin === pinData.length - 1?0:currentPin + 1)}>›
+        </button>
+      </div>
+    )}
+  </div>
+)}
       <div className="chatBody">
         <div className="encryptBox">
            Messages are end-to-end encrypted. No one outside this chat can read or listen to them.
         </div>
+
+
 
         <p>jisko message bhejna ha uski id {data?._id}</p> 
         <p>jisko message bhejna ha uska email {data?.email}</p>
@@ -328,7 +383,7 @@ const ChatPage = ({ data, data2 }: Props) => {
     const isSender = all.senderId === data2.loginUserId;
 
     return (
-      <div key={index}className={`message ${isSender ? "sender" : "receiver"}`}>
+      <div key={index} id={`message-${all._id}`} className={`message ${isSender ? "sender" : "receiver"}`}>
         {editingId === all._id ? (
   <div className="editBox">
     <input value={editText} onChange={(e) => setEditText(e.target.value)} className="editInput" />
@@ -340,14 +395,25 @@ const ChatPage = ({ data, data2 }: Props) => {
 ) : (
   <>
   
+  {all.isPinned && (
+    <span className="pin-icon-on-message">📌</span>
+  )}
     {/* TEXT MESSAGE */}
-    {all.messageType !== "file" && all.messageType!=="system" && (
+    {all.messageType !== "file" && all.messageType!=="system" && all.messageType!=="systemPinned" && (
       <div className="message-text">{renderMessageWithLinks(all.message)}</div>
     )}
     
     {all.messageType === "system" && (
   <div className="system-message">
     {isSender ? `${all.message}` : `${all.message}`}
+  </div>
+)}
+
+
+
+{all.messageType=== "systemPinned" && (
+  <div className="system-message">
+    {isSender?`You Pinned a message`:`They Pinned a message`}
   </div>
 )}
 
@@ -417,7 +483,7 @@ const ChatPage = ({ data, data2 }: Props) => {
 
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
-{all.messageType !== "system" && (
+{all.messageType !== "system" && all.messageType!=="systemPinned" &&  (
   <div className="menu-container">
     <button className="menu-btn" onClick={() => setOpenMenu(openMenu === index ? null : index)}>⋮</button>
 
@@ -435,9 +501,12 @@ const ChatPage = ({ data, data2 }: Props) => {
         ) : (
           <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
         )}
-        {all.messageType === "text" && (<div onClick={()=>{navigator.clipboard.writeText(all.message);setOpenMenu(null);}} className="menu-item">Copy</div>)}
-
-      </div>
+        {all.messageType === "text" && (<div onClick={()=>{navigator.clipboard.writeText(all.message);setOpenMenu(null);}} className="menu-item">Copy</div>)}  
+  {isSender && (
+     <div onClick={()=>handlePin({ _id: all._id,senderId: data2.loginUserId,receiverId: data._id,isPinned: all?.isPinned
+      })
+    }className="menu-item">{all.isPinned ? "unpinned" : "pin"}</div>
+)}      </div>
     )}
   </div>
 )}

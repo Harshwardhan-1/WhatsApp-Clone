@@ -22,6 +22,7 @@ interface MessageItem{
     isEdited:boolean,
     createdAt:Date,
     updatedAt:Date,
+    isPinned:boolean,
 }
 export interface Message{
     _id:string,
@@ -40,6 +41,7 @@ export interface Message{
     createdAt:Date,
     updatedAt:Date,
     notificationSound?:string | null,
+    isPinned:boolean,
 }
 interface error{
     msg:string,
@@ -145,7 +147,16 @@ export function ChatTalk(data: User, data2: CurrentUser) {
    }
 }
 
-    
+const handleUpdatePinMessage=(message:Message)=>{
+    const isCurrentChat =(message.senderId === senderId && message.receiverId === receiverId) ||
+        (message.senderId === receiverId && message.receiverId === senderId);
+        if(isCurrentChat){
+            setAllMessages(prev=>prev.map(msg=>msg._id===message._id?message:msg));
+        }
+}
+
+
+
     
 
  
@@ -183,6 +194,7 @@ export function ChatTalk(data: User, data2: CurrentUser) {
         socket.on("isSeenStatus",handleIsMarkSeen);
         socket.on("isDelivered_mark",handleIsDeliveredMark);
         socket.on("disappear_message",handleDisappearMsg);
+        socket.on("update_pin_message",handleUpdatePinMessage);
         socket.on("chat_cleared",(data:{senderId:string,receiverId:string})=>{
             loadMessage();
         });
@@ -202,6 +214,7 @@ export function ChatTalk(data: User, data2: CurrentUser) {
          socket.off("isDelivered_mark",handleIsDeliveredMark);
          socket.off("chat_cleared");
          socket.off("disappear_message",handleDisappearMsg);
+         socket.off("update_pin_message",handleUpdatePinMessage);
         };
     },[locadata?._id,senderId,receiverId]);
 

@@ -53,6 +53,7 @@ export default App
 
 
 //new task
-//1 show real time isSeen,send,deleiver
-//2 show real time update to chatlist
-//3 typing indicator
+//1 add pin option
+//2 add smile option
+//3 add group chat
+//4 add people in group using qr

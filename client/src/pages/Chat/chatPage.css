@@ -503,6 +503,61 @@
   }
 }
 
+.pinned-message-bar {
+  height: 52px;
+  min-height: 52px;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #d1d7db;
+  box-sizing: border-box;
+}
+
+.pinned-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pin-symbol {
+  font-size: 18px;
+  color: #54656f;
+}
+
+.pinned-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.pinned-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #00a884;
+}
+
+.pinned-preview {
+  font-size: 13px;
+  color: #667781;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 500px;
+}
+
+.pinned-arrow {
+  font-size: 22px;
+  color: #54656f;
+  margin-left: 10px;
+}
+
+
 @keyframes typingBounce {
   0%,
   80%,

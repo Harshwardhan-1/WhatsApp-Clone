@@ -9,6 +9,7 @@ import { get_last_message, update_chat_list, update_chat_list_edit } from "../co
 import { store_last_message } from "../controllers/last.message.controller";
 import { totalPendingMessage } from "../controllers/chat.controller";
 import { profileSocket } from "./profile.socket";
+import { allPinnedMessage } from "../controllers/profile.controller";
 
 
 
@@ -170,6 +171,14 @@ io.on('connection',(socket)=>{
         if(updateChatList){
            socket.emit("chat_list_update",updateChatList);
         }
+
+
+        //pin part
+               const message=await allPinnedMessage({senderId:data.senderId,receiverId:data.receiverId});
+                socket.emit("all_pinned",(message));
+                if(receiverSocketId){
+                    io.to(receiverSocketId).emit("all_pinned",(message));
+                }
     }catch(err){
         console.log(err);
             socket.emit("error_msg",err);

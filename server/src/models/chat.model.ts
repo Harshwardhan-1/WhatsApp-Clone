@@ -22,6 +22,7 @@ export interface IChat extends Document{
     isClear:string[],
     isSenderClear?:boolean,
     isReceiverClear?:boolean,
+    isPinned?:boolean,
     isEdited:boolean,
     createdAt:Date,
     updatedAt:Date,
@@ -108,6 +109,10 @@ const chatSchema=new mongoose.Schema<IChat>({
     notificationSound:{
         type:String,
         default:"off",
+    },
+    isPinned:{
+        type:Boolean,
+        default:false,
     },
 },
 {timestamps:true}, 
