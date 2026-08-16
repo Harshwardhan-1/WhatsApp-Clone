@@ -27,7 +27,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/dotenv": "^6.1.1",
@@ -38,11 +37,7 @@
     "@types/nodemon": "^1.19.6",
     "@types/prettier": "^2.7.3",
     "@types/socket.io": "^3.0.1",
-    "eslint": "^10.8.1",
-    "globals": "^17.11.0",
-    "jiti": "^2.7.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.67.0"
+    "typescript": "^5.9.3"
   }
 }
