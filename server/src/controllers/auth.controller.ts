@@ -123,14 +123,12 @@ export const signin=async(req:Request,res:Response,next:NextFunction):Promise<vo
 export const logout=async(req:Request,res:Response,next:NextFunction):Promise<void>=>{
 try{
     const token=req.cookies?.token;
-    if(!token){
-        res.status(400).json({
-            success:false,
-            message:"not login",
-        });
-        return;
-    }
-    res.clearCookie(token);
+    res.clearCookie("token",{
+        httpOnly:true,
+        secure:true,
+        sameSite:"none",
+        partitioned:true,
+    });
     res.status(200).json({
         success:true,
         message:"successfully logout",
@@ -141,10 +139,24 @@ try{
 }
 
 
-
-
-
-
+export const me=async(req:authRequest,res:Response,next:NextFunction)=>{
+    try{
+        const user=req.user;
+        if(!user){
+            return res.status(401).json({
+                success:false,
+                message:"Unauthorized",
+            });
+        }
+        return res.status(200).json({
+            success:true,
+            message:"successfull",
+            user
+        });
+    }catch(err){
+        next(err);
+    }
+}
 
 
 
