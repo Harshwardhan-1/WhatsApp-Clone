@@ -11,6 +11,7 @@ import { totalPendingMessage } from "../controllers/chat.controller";
 import { profileSocket } from "./profile.socket";
 import { emojiOnMessages } from "./emoji.socket";
 import { allPinnedMessage } from "../controllers/profile.controller";
+import { stories } from "./stories.socket";
 
 
 
@@ -35,6 +36,7 @@ io.on('connection',(socket)=>{
     });
     profileSocket(socket,users,io);
     emojiOnMessages(socket,users,io);
+    stories(socket,users,io);
 
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{

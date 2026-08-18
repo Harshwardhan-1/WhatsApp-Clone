@@ -24,7 +24,6 @@ import { emojiOnMessages } from "../../hooks/use.emoji.hook";
 import { FooterEmoji } from "../../components/FooterEmoji/FooterEmoji";
 
 
-
 interface User {
     _id: string;
     name: string;
@@ -322,6 +321,31 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
   setShowReactionDetail(null);
 };
   
+
+
+
+
+//story logic here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//story logic end
 
 
   return (

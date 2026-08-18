@@ -1,6 +1,7 @@
 import { useState,useEffect } from "react";
 import { ShowAllUser } from "../../hooks/usechat.hooks";
 import { socket } from "../../utils/socket";
+import { useNavigate } from "react-router-dom";
 import "./ChatListPage.css";
 import {motion,AnimatePresence} from 'framer-motion';
 import { userChatListPresence } from "../../services/user.presence.service";
@@ -122,6 +123,12 @@ const bLast = lastMessages.find((msg) =>(msg.senderId === userData?.loginUserId 
 const aTime = aLast ? new Date(aLast?.updatedAt).getTime() : 0;const bTime = bLast ? new Date(bLast?.updatedAt).getTime() : 0;
   return bTime - aTime;
 });
+const navigate=useNavigate();
+
+
+const handleStories=()=>{
+  navigate("/story",{state:{senderId:userData?.loginUserId}});
+}
   
   
 
@@ -142,6 +149,7 @@ const aTime = aLast ? new Date(aLast?.updatedAt).getTime() : 0;const bTime = bLa
         <button>Unread</button>
         <button >Favorites</button>
         <button>Groups</button>
+        <button onClick={handleStories}>Stories</button>
       </div>
 
       <div className="chatPage__userList">
