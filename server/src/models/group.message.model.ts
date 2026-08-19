@@ -14,16 +14,16 @@ interface ParentReply{
 
 export interface IGroupMessage extends Document{
     
-    groupId:string,
+    groupId:Types.ObjectId,
     senderId:string,
-    receiverId:Types.ObjectId[],
+
 
     message:string,
 
 
     parentReply?:ParentReply[],
 
-    messageType:"text" | "file" | "system",
+    messageType:string,
 
 
     fileUrl?:string,
@@ -59,7 +59,7 @@ export interface IGroupMessage extends Document{
 
 const groupChatSchema=new mongoose.Schema<IGroupMessage>({
     groupId:{
-        type:String,
+        type:mongoose.Schema.Types.ObjectId,
         required:[true,'groupId is required'],
         index:true,
     },
@@ -67,13 +67,6 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
         type:String,
         required:[true,'senderId is missing'],
     },
-    receiverId:[
-        {
-            type:Types.ObjectId,
-            ref:"user",
-            default:[],
-        },
-    ],
     message:{
         type:String,
         required:[true,'message is missing'],
@@ -177,5 +170,9 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
 {timestamps:true}
 );
 
+
+
+
+groupChatSchema.index({expiresAt:1},{expireAfterSeconds:0});
 
 export const groupMessage=mongoose.model<IGroupMessage>("group_message",groupChatSchema);

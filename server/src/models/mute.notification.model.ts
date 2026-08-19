@@ -27,3 +27,44 @@ export const notificationSchema=new mongoose.Schema<INotification>({
 
 
 export const notification=mongoose.model<INotification>("notification",notificationSchema);
+
+
+
+
+
+
+
+
+
+
+export interface IGroupNotification extends Document{
+    groupId:string,
+    senderId:string,
+    duration:string,
+}
+
+
+
+
+const muteGroupNotification=new mongoose.Schema<IGroupNotification>({
+    groupId:{
+        type:String,
+        required:[true,'groupId is required'],
+    },
+    senderId:{
+        type:String,
+        required:[true,'senderId is required'],
+    },
+    duration:{
+        type:String,
+        enum:["off","8hrs","1week","always"],
+        default:"off",
+    }
+},
+{timestamps:true}
+);
+
+
+
+
+export const muteGroupNotificationModel=mongoose.model("group_mute_notification",muteGroupNotification);

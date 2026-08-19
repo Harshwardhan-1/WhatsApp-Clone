@@ -27,3 +27,46 @@ const disappearingSchema=new mongoose.Schema<Idisappaering>({
 );
 
 export const disappearingModel=mongoose.model<Idisappaering>("disappering",disappearingSchema);
+
+
+
+
+
+
+
+
+//this one is for group message Model foe disappearing message
+
+
+
+
+export interface IDisappearingMessageModel extends Document{
+    groupId:string,
+    senderId:string,
+    duration:string,
+}
+
+
+
+
+
+const groupDisappearingMessage=new mongoose.Schema<IDisappearingMessageModel>({
+    groupId:{
+        type:String,
+        required:[true,'group id is required'],
+    },
+    senderId:{
+        type:String,
+        required:[true,'senderId is required'],
+    },
+    duration:{
+        type:String,
+        default:"off",
+    },
+},
+{timestamps:true}
+);
+
+
+export const groupDisappearingMessageModel=
+mongoose.model<IDisappearingMessageModel>("groupDisappeingMessage",groupDisappearingMessage)
