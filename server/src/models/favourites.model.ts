@@ -27,3 +27,43 @@ const favouritesSchema=new mongoose.Schema<IFavourites>({
 
 
 export const favourites=mongoose.model<IFavourites>("favourites",favouritesSchema);
+
+
+
+
+
+
+
+
+
+
+export interface IGroupFavourites extends Document{
+    groupId:Types.ObjectId, //group id
+    senderId:Types.ObjectId,
+    isMarkedAsFavourites:boolean,
+}
+
+
+
+const groupFavouritesSchema=new mongoose.Schema<IGroupFavourites>({
+groupId:{
+    type:mongoose.Schema.Types.ObjectId,
+    required:[true,'group id is required'],
+},
+senderId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"user",
+    required:[true,'senderId is required'],
+},
+isMarkedAsFavourites:{
+    type:Boolean,
+    default:false,
+}
+},
+{timestamps:true}
+);
+
+
+
+
+export const groupFavourites=mongoose.model<IGroupFavourites>("group_Favourites",groupFavouritesSchema);

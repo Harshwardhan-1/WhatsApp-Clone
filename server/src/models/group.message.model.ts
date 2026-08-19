@@ -34,7 +34,9 @@ export interface IGroupMessage extends Document{
     sizeInMb?:number,
 
 
-    
+    isSend:boolean,
+    isDelivered:boolean,
+    isSeen:boolean,
     isPinned?:boolean,
     isEdited:boolean,
 
@@ -124,7 +126,18 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
         type:Boolean,
         default:false,
     },
-
+    isSend:{
+        type:Boolean,
+        default:false,
+    },
+    isDelivered:{
+        type:Boolean,
+        default:false,
+    },
+    isSeen:{
+        type:Boolean,
+        default:false,
+    },
      deliveredTo:[
         {
         type:Types.ObjectId,
