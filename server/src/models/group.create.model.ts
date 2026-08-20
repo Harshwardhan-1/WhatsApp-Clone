@@ -21,7 +21,8 @@ export interface IGroupMessage extends Document{
      canChangeGroupName:boolean,
      canChangeGroupImage:boolean,
      canAddGroupMembers:boolean,
-     changeDisapperingMessageSetting:boolean,
+     changeDisappearingMessageSetting:boolean,
+     onlyAdminSendMessage:boolean,
 
      groupPermission:boolean,
 
@@ -88,7 +89,11 @@ const groupChat=new mongoose.Schema<IGroupMessage>({
         type:Boolean,
         default:false,
     },
-    changeDisapperingMessageSetting:{
+    changeDisappearingMessageSetting:{
+        type:Boolean,
+        default:false,
+    },
+    onlyAdminSendMessage:{
         type:Boolean,
         default:false,
     },

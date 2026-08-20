@@ -21,7 +21,7 @@ export interface IGroupMessage extends Document{
     message:string,
 
 
-    parentReply?:ParentReply[],
+    parentReply:ParentReply[],
 
     messageType:string,
 
@@ -86,7 +86,8 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
             },
             message:{
                 type:String,
-            }
+            },
+        default:[],
         },
     ],
     messageType:{
