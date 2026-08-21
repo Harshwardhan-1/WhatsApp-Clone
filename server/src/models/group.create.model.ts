@@ -6,7 +6,7 @@ export interface IGroupMessage extends Document{
     inviteToken:string,
     groupName:string,
     //this sender id is basically for a person who create group
-     groupCreatorId:string,
+     groupCreatorId:Types.ObjectId,
       
      //this is basically all the receiverId we will convert it to objectId
      peoplesId:Types.ObjectId[],
@@ -38,19 +38,20 @@ const groupChat=new mongoose.Schema<IGroupMessage>({
 
     inviteToken:{
         type:String,
-        required:[true,'required token is required'],
+        required:[true,'invitetoken is required'],
         unique:[true,'invite token must be unique'],
         default:"",
     },
     groupName:{
         type:String,
         required:[true,'groupName is required'],
-        unique:[true,'groupName must be unique'],
+        // unique:[true,'groupName must be unique'],
         trim:true,
     },
         groupCreatorId:{
-        type:String,
-        required:[true,'group id is missing'],
+          type:Types.ObjectId,
+          ref:"user",
+          required:[true,'group id is missing'],
     },
     peoplesId:[
         {
@@ -117,4 +118,4 @@ updatedAt:{
 
 
 
-export const groupChatModel=mongoose.model<IGroupMessage>("group_message",groupChat);
+export const groupChatModel=mongoose.model<IGroupMessage>("group_create",groupChat);
