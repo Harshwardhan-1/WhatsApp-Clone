@@ -71,7 +71,11 @@ try{
         let senderId=findLastMessage[i].senderId;
         let receiverId=findLastMessage[i].receiverId;
         const findLastChat=await personalChat.findOne({
-            $or:[{senderId:senderId,receiverId:receiverId},{senderId:receiverId,receiverId:senderId},]
+            $or:[
+                {senderId:senderId,receiverId:receiverId},
+                {senderId:receiverId,receiverId:senderId},
+            ],
+            messageType:{$nin:["system"]},
         }).sort({createdAt:-1});
 
         if(!findLastChat){
@@ -120,7 +124,8 @@ export const  update_chat_list=async(data:{senderId:string,receiverId:string})=>
         {
             senderId:data.receiverId,
             receiverId:data.senderId,
-        },]
+        },],
+        messageType:{$nin:["system"]}
         }).sort({createdAt:-1});
         
 

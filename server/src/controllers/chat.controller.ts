@@ -1,11 +1,9 @@
 import {Request,Response,NextFunction} from 'express';
 import { personalChat } from '../models/chat.model';
 import { userlastpresence } from '../models/user.lastpresence.model';
-import { disappearingMessageValidator } from '../validators/disappearing.message.validator';
 import { Types } from 'mongoose';
 import { disappearingModel } from '../models/disappearing.message.model';
 import { durationtoMs } from '../helper/durationtoMs';
-import { string } from 'zod';
 import { notification } from '../models/mute.notification.model';
 
 interface personalMsg{

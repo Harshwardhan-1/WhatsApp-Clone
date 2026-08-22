@@ -3,63 +3,50 @@ import { groupChatModel } from '../models/group.create.model';
 import mongoose from 'mongoose';
 import { authRequest } from '../types/auth.Requests.types';
 import  QRCode from "qrcode";
+import { groupMessage } from '../models/group.message.model';
 
 
 
-//create group /api/v1/create
-export const createGroup=async(req:authRequest,res:Response,next:NextFunction)=>{
+
+
+export const createGroup=async(data:{groupName:string,senderId:string,peoplesId:[]})=>{
     try{
-        const {groupName,senderId,peoplesId}=req.body;
-        if(!groupName || !senderId){
-            return res.status(400).json({
-                success:false,
-                message:"group name is required",
-            });
+        if(!data.groupName || !data.senderId){
+            throw new Error("group name is required");
         }
-        if(peoplesId.length===0){
-            return res.status(400).json({
-                success:false,
-                message:"there should be atleast one person in the group",
-            });
+        if(data.peoplesId.length===0){
+          throw new Error("there should be atleast one person in the group");
         }
-        const checkName=await groupChatModel.findOne({groupName});
-        if(checkName){
-            return res.status(409).json({
-                success:false,
-                message:"this group name is already taken please select some diffrent name",
-            });
-        }
-        const adminId=new mongoose.Types.ObjectId(senderId);
 
+        const adminId=new mongoose.Types.ObjectId(data.senderId);
         const inviteToken=`${Date.now()}-${Math.round(Math.random()*1e9)}`;
         const create=await groupChatModel.create({
-            inviteToken,
-            groupName:groupName,
-            groupCreatorId:senderId,
+            inviteToken, 
+            groupName:data.groupName,
+            groupCreatorId:data.senderId,
         });
         if(!create){
-            return res.status(500).json({
-                success:false,
-                message:"internal server error",
-            });
+            throw new Error("internal server error")
         }
         create.admin.push(adminId);
-        await create.save();
-        for(let i=0;i<peoplesId.length;i++){
-            const id=new mongoose.Types.ObjectId(peoplesId[i]);
+        for(let i=0;i<data.peoplesId.length;i++){
+            const id=new mongoose.Types.ObjectId(data.peoplesId[i]);
             create.peoplesId.push(id);
-            await create.save();
         }
         create.peoplesId.push(adminId);
         await create.save();
         await create.populate("peoplesId","name avatar");
-        return res.status(200).json({
-            success:true,
-            message:"group created successfully",
-            create
+        await create.populate("groupCreatorId","name avatar");
+        const creator:any=create.groupCreatorId;
+        await groupMessage.create({
+            groupId:create._id,
+            senderId:data.senderId,
+            message:`${creator.name} created this group`,
+            messageType:"system",
         });
+        return {message:"group created successfully",totalPeoples:create.peoplesId.length,create};
     }catch(err){
-        next(err);
+        throw err;
     }
 }
 
@@ -95,7 +82,7 @@ export const deleteGroup=async(req:authRequest,res:Response,next:NextFunction)=>
                 message:"group not found",
             });
         }
-        if(findGroup.groupCreatorId!==senderId){
+        if(findGroup.groupCreatorId.toString()!==senderId){
             return res.status(400).json({
                 success:false,
                 message:"not have permission to delete this group",
@@ -229,6 +216,8 @@ export const groupPermission=async(data:
     changeNameSettings:boolean,
     changeImageSettings:boolean,
     changeAddGroupMembers:boolean,
+    changeDisapperingMessageSetting:boolean,
+    onlyAdminSendMessage:boolean,
 })=>{
     try{
         const group=await groupChatModel.findById(data._id);
@@ -242,6 +231,8 @@ export const groupPermission=async(data:
             group.canChangeGroupName=data.changeNameSettings;
             group.canChangeGroupImage=data.changeImageSettings;
             group.canAddGroupMembers=data.changeAddGroupMembers;
+            group.changeDisappearingMessageSetting=data.changeDisapperingMessageSetting;
+            group.onlyAdminSendMessage=data.onlyAdminSendMessage;
             await group.save();
             return group;
         }else{
@@ -429,6 +420,10 @@ export const personLeaveGroup=async(data:{_id:string,senderId:string})=>{
 
 //here we add normally direct
 
+
+
+//here now be emit and store message like added by someone aesa implement karna ha ab
+
 export const addMembers=async(data:{_id:string,senderId:string,receiverId:string})=>{
     try{
         const group=await groupChatModel.findById(data._id);
@@ -577,18 +572,3 @@ export const groups=async(data:{senderId:string})=>{
         throw err;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//read by delievered to this we have to track 
