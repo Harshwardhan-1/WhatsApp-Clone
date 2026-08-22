@@ -320,32 +320,6 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
   });
   setShowReactionDetail(null);
 };
-  
-
-
-
-
-//story logic here
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//story logic end
 
 
   return (

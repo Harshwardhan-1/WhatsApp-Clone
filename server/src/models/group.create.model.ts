@@ -118,4 +118,4 @@ updatedAt:{
 
 
 
-export const groupChatModel=mongoose.model<IGroupMessage>("group_create",groupChat);
+export const groupChatModel=mongoose.model<IGroupMessage>("create_group",groupChat);

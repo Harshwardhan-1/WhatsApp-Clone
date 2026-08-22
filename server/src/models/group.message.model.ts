@@ -189,4 +189,4 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
 
 groupChatSchema.index({expiresAt:1},{expireAfterSeconds:0});
 
-export const groupMessage=mongoose.model<IGroupMessage>("group_message",groupChatSchema);
+export const groupMessage=mongoose.model<IGroupMessage>("group__messages",groupChatSchema);

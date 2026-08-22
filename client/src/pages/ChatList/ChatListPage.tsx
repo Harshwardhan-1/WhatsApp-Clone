@@ -130,6 +130,9 @@ const handleStories=()=>{
   navigate("/story",{state:{senderId:userData?.loginUserId}});
 }
   
+const handleGroups=async()=>{
+  navigate("/group",{state:{senderId:userData?.loginUserId}});
+}
   
 
   return (
@@ -148,7 +151,7 @@ const handleStories=()=>{
         <button>All</button>
         <button>Unread</button>
         <button >Favorites</button>
-        <button>Groups</button>
+        <button onClick={handleGroups}>Groups</button>
         <button onClick={handleStories}>Stories</button>
       </div>
 

@@ -11,7 +11,7 @@ import { groupMessage } from '../models/group.message.model';
 
 export const createGroup=async(data:{groupName:string,senderId:string,peoplesId:[]})=>{
     try{
-        if(!data.groupName || !data.senderId){
+        if(!data.groupName || !data.senderId){ 
             throw new Error("group name is required");
         }
         if(data.peoplesId.length===0){

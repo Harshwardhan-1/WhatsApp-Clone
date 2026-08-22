@@ -177,7 +177,7 @@ export const allUsers=async(req:authRequest,res:Response,next:NextFunction)=>{
             });
             return;
         }
-        res.status(200).json({
+       return res.status(200).json({
             success:true,
             message:"all users",
             data:{

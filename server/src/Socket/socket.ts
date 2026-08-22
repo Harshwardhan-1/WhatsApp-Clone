@@ -12,6 +12,7 @@ import { profileSocket } from "./profile.socket";
 import { emojiOnMessages } from "./emoji.socket";
 import { allPinnedMessage } from "../controllers/profile.controller";
 import { stories } from "./stories.socket";
+import { groupChat } from "./group.message.socket";
 
 
 
@@ -26,6 +27,7 @@ const io=new Server(server,{
 });
 const users:{[key:string]:string}={};
 let activeChats:Record<string,string>={};
+let activeGroupChats:Record<string,string>={};
 io.on('connection',(socket)=>{
     console.log("connected:",socket.id);
 
@@ -37,13 +39,25 @@ io.on('connection',(socket)=>{
     profileSocket(socket,users,io);
     emojiOnMessages(socket,users,io);
     stories(socket,users,io);
+    groupChat(socket,users,io,activeGroupChats);
 
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;
     });
+
+
+    socket.on("active_group_user",(data:{senderId:string,groupId:string})=>{
+        activeGroupChats[data.senderId]=data.groupId;
+    })
+
+
     socket.on("not_active_user",(data:{senderId:string,receiverId:string})=>{
         delete activeChats[data.senderId];
+    });
+
+    socket.on("not_activeGroupChatUser",(data:{senderId:string,groupId:string})=>{
+        delete activeGroupChats[data.senderId];
     })
 
 
