@@ -190,9 +190,9 @@ const handleUpdatePinMessage=(message:Message)=>{
         (message.senderId === receiverId && message.receiverId === senderId);
         if(isCurrentChat) {
             setAllMessages(prev => [...prev, message]);
-            if(message.senderId!==data2.loginUserId  && message?.notificationSound=== "off"){
+        }
+         if(message.senderId!==data2.loginUserId  && message?.notificationSound=== "off"){
                 notificationSound();
-            }
         }
 });
         socket.on('error_msg',handleError);

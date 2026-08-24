@@ -4,6 +4,7 @@ import { env } from "../configs/env.config";
 import { showApiError } from "../utils/showApiError";
 import {socket} from '../utils/socket';
 import { useRef } from "react";
+import { notificationSound } from "../notification/notification.sound";
 
 export interface ChatUser {
     _id: string;
@@ -37,11 +38,16 @@ export  function groupChatHook(senderId:string){
 
 
     const handleReceiveMessage=(message:any)=>{
-        const isInCurrentGroup=message.groupId.toString()===groupIdRef.current.toString();;
-        if(isInCurrentGroup){
-         setMessages(prev => [...prev, message]);
-        }
+    const isInCurrentGroup=message.groupId.toString()===groupIdRef.current.toString();;
+    if(isInCurrentGroup){
+     setMessages(prev => [...prev, message]);
     }
+    const msgSenderId = message.senderId?._id ? message.senderId._id.toString() : message.senderId?.toString();
+    if(msgSenderId !== senderId && message?.notificationSound !== "8hrs" && message?.notificationSound!=="1week" && message?.notificationSound!=="always"){
+        notificationSound();
+    }
+}
+
 
      const handleMsgDelivered=(updatedMessages:any)=>{
            setMessages(prev=>prev.map(msg=>{
@@ -109,6 +115,11 @@ const handleEmojiOperation = (msg: any) => {
         prev.map((m) => (m._id === msg._id ? { ...m, reaction: msg.reaction } : m))
     );
 };
+
+
+ const clearChat=()=>{
+    setMessages([]);
+ }
    
 
     useEffect(()=>{
@@ -143,6 +154,7 @@ const handleEmojiOperation = (msg: any) => {
     socket.on("group_message_edited",handleGroupEditMessage);
     socket.on("reply_on_parent_message",handleParentReply);
     socket.on("emoji_operation",handleEmojiOperation);
+    socket.on("clear_all_chat",clearChat);
     
 
 
@@ -159,6 +171,7 @@ const handleEmojiOperation = (msg: any) => {
         socket.off("group_message_edited",handleGroupEditMessage);
         socket.off("reply_on_parent_message",handleParentReply);
         socket.off("emoji_operation",handleEmojiOperation);
+        socket.off("clear_all_chat",clearChat);
     }
     },[]);
     
@@ -195,6 +208,20 @@ const handleEmojiOperation = (msg: any) => {
     }
 
 
+    const groupFile=(data:{_id:string,senderId:string,message:string,messageType:string,
+        fileUrl:string,mimetype:string,sizeInKb:number,sizeInMb:number,
+        filename:string,orignalname:string
+    })=>{
+        socket.emit("send_group_message",(data));
+    }
+
+
+
+    const clearGroupChatUser=(data:{_id:string,senderId:string})=>{
+        socket.emit("clear_user_group_chat",(data));
+    }
+
+
     
     
 
@@ -211,5 +238,7 @@ const handleEmojiOperation = (msg: any) => {
     handleEditMessage,
     messageInfo,
     groupEmoji,
+    groupFile,
+    clearGroupChatUser,
 };
 }

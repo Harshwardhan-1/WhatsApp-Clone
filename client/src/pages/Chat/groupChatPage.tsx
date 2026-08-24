@@ -7,6 +7,14 @@ import { useEffect } from "react";
 import { socket } from "../../utils/socket";
 import { MsgInfo } from "../../components/msgInfo/msgInfo";
 import EmojiPicker from "emoji-picker-react";
+import axios from "axios";
+import {env} from '../../configs/env.config';
+import { showApiError } from "../../utils/showApiError";
+import { GroupMedia } from "../../components/GroupMedia/media/media";
+import { GroupDocs } from "../../components/GroupMedia/docs/docs";
+import { renderMessageWithLinks } from "../../utils/linkify/linkify";
+import { GroupLinks } from "../../components/GroupMedia/links/link";
+import { GroupMuteNotification } from "../../components/GroupMuteNotification/GroupMuteNotification";
 
 
 
@@ -18,6 +26,21 @@ function getSenderColor(id: string) {
         hash = id.charCodeAt(i) + ((hash << 5) - hash);
     }
     return senderColors[Math.abs(hash) % senderColors.length];
+}
+
+// converts sizeInKb (only source used, since sizeInMb field is stored buggy in db)
+// to a human readable KB/MB label
+function formatFileSize(sizeInKb?: number) {
+    if (sizeInKb === undefined || sizeInKb === null || isNaN(sizeInKb)) return "";
+    if (sizeInKb < 1024) return `${sizeInKb.toFixed(2)} KB`;
+    return `${(sizeInKb / 1024).toFixed(2)} MB`;
+}
+
+// builds a usable src/href from fileUrl, handling relative paths from backend
+function resolveFileUrl(fileUrl?: string) {
+    if (!fileUrl) return "";
+    if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) return fileUrl;
+    return `${env.backendUrl}${fileUrl.startsWith("/") ? "" : "/"}${fileUrl}`;
 }
 
 
@@ -42,6 +65,8 @@ export function GroupChat() {
          handleEditMessage,
          messageInfo,
          groupEmoji,
+         groupFile,
+         clearGroupChatUser,
         } = groupChatHook(senderId);
     const [showModal, setShowModal] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -164,6 +189,76 @@ export function GroupChat() {
         setShowReactionDetail(null);
     };
 
+
+
+    const [file,setFile]=useState<File>();
+      const [activeOption, setActiveOption] = useState<string | null>(null);
+    
+
+
+
+    const handleFileSubmit=async(e:React.FormEvent<HTMLFormElement>)=>{
+        e.preventDefault();
+        if(!file){
+            alert("file not found");
+            return;
+        }
+        try{
+        const formData=new FormData();
+        formData.append("file",file);
+
+        const res=await axios.post(`${env.backendUrl}/api/v1/upload`,formData,{withCredentials:true});
+        if(res.data.success){
+            const data=res.data.data;
+            groupFile({_id:selectedGroup._id,senderId,message:data.path,messageType:"file",
+                fileUrl:data.path,mimetype:data.mimetype,sizeInKb:data.sizeInKb,sizeInMb:data.sizeInMb,
+                filename:data.fileName,orignalname:data.orignalname,
+            });
+        }
+        }catch(err){
+            showApiError(err);
+            console.log(err);
+        }
+    }
+
+   const [showMenu,setShowMenu]=useState<boolean>(false);
+
+
+
+
+
+
+
+
+
+
+
+  
+  const handleSelect=(value:string)=>{
+    if(value==="clear chat"){
+        if(!window.confirm("confirm you want to clear chat")){
+            return;
+        }
+        clearGroupChatUser({_id:selectedGroup._id,senderId});
+        return;
+    }
+    if(value==="media"){
+      setActiveOption("media");
+      setShowMenu(false);
+    }
+    if(value==="docs"){
+        setActiveOption("docs");
+        setShowMenu(false);
+    }
+    if(value==="links"){  
+      setActiveOption("links");
+      setShowMenu(false);
+    }
+    if(value==="mute notification"){
+        setActiveOption("mute notification");
+        setShowMenu(false);
+    }
+  }
     return (
         <div className="group-chat">
 
@@ -185,8 +280,67 @@ export function GroupChat() {
                     <div className="whatsapp-screen">
                         <img src="/WhatsApp.svg"  alt="WhatsApp"/>
                     </div>
-                ) : (
+                ) : ( 
                  <div className="chat-screen"> 
+
+          <div className="chatOptions">
+        <button className="threeDotBtn" onClick={() => setShowMenu(prev => !prev)}>⋮</button>
+        {showMenu && (
+            <div className="optionsMenu">
+                <button onClick={() => handleSelect("clear chat")}>Clear chat</button>
+                <button onClick={() => handleSelect("disappearing message")}>Disappearing messages</button>
+                <button onClick={() => handleSelect("mute notification")}>Mute notifications</button>
+                <button onClick={() => handleSelect("media")}>Media</button>
+                <button onClick={() => handleSelect("docs")}>Docs</button>
+                <button onClick={() => handleSelect("links")}>Links</button>
+            </div>
+        )}
+    </div>
+
+    {
+      activeOption==="media" && (
+        <GroupMedia
+        onBack={()=>setActiveOption(null)}
+        _id={selectedGroup._id}
+        senderId={senderId}
+        />
+      )}
+
+
+      {
+      activeOption==="docs" && (
+        <GroupDocs
+        onBack={()=>setActiveOption(null)}
+        _id={selectedGroup._id}
+        senderId={senderId}
+        />
+      )}
+
+
+      
+      {
+      activeOption==="links" && (
+        <GroupLinks
+        onBack={()=>setActiveOption(null)}
+        _id={selectedGroup._id}
+        senderId={senderId}
+        />
+      )}
+
+
+
+      {
+      activeOption==="mute notification" && (
+        <GroupMuteNotification
+        onBack={()=>setActiveOption(null)}
+        _id={selectedGroup._id}
+        senderId={senderId}
+        />
+      )}
+      
+
+
+
 
         <div className="chat-header"> 
             <div className="chat-logo"> 
@@ -214,6 +368,13 @@ export function GroupChat() {
     const isSender = msgSenderId?.toString() === senderId?.toString();
     const isSystem = msg.messageType === "system"; 
     const isText = msg.messageType === "text";
+    const isFileMsg = msg.messageType === "file";
+    const isImage = isFileMsg && msg.mimetype?.startsWith("image");
+    const isVideo = isFileMsg && msg.mimetype?.startsWith("video");
+    const isPdf = isFileMsg && msg.mimetype === "application/pdf";
+    const isOtherFile = isFileMsg && !isImage && !isVideo && !isPdf;
+    const fileSrc = isFileMsg ? resolveFileUrl(msg.fileUrl) : "";
+    const displayFileName = msg.orignalname || msg.filename || "file";
 
     if (isSystem) {
       return (
@@ -230,7 +391,53 @@ export function GroupChat() {
         {typeof msg.senderId === "object" ? msg.senderId?.name : ""}
       </span>
     )}
-        <span className="message-text">{msg.message}</span>
+
+        {isText && (
+          <span className="message-text">{renderMessageWithLinks(msg.message)}</span>
+        )}
+
+        {isImage && (
+          <div className="message-file message-image">
+            <img
+              src={fileSrc}
+              alt={displayFileName}
+              className="message-image-preview"
+              onClick={() => window.open(fileSrc, "_blank")}
+            />
+            <div className="file-meta">
+              <span className="file-size">{formatFileSize(msg.sizeInKb)}</span>
+            </div>
+          </div>
+        )}
+
+        {isVideo && (
+          <div className="message-file message-video">
+            <video src={fileSrc} controls className="message-video-preview" />
+            <div className="file-meta">
+              <span className="file-size">{formatFileSize(msg.sizeInKb)}</span>
+            </div>
+          </div>
+        )}
+
+        {isPdf && (
+          <a href={fileSrc} target="_blank" rel="noopener noreferrer" className="message-file message-doc">
+            <div className="file-icon pdf-icon">PDF</div>
+            <div className="file-info">
+              <span className="file-name">{displayFileName}</span>
+              <span className="file-size">{formatFileSize(msg.sizeInKb)}</span>
+            </div>
+          </a>
+        )}
+
+        {isOtherFile && (
+          <a href={fileSrc} target="_blank" rel="noopener noreferrer" download className="message-file message-doc">
+            <div className="file-icon generic-icon">📄</div>
+            <div className="file-info">
+              <span className="file-name">{displayFileName}</span>
+              <span className="file-size">{formatFileSize(msg.sizeInKb)}</span>
+            </div>
+          </a>
+        )}
 
         <button className="reaction-btn" onClick={() => setReactionMessage(msg._id)}>
           😊
@@ -340,6 +547,13 @@ export function GroupChat() {
             <input  type="text"  placeholder="send message" value={message}  onChange={(e)=>setMessage(e.target.value)}/> 
             <button type="submit">Send</button>  
         </form> 
+
+        <form onSubmit={handleFileSubmit} className="message-form">
+            <input type="file" placeholder="send message" onChange={(e)=>setFile(e.target.files?.[0])} />
+            <button type="submit">Send</button>
+        </form>
+
+
     </div> 
      )}
      <MsgInfo
