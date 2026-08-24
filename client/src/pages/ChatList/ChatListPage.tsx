@@ -96,27 +96,74 @@ const handleIncreaseUnseenCount = (data:{senderId:string}) => {
 };
   
 
+// useEffect(()=>{
+//   const userId=userData?.loginUserId;
+//   if(!userId)return;
+//      socket.emit("join",userId);
+//      socket.emit("user_online",{userId:userId}); 
+//      //this is for group online
+//      socket.emit("add_to_delivered",{senderId:userId});
+
+//      //gorup online off
+//      socket.emit("last_message",{userId:userId});
+//       socket.emit("unseen_message",{senderId:userId});
+//      socket.on("all_last_message",handleAllLastMessage);
+//      socket.on("chat_list_update",handleChatListUpdate);
+//      socket.on("unseen_message_count",handleUnseenMessage);
+//      socket.on("unseen_count_zero",handleUnseenCountZero);
+//      socket.on("increase_unseen_count",handleIncreaseUnseenCount);
+//      return()=>{
+//       socket.off("user_online");
+//       socket.off("all_last_message",handleAllLastMessage);
+//       socket.off("chat_list_update",handleChatListUpdate);
+//       socket.off("unseen_message_count",handleUnseenMessage);
+//       socket.off("unseen_count_zero",handleUnseenCountZero);
+//       socket.off("increase_unseen_count",handleIncreaseUnseenCount);
+//      }
+// },[userData?.loginUserId]);
+
+
+
+
+//new start
 useEffect(()=>{
   const userId=userData?.loginUserId;
   if(!userId)return;
+
+  const initSocketData = () => {
      socket.emit("join",userId);
      socket.emit("user_online",{userId:userId}); 
+     socket.emit("add_to_delivered",{senderId:userId});
      socket.emit("last_message",{userId:userId});
-      socket.emit("unseen_message",{senderId:userId});
-     socket.on("all_last_message",handleAllLastMessage);
-     socket.on("chat_list_update",handleChatListUpdate);
-     socket.on("unseen_message_count",handleUnseenMessage);
-     socket.on("unseen_count_zero",handleUnseenCountZero);
-     socket.on("increase_unseen_count",handleIncreaseUnseenCount);
-     return()=>{
-      socket.off("user_online");
+     socket.emit("unseen_message",{senderId:userId});
+  };
+
+  initSocketData(); // pehli baar
+
+  socket.on("connect", initSocketData); // socket reconnect hone pe bhi
+
+  socket.on("all_last_message",handleAllLastMessage);
+  socket.on("chat_list_update",handleChatListUpdate);
+  socket.on("unseen_message_count",handleUnseenMessage);
+  socket.on("unseen_count_zero",handleUnseenCountZero);
+  socket.on("increase_unseen_count",handleIncreaseUnseenCount);
+
+  return()=>{
+      socket.off("connect", initSocketData);
       socket.off("all_last_message",handleAllLastMessage);
       socket.off("chat_list_update",handleChatListUpdate);
       socket.off("unseen_message_count",handleUnseenMessage);
       socket.off("unseen_count_zero",handleUnseenCountZero);
       socket.off("increase_unseen_count",handleIncreaseUnseenCount);
-     }
+  }
 },[userData?.loginUserId]);
+
+
+
+//new ends
+
+
+
 
 const sortedUsers = [...data].sort((a, b) => {const aLast = lastMessages.find((msg) =>(msg.senderId === userData?.loginUserId &&msg.receiverId === a._id) ||(msg.receiverId === userData?.loginUserId &&msg.senderId === a._id));
 const bLast = lastMessages.find((msg) =>(msg.senderId === userData?.loginUserId &&msg.receiverId === b._id) ||(msg.receiverId === userData?.loginUserId &&msg.senderId === b._id));
