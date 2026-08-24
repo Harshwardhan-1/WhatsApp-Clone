@@ -4,6 +4,7 @@ export interface INotification extends Document{
     senderId:string,
     receiverId:string,
     duration:string,
+    mutedUntil?:Date | null,
 };
 
 
@@ -20,6 +21,10 @@ export const notificationSchema=new mongoose.Schema<INotification>({
         type:String,
         enum:["8hrs","1week","always","off"],
         default:"off",
+    },
+    mutedUntil:{
+        type:Date,
+        default:null,
     },
 },{
     timestamps:true,
@@ -41,6 +46,7 @@ export interface IGroupNotification extends Document{
     groupId:string,
     senderId:string,
     duration:string,
+    mutedUntil:Date | null,
 }
 
 
@@ -59,7 +65,11 @@ const muteGroupNotification=new mongoose.Schema<IGroupNotification>({
         type:String,
         enum:["off","8hrs","1week","always"],
         default:"off",
-    }
+    },
+    mutedUntil:{
+        type:Date,
+        default:null,
+    },
 },
 {timestamps:true}
 );

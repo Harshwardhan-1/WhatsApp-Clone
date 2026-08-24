@@ -17,6 +17,7 @@ import { fail } from "../helper/AppError";
 import { Socket,Server } from "socket.io";
 import mongoose from 'mongoose';
 import { groupLastMessage } from "../models/group.conversion.model";
+import { getMuteExpiry } from "../helper/durationtoMs";
 
 
 
@@ -48,10 +49,7 @@ export const createMessage=async(data:createGroupMessageConfig)=>{
            duration=durationtoMs(checkDuration.duration);
         }
 
-        let notification="off";
-        if(muteGroupNotification){
-           notification=muteGroupNotification.duration;
-        }
+       
 
 
         const createGroupMessage=await groupMessage.create({
@@ -66,7 +64,6 @@ export const createMessage=async(data:createGroupMessageConfig)=>{
             sizeInKb:Number(data?.sizeInKb ?? 0),
             sizeInMb:Number(data?.sizeInMb ?? 0),
             expiresAt:duration?new Date(Date.now()+duration):null,
-            notificationSound:notification,
         });
         if(!createGroupMessage){
             throw new Error("failed to create message");
@@ -226,6 +223,7 @@ export const clearChat=async(data:clearChatConfig)=>{
         const group=await groupChatModel.findById(data._id);
         if(!group){
             fail("group not found");
+            return;
         }
         //taking a little bit longer time
         // const findByGroupId=await groupMessage.find({groupId:data._id});
@@ -247,6 +245,19 @@ export const clearChat=async(data:clearChatConfig)=>{
     }
 }
 
+
+// export const afterClearChat=async(data:{_id:string,senderId:string})=>{
+// try{
+// const group=await groupChatModel.findById(data._id);
+// if(!group){
+//     throw new Error("group not found");
+// }
+// const msg=await groupMessage.find({groupId:data._id,hideIt:{$nin:[data.senderId]}});
+// return msg;
+// }catch(err){
+//     throw err;
+// }
+// }
 
 
 
@@ -518,19 +529,27 @@ export const muteNotificattion=async(data:{_id:string,senderId:string})=>{
         const group=await groupChatModel.findById(data._id);
         if(!group){
             fail("group not found");
+            return "off";
         }
         const findMuteNotification=await muteGroupNotificationModel.
         findOne({groupId:data._id,senderId:data.senderId});
 
         if(findMuteNotification){
+            const now=Date.now();
+            if(findMuteNotification.duration!=="off" && findMuteNotification.duration!=="always"
+                &&  findMuteNotification.mutedUntil!==null  && now>=findMuteNotification.mutedUntil.getTime()){
+
+                    findMuteNotification.duration="off";
+                    findMuteNotification.mutedUntil=null;
+            }
+            await findMuteNotification.save();
            return findMuteNotification.duration; 
         }
+        return "off";
     }catch(err){
         throw err;
     }
 }
-
-
 
 
 export const changedMuteNotificationSetting=async(data:{_id:string,senderId:string,duration:string})=>{
@@ -538,22 +557,26 @@ export const changedMuteNotificationSetting=async(data:{_id:string,senderId:stri
         const group=await groupChatModel.findById(data._id);
         if(!group){
             fail("group not found");
+            return;
         }
+         const expiry = getMuteExpiry(data.duration);
         const changeSetting=await muteGroupNotificationModel.findOne({groupId:data._id,senderId:data.senderId});
         if(!changeSetting){
             const create=await muteGroupNotificationModel.create({
                 groupId:data._id,
                 senderId:data.senderId,
                 duration:data.duration,
+                mutedUntil:expiry,
             });
             if(!create){
                 fail("fail to create mute notification model");
             }
-            return create;
+            return create.duration;
         }else{
             changeSetting.duration=data.duration;
+            changeSetting.mutedUntil=expiry;
             await changeSetting.save();
-            return changeSetting;
+            return changeSetting.duration;
         }
     }catch(err){
         throw err;
@@ -702,42 +725,38 @@ export const emitMessageInGroup=async(
             fail("group not found");
             return;
         }
-        //data._id is wo message jo emit karna ha apana ko
         const msg=await groupMessage.findById(msgData._id);
         if(!msg){
             fail("msg not found ot something went wrong");
             return;
         }
 
-            await msg.populate("senderId","name avatar");
+        await msg.populate("senderId","name avatar");
 
         for(let i=0;i<group.peoplesId.length;i++){
-            //here we are checking that in peoplesId it is basically sender and 
-            //receiverId only 
             const receiverId=group.peoplesId[i].toString();
             if (receiverId===data.senderId.toString()){
                 continue;
             }
+            const toNotify = (await muteNotificattion({_id: data._id, senderId: receiverId})) || "off";
             if(activeGroupChats[receiverId]===data._id){
                 const id=new mongoose.Types.ObjectId(receiverId);
                 msg.deliveredTo.push(id); 
                 msg.seenBy.push(id);
                 const receiverSocketId=users[receiverId];
-                   console.log("emitting to:", receiverId, receiverSocketId);
                 if(receiverSocketId){
-                io.to(receiverSocketId).emit("receive_group_message",(msg));
+                io.to(receiverSocketId).emit("receive_group_message",{...msg.toObject(),notificationSound:toNotify});
                 }
             }else if(activeGroupChats[receiverId]!==data._id && users[receiverId]){
                 const id=new mongoose.Types.ObjectId(receiverId);
                 msg.deliveredTo.push(id);
-                 const receiverSocketId=users[receiverId];
+                const receiverSocketId=users[receiverId];
                 if(receiverSocketId){
-                io.to(receiverSocketId).emit("receive_group_message",(msg));
+                    io.to(receiverSocketId).emit("receive_group_message",{...msg.toObject(),notificationSound:toNotify});
                 }
             }
         }
-           //send to sender also
-            socket.emit("receive_group_message",(msg));
+        socket.emit("receive_group_message",(msg));
         await msg.save();
          if(group.peoplesId.length===msg.deliveredTo.length){
             msg.isDelivered=true;
@@ -754,11 +773,6 @@ export const emitMessageInGroup=async(
         throw err;
     }
 }
-
-
-
-
-
 
 
 
