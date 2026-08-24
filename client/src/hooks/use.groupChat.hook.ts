@@ -102,6 +102,13 @@ const handleParentReply=(message:any)=>{
          setMessages(prev => [...prev, message]);
         }
 }
+
+
+const handleEmojiOperation = (msg: any) => {
+    setMessages((prev: any[]) =>
+        prev.map((m) => (m._id === msg._id ? { ...m, reaction: msg.reaction } : m))
+    );
+};
    
 
     useEffect(()=>{
@@ -135,6 +142,7 @@ const handleParentReply=(message:any)=>{
     socket.on("delete_by_me",handleDeleteMe);
     socket.on("group_message_edited",handleGroupEditMessage);
     socket.on("reply_on_parent_message",handleParentReply);
+    socket.on("emoji_operation",handleEmojiOperation);
     
 
 
@@ -150,6 +158,7 @@ const handleParentReply=(message:any)=>{
         socket.off("delete_by_me",handleDeleteMe);
         socket.off("group_message_edited",handleGroupEditMessage);
         socket.off("reply_on_parent_message",handleParentReply);
+        socket.off("emoji_operation",handleEmojiOperation);
     }
     },[]);
     
@@ -181,6 +190,15 @@ const handleParentReply=(message:any)=>{
     }
 
 
+    const groupEmoji=(data:{_id:string,msgId:string,senderId:string,emoji:string})=>{
+        socket.emit("group_emoji",(data));
+    }
+
+
+    
+    
+
+
     return {
     users,
     createGroup,
@@ -192,5 +210,6 @@ const handleParentReply=(message:any)=>{
     handelDeleteFromMy,
     handleEditMessage,
     messageInfo,
+    groupEmoji,
 };
 }

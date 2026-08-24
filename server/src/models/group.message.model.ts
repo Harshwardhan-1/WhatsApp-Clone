@@ -10,6 +10,7 @@ interface ParentReply{
     messageId:Types.ObjectId,
     userId:Types.ObjectId,
     message:string,
+    messageType:string,
 }
 
 export interface IGroupMessage extends Document{
@@ -67,6 +68,7 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
     },
     senderId:{
         type:String,
+        ref:"user",
         required:[true,'senderId is missing'],
     },
     message:{
@@ -86,6 +88,10 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
             },
             message:{
                 type:String,
+            },
+            messageType:{
+                type:String,
+                default:"text",
             },
         default:[],
         },

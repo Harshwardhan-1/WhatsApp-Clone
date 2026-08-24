@@ -4,7 +4,7 @@ export interface createGroupMessageConfig{
     senderId:string,
     message:string,
     messageType:string,
-    fileUrl:string,
+    fileUrl?:string,
     mimetype?:string,
     filename?:string,
     sizeInKb?:number,
@@ -59,6 +59,6 @@ export interface groupLastMessageConfig{
     filename?:string,
     orignalname?:string,
     mimetype?:string,
-    createdAt:Date,
-    updatedAt:Date,
+    createdAt?:Date,
+    updatedAt?:Date,
 }

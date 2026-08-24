@@ -295,6 +295,9 @@ io.on('connection',(socket)=>{
                 io.emit("user_presence",saveLastPresence);
                 disconnectUserId=id;
                 delete users[disconnectUserId];
+                //this 2 line are extra
+                delete activeChats[disconnectUserId];
+                delete activeGroupChats[disconnectUserId];
                 break;
             }
         }
