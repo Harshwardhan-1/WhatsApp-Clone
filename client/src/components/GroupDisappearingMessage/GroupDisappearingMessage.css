@@ -1,0 +1,9 @@
+.optionDisabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    color: #e63946;
+}
+
+.optionDisabled input[type="radio"] {
+    cursor: not-allowed;
+}
