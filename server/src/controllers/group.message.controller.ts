@@ -588,10 +588,66 @@ export const changedMuteNotificationSetting=async(data:{_id:string,senderId:stri
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//extra flag for disappearing value
+
+export const canChange=async(data:
+    {_id:string,senderId:string},
+    socket:Socket,io:Server,
+    users:{[key:string]:string})=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        if(group.changeDisappearingMessageSetting){
+            socket.emit("can_update_disappearing_message");
+        }else{
+            const checkAdmin=group.admin.some(
+            (id)=>id.toString()===data.senderId.toString()
+            );
+            if(!checkAdmin){
+                socket.emit("cannot_update_disappearing_message");
+                return;
+            }
+            socket.emit("can_update_disappearing_message");
+        }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
 //disappearing message
 //if admin has mark it false then on client side w have ti show disable option
 
-export const changeGroupDisappearingMessageSetting=async(data:{_id:string,senderId:string,duration:string})=>{
+
+//here we have to store message on chat message type system and then emit it
+
+
+export const changeGroupDisappearingMessageSetting=async(data:
+    {_id:string,senderId:string,duration:string},
+    socket:Socket,io:Server,users:{[key:string]:string},
+    activeGroupChats:Record<string,string>
+)=>{
     try{
         const group=await groupChatModel.findById(data._id);
         if(!group){
@@ -606,34 +662,117 @@ export const changeGroupDisappearingMessageSetting=async(data:{_id:string,sender
                     senderId:data.senderId,
                     duration:data.duration,
                 });
-                return create;
-            }else{
-                checkDurationExist.duration=data.duration;
-                await checkDurationExist.save();
-                return checkDurationExist;
-            }
-        }else{
-            if(group.groupCreatorId.toString()!==data.senderId){
-                fail("only admin can change group disappearing message setting");
-            }else{
-         const checkDurationExist=await groupDisappearingMessageModel.findOne({groupId:data._id});
-         if(!checkDurationExist){
-                const create=await groupDisappearingMessageModel.create({
+                //return create;
+                //create message
+                const detailData=create;
+               const userDetail=await detailData.populate("senderId","name avatar");
+               const nameInfo=userDetail.senderId as any;
+                const msg=await groupMessage.create({
                     groupId:data._id,
                     senderId:data.senderId,
-                    duration:data.duration,
+                    message:`${nameInfo.name} change the group setting to ${create.duration}`,
+                    messageType:"system",
                 });
-                if(!create){
-                    fail("something went wrong");
+                //here we have to emit to all who are online we will wroye that logic
+                for(let i=0;i<group.peoplesId.length;i++){
+                    const id=group.peoplesId[i].toString();
+                    const receiverId=users[id];
+                    if(receiverId){
+                        io.to(receiverId).emit("receive_group_message",(msg));
+                        io.to(receiverId).emit("put_group_disappearing_value",(data.duration)); 
+                    }
                 }
-               }else{
+                return create.duration;
+            }else{
                 checkDurationExist.duration=data.duration;
+                checkDurationExist.senderId=data.senderId;
                 await checkDurationExist.save();
-                return checkDurationExist;
-               }
+                const durationData=checkDurationExist;
+                const updatedData=await durationData.populate("senderId","name avatar");
+                const senderInfo=updatedData.senderId as any;
+                const msg=await groupMessage.create({
+                    groupId:data._id,
+                    senderId:data.senderId,
+                    message:`${senderInfo.name} change the group setting to ${data.duration}`,
+                    messageType:"system",
+                });
+                for(let i=0;i<group.peoplesId.length;i++){
+                    const id=group.peoplesId[i].toString();
+                    const receiverId=users[id];
+                    if(receiverId){
+                        io.to(receiverId).emit("receive_group_message",(msg));
+                        io.to(receiverId).emit("put_group_disappearing_value",(data.duration)); 
+                    }
+                }
+                return data.duration;
+            }
+        }
+        
+        
+        
+        
+        else{
+            const checkIsAdmin=group.peoplesId.some(
+                (id)=>id.toString()===data.senderId.toString()
+            );
+            if(!checkIsAdmin){
+                throw new Error("don't have access t change the group setting");
+            }else{
+                const findDuration=await groupDisappearingMessageModel.findOne({groupId:data._id});
+             if(!findDuration){
+                    const create=await groupDisappearingMessageModel.create({
+                        groupId:data._id,
+                        senderId:data.senderId,
+                        duration:data.duration,
+                    });
+                     const detailData=create;
+               const userDetail=await detailData.populate("senderId","name avatar");
+               const nameInfo=userDetail.senderId as any;
+                const msg=await groupMessage.create({
+                    groupId:data._id,
+                    senderId:data.senderId,
+                    message:`${nameInfo.name} change the group setting to ${create.duration}`,
+                    messageType:"system",
+                });
+                //here we have to emit to all who are online we will wroye that logic
+                for(let i=0;i<group.peoplesId.length;i++){
+                    const id=group.peoplesId[i].toString();
+                    const receiverId=users[id];
+                    if(receiverId){
+                        io.to(receiverId).emit("receive_group_message",(msg));
+                        io.to(receiverId).emit("put_group_disappearing_value",(data.duration)); 
+                    }
+                }
+                return create.duration;
+                }
+                
+                else{
+                    findDuration.duration=data.duration;
+                    findDuration.senderId=data.senderId; 
+                    await findDuration.save();
+                    const durationData=findDuration;
+                const updatedData=await durationData.populate("senderId","name avatar");
+                const senderInfo=updatedData.senderId as any;
+                const msg=await groupMessage.create({
+                    groupId:data._id,
+                    senderId:data.senderId,
+                    message:`${senderInfo.name} change the group setting to ${data.duration}`,
+                    messageType:"system",
+                });
+                for(let i=0;i<group.peoplesId.length;i++){
+                    const id=group.peoplesId[i].toString();
+                    const receiverId=users[id];
+                    if(receiverId){
+                        io.to(receiverId).emit("receive_group_message",(msg));
+                        io.to(receiverId).emit("put_group_disappearing_value",(data.duration)); 
+                    }
+                }
+                return data.duration;
+                }   
             }
         }
     }catch(err){
+        console.log(err);
         throw err;
     }
 }
@@ -655,6 +794,8 @@ export const getDuationgMessage=async(data:{_id:string,senderId:string})=>{
         const duration=await groupDisappearingMessageModel.findOne({groupId:data._id});
         if(duration){
             return duration.duration;
+        }else{
+            return "off";
         }
     }catch(err){
         throw err;
@@ -938,7 +1079,7 @@ export const showAllMessage=async(data:{_id:string,senderId:string})=>{
     }catch(err){
         throw err;
     }
-}
+} 
 
 
 

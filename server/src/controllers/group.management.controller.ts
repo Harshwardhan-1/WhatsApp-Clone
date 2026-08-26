@@ -4,6 +4,9 @@ import mongoose from 'mongoose';
 import { authRequest } from '../types/auth.Requests.types';
 import  QRCode from "qrcode";
 import { groupMessage } from '../models/group.message.model';
+import { Socket,Server } from 'socket.io';
+import { allAdmin, AllMembers } from './group.info.controller';
+import { User } from '../models/user.model';
 
 
 
@@ -56,49 +59,97 @@ export const createGroup=async(data:{groupName:string,senderId:string,peoplesId:
 
 
 
+
+
+
+
+
+
 //delete group
-//api/v1/:id/:senderId,
 
-
-export const deleteGroup=async(req:authRequest,res:Response,next:NextFunction)=>{
+export const deleteGroup=async(
+    data:{_id:string,senderId:string},socket:Socket,io:Server,
+    users:{[key:string]:string},
+    activeGroupChats:Record<string,string>
+)=>{
     try{
-        const {id,senderId}=req.params;
-        if(!id || !senderId){
-            return res.status(400).json({
-                success:false,
-                message:"something went wrong or login again",
-            });
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
         }
-        if(!req.user){
-            return res.status(401).json({
-                success:false,
-                message:"Unauthorized",
-            });
+        const isCreator=group.groupCreatorId.toString()===data.senderId.toString();
+        if(!isCreator){
+            throw new Error("don't have access to delete this group");
         }
-        const findGroup=await groupChatModel.findById({_id:id});
-        if(!findGroup){
-            return res.status(404).json({
-                success:false,
-                message:"group not found",
-            });
-        }
-        if(findGroup.groupCreatorId.toString()!==senderId){
-            return res.status(400).json({
-                success:false,
-                message:"not have permission to delete this group",
-            });
-        }
-        await findGroup.deleteOne();
-        return res.status(200).json({
-            success:true,
-            message:"group deleted successfully",
+        group.isGroupDeleted=true;
+        await group.save();
+        const msg=await groupMessage.create({
+            groupId:data._id,
+            senderId:data.senderId,
+            message:"The group no longer exist deleted by the owner",
+            messageType:"system",
         });
+        for(let i=0;i<group.peoplesId.length;i++){
+            const id=group.peoplesId[i].toString();
+            if(id===data.senderId)continue;
+            const receiverId=users[id];
+            if(receiverId){
+                io.to(receiverId).emit("receive_group_message",(msg));
+                io.to(receiverId).emit("group_deleted_successfully",({groupId:data._id}));
+            }
+        }
+        socket.emit("receive_group_message",(msg));
+        socket.emit("group_deleted_successfully",({groupId:data._id}));
     }catch(err){
-        next(err);
+        throw err;
     }
 }
 
 
+
+export const exitAndDeleteGroup=async(data:{_id:string,senderId:string})=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        const isRemovedOrLeft=group.removedMembers.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        if(!group.isGroupDeleted && !isRemovedOrLeft){
+            throw new Error("cannot exit and delete group");
+        }
+        const alreadyExited=group.exitAndDelete.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        if(!alreadyExited){
+            group.exitAndDelete.push(new mongoose.Types.ObjectId(data.senderId));
+        }
+        await group.save();
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+export const checkGroupExist=async(data:{_id:string,senderId:string})=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        if(group.isGroupDeleted){
+            return "group not exist";
+        }else{
+            return "group still exist";
+        }
+    }catch(err){
+        throw err;
+    }
+}
 
 
 
@@ -274,118 +325,6 @@ export const allMembersInGroup=async(data:{_id:string,senderId:string})=>{
 
 
 
-export const makeAdmin=async(data:{_id:string,senderId:string,receiverId:string})=>{
-    try{
-        if(!data._id || !data.senderId || !data.receiverId){
-            throw new Error("group id is missing or Unauthorized login again");
-        }
-        const group=await groupChatModel.findById(data._id);
-        if(!group){
-            throw new Error("group not found");
-        }
-        const checkAdmin=group.admin.some(
-            (id=>id.toString()===data.senderId.toString())
-        );
-        if(!checkAdmin){
-            throw new Error("You don't have permission to make user admin");
-        }else{
-            const id=new mongoose.Types.ObjectId(data.senderId);
-            const checkAlreadyPresent=group.admin.some(
-                (id)=>id.toString()===data.senderId.toString()
-            );
-            if(checkAlreadyPresent){
-                throw new Error("already an admin");
-            }else{
-                const id=new mongoose.Types.ObjectId(data.receiverId);
-                group.admin.push(id);
-                await group.save();
-                await Promise.all([
-                    group.populate("peoplesId","name avatar"),
-                    group.populate("admin","name avatar") 
-                ]);
-                return group;
-            }
-        }
-    }catch(err){
-        throw err;
-    }
-} 
-
-
-
-
-
-//here receiverId means the person we want to remove as admin
-export const removeAdmin=async(data:{_id:string,senderId:string,receiverId:string})=>{
-    try{
-        const group=await groupChatModel.findById(data._id);
-        if(!group){
-            throw new Error("group not found");
-        }
-        const checkAdmin=group.admin.some(
-            (id)=>id.toString()===data.senderId.toString()
-        );
-        if(!checkAdmin){
-            throw new Error("cannot have access to remove admin");
-        }else{
-            group.admin=group.admin.filter(
-                (id)=>id.toString()!==data.receiverId.toString()
-            );
-        }
-        await group.save();
-        await Promise.all([
-              group.populate("peoplesId","name avatar"),
-              group.populate("admin","name avatar") 
-                ]);
-        return group;
-    }catch(err){
-        throw err;
-    }
-}
-
-
-
-
-
-
-//receiverId is person who we want to remove from group 
-//senderId is person who wants to remove the person if he is admin
-export const removePerson=async(data:{_id:string,senderId:string,receiverId:string})=>{
-    try{
-        const group=await groupChatModel.findById(data._id);
-        if(!group){
-            throw new Error("group not found");
-        }
-        const isAdmin=group.admin.some(
-            (id)=>id.toString()===data.senderId.toString()
-        );
-        if(!isAdmin){
-            throw new Error("don't have access to remove person from group");
-        }
-        group.peoplesId=group.peoplesId.filter(
-            (id)=>id.toString()!==data.receiverId.toString()
-        );
-        const id=new mongoose.Types.ObjectId(data.receiverId);
-        group.removedMembers.push(id);
-        await group.save();
-        await Promise.all([
-             group.populate("peoplesId","name avatar"),
-             group.populate("admin","name avatar") 
-                ]);
-        return group;
-    }catch(err){
-        throw err;
-    }
-}
-
-
-
-
-
-
-
-
-
 export const personLeaveGroup=async(data:{_id:string,senderId:string})=>{
     try{
         const group=await groupChatModel.findById(data._id);
@@ -423,46 +362,338 @@ export const personLeaveGroup=async(data:{_id:string,senderId:string})=>{
 
 
 //here now be emit and store message like added by someone aesa implement karna ha ab
-
-export const addMembers=async(data:{_id:string,senderId:string,receiverId:string})=>{
+export const addGroupMembersPermission=async(data:{_id:string,senderId:string},socket:Socket)=>{
     try{
         const group=await groupChatModel.findById(data._id);
         if(!group){
             throw new Error("group not found");
         }
         if(group.canAddGroupMembers){
-            //here check if person is on removedgroup array remove it from there
-            group.removedMembers=group.removedMembers.filter(
-                (id)=>id.toString()!==data.receiverId.toString()
-            );
-            const id=new mongoose.Types.ObjectId(data.receiverId);
-            group.peoplesId.push(id);
-            await group.save();
-            await Promise.all([
-                    group.populate("peoplesId","name avatar"),
-                    group.populate("admin","name avatar") 
-                ]);
-            return group;
+            socket.emit("group_add_permission",("permission granted"));
         }else{
+            //checking it is admin we grant permission
             const isAdmin=group.admin.some(
                 (id)=>id.toString()===data.senderId.toString()
             );
-            if(!isAdmin){
-                throw new Error("don't have access to add new members");
+            if(isAdmin){
+                socket.emit("group_add_permission","permission granted");
+            }else{
+                socket.emit("group_add_permission","permission declined");
             }
-            const id=new mongoose.Types.ObjectId(data.receiverId);
-            group.peoplesId.push(id);
-            await group.save();
-            await Promise.all([
-                    group.populate("peoplesId","name avatar"),
-                    group.populate("admin","name avatar") 
-                ]);
-            return group;
         }
     }catch(err){
         throw err;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//add members
+export const addGroupMembers=async(data:
+    {_id:string,senderId:string,newMembers:string[]},
+    socket:Socket,io:Server,users:{[key:string]:string},
+)=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        const personAdding=await User.findById(data.senderId);
+        let personAddingName=""
+        if(personAdding){
+            personAddingName=personAdding.name;
+        }
+        for(let i=0;i<data.newMembers.length;i++){
+            group.peoplesId.push(new mongoose.Types.ObjectId(data.newMembers[i]));
+            //here we check if the person if in removed group we remove it from there
+            group.removedMembers=group.removedMembers.filter(
+                (id)=>id.toString()!==data.newMembers[i].toString()
+            );
+            await group.save();
+
+            //update chat list to show user the group
+            const newMembersSocketId=users[data.newMembers[i]];
+            if(newMembersSocketId){
+                const newChatList=await groups({senderId:data.newMembers[i]});
+                io.to(newMembersSocketId).emit("all_groups",(newChatList));
+            }
+             
+             let name="";
+             const find=await User.findById(data.newMembers[i]);
+             if(find){
+                name=find.name;
+             }
+             const msg=await groupMessage.create({
+                groupId:data._id,
+                senderId:data.senderId,
+                message:`${personAddingName} added ${name}`,
+                messageType:"system",
+             });
+             for(let j=0;j<group.peoplesId.length;j++){
+                const id=group.peoplesId[j].toString();
+                const receiverSocketId=users[id];
+                if(id==data.senderId)continue;
+                if(receiverSocketId){
+                    io.to(receiverSocketId).emit("receive_group_message",(msg));
+                    io.to(receiverSocketId).emit("is_present_in_group","false");
+                }
+             }
+             socket.emit("receive_group_message",(msg));
+             const members=await AllMembers({_id:data._id});
+
+             for(let i=0;i<group.peoplesId.length;i++){
+                const id=group.peoplesId[i].toString();
+                const receiverSocketId=users[id];
+                if(id===data.senderId.toString())continue;
+                if(receiverSocketId){
+                    io.to(receiverSocketId).emit("all_group_members",(members));
+                }
+             }
+        }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+//remove members
+//permission check
+
+export const removeMembersPermission=async(data:{_id:string,senderId:string},socket:Socket)=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        if(!group.canRemoveGroupMembers){
+            if(group.groupCreatorId.toString()===data.senderId.toString()){
+            socket.emit("remove_members_permission",({message:"permission granted",groupCreatorId:group.groupCreatorId}));
+            }
+        }else{
+        const checkAdmin=group.admin.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        if(checkAdmin){
+            socket.emit("remove_members_permission",({message:"permission granted",groupCreatorId:group.groupCreatorId}));
+        }else{
+            socket.emit("remove_members_permission",({message:"permission denied",groupCreatorId:group.groupCreatorId}));
+        }
+    }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+export const removeMembers=async(data:
+    {_id:string,senderId:string,removeMembers:string[]},
+    socket:Socket,io:Server,
+    users:{[key:string]:string}
+)=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        const removingPerson=await User.findById(data.senderId);
+        let name="";
+        if(removingPerson){
+            name=removingPerson.name;
+        }
+        for(let i=0;i<data.removeMembers.length;i++){
+            //current member who we want to remove 
+            const currentMember=await User.findById(data.removeMembers[i]);
+            let currentRemoveMemberName="";
+            if(currentMember){
+                currentRemoveMemberName=currentMember.name;
+            }
+            const msg=await groupMessage.create({
+                groupId:data._id,
+                senderId:data.senderId,
+                message:`${name} removed ${currentRemoveMemberName}`,
+                messageType:"system",
+            });
+
+            group.peoplesId=group.peoplesId.filter(
+                (id)=>id.toString()!==data.removeMembers[i].toString()
+            );
+            group.admin=group.admin.filter(
+                (id)=>id.toString()!==data.removeMembers[i].toString()
+            );
+            group.removedMembers.push(new mongoose.Types.ObjectId(data.removeMembers[i]));
+            await group.save();
+
+            const members=await AllMembers({_id:data._id});
+            const mbrs=members;
+
+            for(let j=0;j<group.peoplesId.length;j++){
+                const id=group.peoplesId[j].toString();
+                const receiverSocketId=users[id];
+                if(id==data.senderId)continue;
+                if(receiverSocketId){
+                    io.to(receiverSocketId).emit("receive_group_message",(msg));
+                    io.to(receiverSocketId).emit("all_group_members",(members));
+                }
+            }
+            const removedMemberSocketId=users[data.removeMembers[i]];
+            if(removedMemberSocketId){
+                io.to(removedMemberSocketId).emit("receive_group_message",(msg));
+                io.to(removedMemberSocketId).emit("is_present_in_group","true");
+            }
+            
+            socket.emit("receive_group_message",(msg));
+            socket.emit("all_group_members",(mbrs));
+        }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+//leave group it is
+export const LeaveGroup=async(data:{_id:string,senderId:string},socket:Socket,io:Server,users:{[key:string]:string})=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        //in peoples
+        const removeGroup=group.peoplesId.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        if(removeGroup){
+            group.peoplesId=group.peoplesId.filter(
+                (id)=>id.toString()!==data.senderId.toString()
+            );
+        }
+        //if it is admin remove it from admin also
+        group.admin=group.admin.filter(
+            (id)=>id.toString()!==data.senderId.toString()
+        );
+        await group.save();
+        let name="";
+        const find=await User.findById(data.senderId);
+        if(find){
+            console.log(find);
+            name=find.name;
+        }
+        const msg=await groupMessage.create({
+            groupId:data._id,
+            senderId:data.senderId,
+            message:`${name} leaves the group`,
+            messageType:"system",
+        });
+        for(let i=0;i<group.peoplesId.length;i++){
+            const id=group.peoplesId[i].toString();
+            const receiverSocketId=users[id];
+            if(id===data.senderId)continue;
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("receive_group_message",(msg));
+            }
+        }
+        socket.emit("receive_group_message",(msg));
+        group.removedMembers.push(new mongoose.Types.ObjectId(data.senderId));
+        socket.emit("is_present_in_group","true");
+        await group.save();
+    }catch(err){
+
+    }
+}
+
+
+export const isGroupMember=async(data:{_id:string,senderId:string})=>{
+    try{
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        const checkIsMember=group.removedMembers.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        if(checkIsMember){
+            return "true";
+        }else{
+            return "false";
+        }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+//manage admins
+export const manageAdmin=async(data:
+    {_id:string,senderId:string,makeAdmins:string[],removeAdmins:string[]},
+    socket:Socket,io:Server,users:{[key:string]:string}
+)=>{
+    try{
+        const  group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
+        }
+        for(let i=0;i<data.makeAdmins.length;i++){
+            group.admin.push(new mongoose.Types.ObjectId(data.makeAdmins[i]));
+        }
+
+        for(let i=0;i<data.removeAdmins.length;i++){
+            group.admin=group.admin.filter(
+                (id)=>id.toString()!==data.removeAdmins[i].toString()
+            );
+        }
+        await group.save();
+        const members=await allAdmin({_id:data._id});
+        for(let i=0;i<group.peoplesId.length;i++){
+            const id=group.peoplesId[i].toString();
+            const receiverSocketId=users[id];
+            if(id===data.senderId)continue;
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("all_group_admins",(members));
+            }
+        }
+        socket.emit("all_group_admins",(members));
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
 
 
 
@@ -563,7 +794,13 @@ export const joinGroup=async(req:authRequest,res:Response,next:NextFunction)=>{
 //in this we have to show user the groups in which user is actually involved
 export const groups=async(data:{senderId:string})=>{
     try{
-        const findAllGroups=await groupChatModel.find({peoplesId:data.senderId}).populate("peoplesId","name avatar");
+        const findAllGroups=await groupChatModel.find({
+            exitAndDelete:{$ne:data.senderId},
+            $or:[
+                {peoplesId:data.senderId},
+                {removedMembers:data.senderId},
+            ],
+        }).populate("peoplesId","name avatar")
         if(findAllGroups.length===0){
             return;
         }
