@@ -54,6 +54,7 @@ export function AddGroupMembersModal({ users, selectedIds,senderId, setSelectedI
             return;
         }
         createGroup({groupName,senderId,peoplesId:selectedIds})
+        onClose();
     };
 
     return (

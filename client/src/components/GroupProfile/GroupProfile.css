@@ -1,0 +1,353 @@
+.groupProfilePage {
+    width: 400px;
+    max-width: 100%;
+    background: #fff;
+    height: 100%;
+    overflow-y: auto;
+    box-shadow: -2px 0 12px rgba(0,0,0,0.15);
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    animation: slideInRight 0.25s ease-out;
+}
+
+.groupProfileNameRow {
+    cursor: pointer;
+}
+
+.editNameBox {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.editNameBox input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    width: 85%;
+    font-size: 15px;
+    outline: none;
+}
+
+.editNameBox input:focus {
+    border-color: #00a884;
+}
+
+.editNameBtns {
+    display: flex;
+    gap: 8px;
+}
+
+.editNameBtns button {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.editNameBtns button:first-child {
+    background: #f0f2f5;
+    color: #111b21;
+}
+
+.editNameBtns button:last-child {
+    background: #00a884;
+    color: #fff;
+}
+.editImageOverlay.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.groupProfileTopBar {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+}
+
+.backArrow {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #54656f;
+}
+
+.groupProfileHero {
+    text-align: center;
+    padding: 24px 16px;
+    border-bottom: 8px solid #f0f2f5;
+}
+
+.groupProfileAvatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 16px;
+    background: #ddd;
+    position: relative;
+}
+
+.groupProfileAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.editImageOverlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.groupProfileNameRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.groupProfileNameRow h2 {
+    font-size: 20px;
+    margin: 0;
+    color: #111b21;
+}
+
+.editIcon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #667781;
+}
+
+
+
+/* --- Add this block to your existing GroupProfile.css --- */
+
+.groupMembersSection {
+    margin-top: 16px;
+    background: #fff;
+}
+
+.groupMembersHeader {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #667781;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 1px solid #e9edef;
+}
+
+.groupMembersList {
+    display: flex;
+    flex-direction: column;
+}
+
+.groupMemberRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: default;
+}
+
+.groupMemberRow:hover {
+    background: #f5f6f6;
+}
+
+.groupMemberAvatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #00a884;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+}
+
+.groupMemberAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.groupMemberInfo {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.groupMemberName {
+    font-size: 15px;
+    color: #111b21;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.groupMemberAbout {
+    font-size: 13px;
+    color: #667781;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.adminBadge {
+    font-size: 12px;
+    color: #667781;
+    flex-shrink: 0;
+}
+
+
+.addMembersOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.addMembersModal {
+    background: #fff;
+    width: 420px;
+    max-height: 80vh;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.addMembersHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.addMembersHeader .closeBtn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.addMembersSearch {
+    margin: 12px 16px;
+    padding: 10px 14px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    outline: none;
+}
+
+.addMembersList {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0 8px;
+}
+
+.addMembersRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.addMembersRow:hover {
+    background: #f5f5f5;
+}
+
+.addMembersRow.alreadyMember {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.addMembersAvatar img,
+.addMembersAvatar span {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ddd;
+}
+
+.addMembersInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.alreadyMemberTag {
+    font-size: 11px;
+    color: #999;
+}
+
+.addMembersFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid #eee;
+}
+
+.addMembersFooter .cancelBtn {
+    background: none;
+    border: 1px solid #ccc;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.addMembersFooter .saveBtn {
+    background: #00a884;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.addMembersFooter .saveBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.groupProfileActions {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}

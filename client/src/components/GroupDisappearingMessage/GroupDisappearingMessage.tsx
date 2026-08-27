@@ -3,6 +3,7 @@ import { socket } from "../../utils/socket";
 import {useEffect} from 'react';
 import { showMessage } from "../../utils/messageToast";
 import "../disapperingMessage/disappearing.message.css";
+import "./GroupDisappearingMessage.css";
 
 interface prop{
     onBack:()=>void;
@@ -33,12 +34,17 @@ export function GroupDisappearingMessage({onBack,_id,senderId}:prop){
         socket.on("put_group_disappearing_value",(duration:string)=>{
             setDisappearMessage(duration);
         });
+        socket.on("group_settings_changed",(data:{groupId:string})=>{
+    if(data.groupId===_id){
+        socket.emit("check_can_change",({_id,senderId}));
+    }
+});
         return()=>{
             socket.off("group_disappearing_val");
             socket.off("can_update_disappearing_message");
             socket.off("cannot_update_disappearing_message");
             socket.off("put_group_disappearing_value");
-
+            socket.off("group_settings_changed");
         }
     },[]);
 
