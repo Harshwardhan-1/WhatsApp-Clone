@@ -57,6 +57,7 @@ const groupDisappearingMessage=new mongoose.Schema<IDisappearingMessageModel>({
     },
     senderId:{
         type:String,
+        ref:"user",
         required:[true,'senderId is required'],
     },
     duration:{

@@ -16,15 +16,20 @@ export interface IGroupMessage extends Document{
 
      removedMembers:Types.ObjectId[],
 
+     exitAndDelete:Types.ObjectId[],
+
      groupImage?:string,
 
      canChangeGroupName:boolean,
      canChangeGroupImage:boolean,
      canAddGroupMembers:boolean,
+     canRemoveGroupMembers:boolean,
      changeDisappearingMessageSetting:boolean,
      onlyAdminSendMessage:boolean,
 
      groupPermission:boolean,
+
+     isGroupDeleted?:boolean,
 
      createdAt:Date,
      updatedAt:Date,
@@ -47,6 +52,8 @@ const groupChat=new mongoose.Schema<IGroupMessage>({
         required:[true,'groupName is required'],
         // unique:[true,'groupName must be unique'],
         trim:true,
+        minLength:[3,"groupName must be atleast 3 characters"],
+        maxLength:[100,'groupName should not be greater than 100 characters'],
     },
         groupCreatorId:{
           type:Types.ObjectId,
@@ -74,6 +81,13 @@ const groupChat=new mongoose.Schema<IGroupMessage>({
             default:[],
         },
     ],
+    exitAndDelete:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"user",
+            default:[],
+        },
+    ],
     groupImage:{
         type:String,
         default:"",
@@ -87,6 +101,10 @@ const groupChat=new mongoose.Schema<IGroupMessage>({
         default:false,
     },
     canAddGroupMembers:{
+        type:Boolean,
+        default:false,
+    },
+    canRemoveGroupMembers:{
         type:Boolean,
         default:false,
     },
@@ -105,6 +123,10 @@ const groupChat=new mongoose.Schema<IGroupMessage>({
     createdAt:{
     type:Date,
     default:Date.now,
+},
+isGroupDeleted:{
+    type:Boolean,
+    default:false,
 },
 updatedAt:{
     type:Date,
