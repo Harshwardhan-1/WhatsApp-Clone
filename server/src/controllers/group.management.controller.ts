@@ -7,12 +7,14 @@ import { groupMessage } from '../models/group.message.model';
 import { Socket,Server } from 'socket.io';
 import { allAdmin, AllMembers } from './group.info.controller';
 import { User } from '../models/user.model';
+import { io,users } from '../Socket/socket';
 
 
 
-
-
-export const createGroup=async(data:{groupName:string,senderId:string,peoplesId:[]})=>{
+export const createGroup=async(data:
+    {groupName:string,senderId:string,peoplesId:[]},
+    socket:Socket,io:Server,users:{[key:string]:string}
+)=>{
     try{
         if(!data.groupName || !data.senderId){ 
             throw new Error("group name is required");
@@ -38,20 +40,36 @@ export const createGroup=async(data:{groupName:string,senderId:string,peoplesId:
         }
         create.peoplesId.push(adminId);
         await create.save();
-        await create.populate("peoplesId","name avatar");
-        await create.populate("groupCreatorId","name avatar");
         const creator:any=create.groupCreatorId;
-        await groupMessage.create({
+        let name="";
+        const find=await User.findById(data.senderId);
+        if(find){
+            name=find.name;
+        }
+        const msg=await groupMessage.create({
             groupId:create._id,
             senderId:data.senderId,
-            message:`${creator.name} created this group`,
+            message:`${name} created this group`,
             messageType:"system",
         });
-        return {message:"group created successfully",totalPeoples:create.peoplesId.length,create};
+
+        for(let i=0;i<create.peoplesId.length;i++){
+            const id=create.peoplesId[i].toString();
+            const receiverSocketId=users[id];
+            const allGroup=await groups({senderId:id});
+            if(id===data.senderId.toString())continue;
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("all_groups",(allGroup));
+                io.to(receiverSocketId).emit("receive_group_message",(msg));
+            }
+        }
+        const grp=await groups({senderId:data.senderId});
+        socket.emit("all_groups",(grp));
+        socket.emit("receive_group_message",(msg));
     }catch(err){
         throw err;
     }
-}
+} 
 
 
 
@@ -758,19 +776,52 @@ export const joinGroup=async(req:authRequest,res:Response,next:NextFunction)=>{
                 message:"group not found",
             });
         }
+        const member=group.peoplesId.some(
+            (id)=>id.toString()===user._id.toString()
+        );
+        if(member){
+            return res.status(400).json({
+                success:false,
+                message:"already a member",
+            }); 
+        }
+
         group.removedMembers=group.removedMembers.filter(
             (id)=>id.toString()!==user._id.toString()
         );
         const id=new mongoose.Types.ObjectId(user._id);
         group.peoplesId.push(id);
         await group.save();
-        await Promise.all([
-             group.populate("peoplesId","name avatar"),
-             group.populate("admin","name avatar") 
-                ]);
-        //after return on frontend we again have to emit because this is response 
-        // we again send group id to backend and io.emit to all the members of the group 
-        // if they are online that new person join
+        
+
+        //here socket part for real time update
+        const find=await User.findById(user._id);
+        let name="";
+        if(find){
+            name=find.name;
+        }
+
+        const members=await AllMembers({_id:group._id.toString()});
+        for(let i=0;i<group.peoplesId.length;i++){
+            const id=group.peoplesId[i].toString();
+            const receiverSocketId=users[id];
+            const msg=await groupMessage.create({
+                groupId:group._id,
+                senderId:user._id.toString(),
+                message:`${name} joined using the group link`,
+                messageType:"system",
+            });
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("receive_group_message",(msg));
+                io.to(receiverSocketId).emit("all_group_members",(members));
+            }
+        }
+        //here we will give the join trhe person the list of his all groups
+        const chatList=await groups({senderId:user._id.toString()});
+        const receiverSocketId=users[user._id.toString()];
+        if(receiverSocketId){
+            io.to(receiverSocketId).emit("all_groups",(chatList));
+        }
         return res.status(200).json({
             success:true,
             group,

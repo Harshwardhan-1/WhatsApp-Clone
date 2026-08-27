@@ -2,6 +2,16 @@ import {Request,Response,NextFunction} from 'express';
 import { lastMessage } from '../models/conversion.model';
 import { personalChat } from '../models/chat.model';
 
+
+const getDisplayText = (msg: any) => {
+    if (!msg) return "";
+    if (msg.messageType === "text") {
+        return msg.message || "";
+    }
+    // image, video, pdf, audio, file — in sab me caption text nahi hota
+    return msg.orignalname || msg.message || "";
+};
+
 export const store_last_message=async(data:{senderId:string,receiverId:string,msg:string,messageType:string,originalname?:string})=>{
     try{
         const findLastMessage=await lastMessage.findOne({
@@ -17,11 +27,11 @@ export const store_last_message=async(data:{senderId:string,receiverId:string,ms
             ],
         });
         let lastmessage="";
-        if(data?.messageType==="file"){
-            lastmessage=data?.originalname || "";
+        if(data?.messageType && data.messageType!=="text"){
+          lastmessage=data?.originalname || data.msg || "";
         }else{
-            lastmessage=data.msg;
-        }
+          lastmessage=data.msg;
+}
         if(findLastMessage){
             findLastMessage.lastmessage=lastmessage;
             findLastMessage.messageType=data.messageType;
@@ -48,6 +58,54 @@ export const store_last_message=async(data:{senderId:string,receiverId:string,ms
 }
 
 
+
+//for update file ka ha ya many message come  ek ssaath
+
+export const storeLastMessageForwardMessage=async(data:{senderId:string,receiverId:string})=>{
+    try{
+        const findLastMessage=await personalChat.findOne({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+        }).sort({createdAt:-1});
+
+
+        
+        if(findLastMessage){
+            const lastmsg = getDisplayText(findLastMessage);
+            const lastMsg=await lastMessage.findOne({
+                $or:[
+                    {senderId:data.senderId,receiverId:data.receiverId},
+                    {senderId:data.receiverId,receiverId:data.senderId},
+                ],
+            });
+            if(lastMsg){
+                lastMsg.lastmessage=lastmsg;
+                lastMsg.messageType=findLastMessage.messageType;
+                lastMsg.createdAt=findLastMessage.createdAt;
+                lastMsg.updatedAt=findLastMessage.updatedAt;
+                lastMsg.clearBy=[],
+                await lastMsg.save();
+                return lastMsg;
+            }else{
+                 const createLastMessage=await lastMessage.create({
+                senderId:data.senderId,
+                receiverId:data.receiverId,
+                lastmessage:lastmsg,
+                messageType:findLastMessage.messageType,
+            });
+            if(createLastMessage){
+                return createLastMessage;
+            }else{
+                throw new Error("failed to create last message");
+            }
+            }
+        }
+    }catch(err){
+        throw err;
+    }
+}
 
 
 
@@ -82,7 +140,7 @@ try{
             continue;
         }
         const isClearByThisUser=findLastMessage[i].clearBy?.includes(data.userId);
-        const displayMsg=findLastChat.messageType==="file"?findLastChat?.originalname || "":findLastChat.message;
+        const displayMsg = getDisplayText(findLastChat);
         response.push({
         senderId,
         receiverId,
