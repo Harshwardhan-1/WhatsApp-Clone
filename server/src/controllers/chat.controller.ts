@@ -5,6 +5,8 @@ import { Types } from 'mongoose';
 import { disappearingModel } from '../models/disappearing.message.model';
 import { durationtoMs } from '../helper/durationtoMs';
 import { notification } from '../models/mute.notification.model';
+import { groupChatModel } from '../models/group.create.model';
+
 
 interface personalMsg{
     senderId:string,
@@ -361,5 +363,22 @@ export const totalPendingMessage=async(data:{userId:string})=>{
         return messages;
     }catch(err){
         throw new Error("fail to show pending message");
+    }
+}
+
+
+
+
+
+
+
+
+
+export const allGroupsOfSender=async(senderId:string)=>{
+    try{
+        const group=await groupChatModel.find({peoplesId:senderId});
+        return group;
+    }catch(err){
+        throw err;
     }
 }

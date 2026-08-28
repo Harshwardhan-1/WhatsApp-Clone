@@ -42,16 +42,19 @@ const notificationSound=async(senderId:string,receiverId:string):Promise<string>
 }
 
 export const forward_messages=async(data:
-    {messageIds:string[],senderId:string,targets: targetType[]},
+    {messageIds:string[],senderId:string,targets: targetType[],sourceType?:"group"|"personal"},
     socket:Socket,io:Server,users:{[key:string]:string},
     activeChats:Record<string,string>,
     activeGroupChats:Record<string,string>
 )=>{
     try{
-        // source hamesha groupMessage hi hai, forward sirf group chat se trigger hota hai
-        const originalMessages = await groupMessage.find({ _id: { $in: data.messageIds } });
-        if(originalMessages.length === 0) return;
+        const sourceType = data.sourceType==="personal"?"personal":"group";
 
+        const originalMessages = sourceType==="personal"
+            ? await personalChat.find({_id:{ $in: data.messageIds}})
+            : await groupMessage.find({_id:{ $in: data.messageIds}});
+
+        if(originalMessages.length === 0) return;
         for(let i=0;i<data.targets.length;i++){
             const type=data.targets[i].type;
             const id=data.targets[i].id;
@@ -72,7 +75,6 @@ export const forward_messages=async(data:
                         filename:orignalMsg?.filename,
                         sizeInKb:orignalMsg?.sizeInKb,
                         sizeInMb:orignalMsg?.sizeInMb,
-                        orignalname:orignalMsg?.orignalname,
                         expiresAt:duration?new Date(Date.now()+duration):null,
                         notificationSound:sound,
                         isPinned:false,
@@ -114,7 +116,6 @@ export const forward_messages=async(data:
                         fileUrl:msg?.fileUrl,
                         mimetype:msg?.mimetype,
                         filename:msg?.filename,
-                        originalname:msg?.orignalname,
                         sizeInKb:msg?.sizeInKb,
                         sizeInMb:msg?.sizeInMb,
                     });

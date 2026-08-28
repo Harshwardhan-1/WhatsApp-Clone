@@ -22,6 +22,7 @@ import EmojiPicker from "emoji-picker-react";
 import { useRef } from "react";
 import { emojiOnMessages } from "../../hooks/use.emoji.hook";
 import { FooterEmoji } from "../../components/FooterEmoji/FooterEmoji";
+import { ForwardModal } from "../../components/ForwardMessage/ForwardModel"; // NAYA
 
 
 interface User {
@@ -77,6 +78,14 @@ const ChatPage = ({ data, data2 }: Props) => {
       socket.emit("stop_typing",{senderId,receiverId});
     },2000);
   }
+
+
+  // NAYA — ye state ab groups store karega jo pehle khali function tha
+  const [senderGroups, setSenderGroups] = useState<any[]>([]);
+
+  const handleAllGroups=async(data:any)=>{
+    setSenderGroups(data); // NAYA — pehle khali tha
+  }
   
 
   const [typing,setTyping]=useState(false);
@@ -98,15 +107,66 @@ const ChatPage = ({ data, data2 }: Props) => {
       }
      });
 
-     socket.emit("all_groups_of_receiver",(data2.loginUserId))
+     socket.emit("all_groups_of_sender",(data2.loginUserId));
+
+     socket.on("got_all_groups_of_sender",handleAllGroups);
 
      return()=>{
       notActiveChats({senderId:data2.loginUserId,receiverId:data._id});
       socket.off("user_start_typing");
       socket.off("user_stop_typing");
+      socket.off("got_all_groups_of_sender",handleAllGroups);
 }
 
   },[data._id,data2.loginUserId,activeChats,notActiveChats,user_open_chat,userpresence]);
+
+
+  // NAYA — forward modal ke "Contacts" tab ke liye saare users chahiye
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  useEffect(() => {
+      if(!data2.loginUserId) return;
+      const fetchUsers = async () => {
+          try {
+              const res = await axios.get(`${env.backendUrl}/api/v1/chat/alluser`, { withCredentials: true });
+              if (res.data.success) {
+                  const otherUsers = res.data.data.allUser.filter(
+                      (u: any) => u._id !== data2.loginUserId
+                  );
+                  setAllUsers(otherUsers);
+              }
+          } catch (err) {
+              showApiError(err);
+          }
+      };
+      fetchUsers();
+  }, [data2.loginUserId]);
+
+
+  // NAYA — message selection + forward modal ke states
+  const [selectionMode, setSelectionMode] = useState<boolean>(false);
+  const [selectedMsgIds, setSelectedMsgIds] = useState<string[]>([]);
+  const [showForwardModal, setShowForwardModal] = useState<boolean>(false);
+
+  const startForwardSelection = (msgId: string) => {
+      setSelectionMode(true);
+      setSelectedMsgIds([msgId]);
+  };
+
+  const toggleMessageSelection = (msgId: string) => {
+      setSelectedMsgIds((prev) =>
+          prev.includes(msgId) ? prev.filter((id) => id !== msgId) : [...prev, msgId]
+      );
+  };
+
+  const cancelSelection = () => {
+      setSelectionMode(false);
+      setSelectedMsgIds([]);
+  };
+
+  const openForwardModal = () => {
+      if (selectedMsgIds.length === 0) return;
+      setShowForwardModal(true);
+  };
 
 
 
@@ -358,6 +418,21 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
     </div>
       </div>
 
+      {/* NAYA — jab message select mode on ho tab ye bar dikhega */}
+      {selectionMode && (
+          <div className="selectionBar">
+              <button className="selectionCancelBtn" onClick={cancelSelection}>✕</button>
+              <span className="selectionCount">{selectedMsgIds.length} selected</span>
+              <button
+                  className="selectionForwardBtn"
+                  disabled={selectedMsgIds.length === 0}
+                  onClick={openForwardModal}
+              >
+                  ➤
+              </button>
+          </div>
+      )}
+
 
 {activeOption === "disappearing" && (
     <DisappearingMessage
@@ -454,12 +529,27 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
 
 
 
-      <div key={index} id={`message-${all._id}`} className={`message ${isSender ? "sender" : "receiver"}`}>
+      <div
+        key={index}
+        id={`message-${all._id}`}
+        className={`message ${isSender ? "sender" : "receiver"}${selectionMode ? " selectable" : ""}${selectedMsgIds.includes(all._id) ? " selectedMsg" : ""}`}
+        onClick={() => { if (selectionMode) toggleMessageSelection(all._id); }}
+      >
+     {/* NAYA — selection mode me checkbox */}
+     {selectionMode && (
+       <input
+         type="checkbox"
+         className="messageSelectCheckbox"
+         checked={selectedMsgIds.includes(all._id)}
+         onChange={() => toggleMessageSelection(all._id)}
+         onClick={(e) => e.stopPropagation()}
+       />
+     )}
      {all.messageType !== "system" &&
  all.messageType !== "systemPinned" && (
   <button
     className="reaction-btn"
-    onClick={() => setReactionMessage(all._id)}
+    onClick={(e) => { e.stopPropagation(); setReactionMessage(all._id); }}
   >
     😊
   </button>
@@ -477,7 +567,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
      )}
 
      {all.reaction && all.reaction.length > 0 && (
-       <div className="reaction-badge" onClick={() => setShowReactionDetail(all._id)}>
+       <div className="reaction-badge" onClick={(e) => { e.stopPropagation(); setShowReactionDetail(all._id); }}>
          {Object.keys(groupReactions(all.reaction)).slice(0, 3).map((emoji) => (
            <span key={emoji}>{emoji}</span>
          ))}
@@ -492,7 +582,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
     </div>
 
     <div className="reaction-pills-row">
-      <button className="add-reaction-pill" onClick={() => setReactionMessage(all._id)}>
+      <button className="add-reaction-pill" onClick={(e) => { e.stopPropagation(); setReactionMessage(all._id); }}>
         😊+
       </button>
       {Object.entries(groupReactions(all.reaction)).map(([emoji, users]) => (
@@ -512,7 +602,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
           <div
             key={r.userId}
             className="reaction-user-row"
-            onClick={() => isMe && handleRemoveReaction(all._id, r.emoji)}
+            onClick={(e) => { e.stopPropagation(); isMe && handleRemoveReaction(all._id, r.emoji); }}
           >
             <div
               className="reaction-avatar"
@@ -652,7 +742,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
 {all.messageType !== "system" && all.messageType!=="systemPinned" &&  (
   <div className="menu-container">
-    <button className="menu-btn" onClick={() => setOpenMenu(openMenu === index ? null : index)}>⋮</button>
+    <button className="menu-btn" onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === index ? null : index); }}>⋮</button>
 
 
     {openMenu === index && (
@@ -662,11 +752,17 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
             {all.messageType !== "file" && (
               <div className="menu-item" onClick={() => { handleEdit(all); setOpenMenu(null); }}>Edit</div>
             )}
+            {/* NAYA — Forward option */}
+            <div className="menu-item" onClick={() => { startForwardSelection(all._id); setOpenMenu(null); }}>Forward</div>
             <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
             <div className="menu-item" onClick={() => { deleteForEveryone({ _id: all._id, senderId: all.senderId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Everyone</div> 
           </>
         ) : (
-          <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
+          <>
+            {/* NAYA — Forward option receiver side bhi */}
+            <div className="menu-item" onClick={() => { startForwardSelection(all._id); setOpenMenu(null); }}>Forward</div>
+            <div className="menu-item" onClick={() => { delete_from_me({ _id: all._id, senderId: data2.loginUserId, receiverId: all.receiverId }); setOpenMenu(null); }}>Delete For Me</div>
+          </>
         )}
         {all.messageType === "text" && (<div onClick={()=>{navigator.clipboard.writeText(all.message);setOpenMenu(null);}} className="menu-item">Copy</div>)}  
   {isSender && (
@@ -708,6 +804,19 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
           <button type="submit">send</button>
         </form>
       </div>
+
+      {/* NAYA — Forward Modal, purane GroupChat wale component ko yahan reuse kiya hai */}
+      {showForwardModal && (
+          <ForwardModal
+              onClose={() => setShowForwardModal(false)}
+              senderId={data2.loginUserId}
+              users={allUsers}
+              groups={senderGroups}
+              selectedMessageIds={selectedMsgIds}
+              onForwarded={cancelSelection}
+              sourceType="personal"
+          />
+      )}
     </div>
     
   );

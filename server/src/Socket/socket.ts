@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import {Server as httpServer} from "http";
-import { isSend,isDelivered, PersonalChat } from "../controllers/chat.controller";
+import { isSend,isDelivered, PersonalChat, allGroupsOfSender } from "../controllers/chat.controller";
 import { userlastVisit } from "../controllers/chat.controller";
 import { userlastpresence } from "../models/user.lastpresence.model";
 import {edit,delete_from_me,delete_from_everyone } from "../controllers/chat.controller";
@@ -285,7 +285,23 @@ io.on('connection',(socket)=>{
         if(receiverId){
             io.to(receiverId).emit("user_stop_typing",{senderId:data.senderId,receiverId:data.receiverId});
         }
-     })
+     });
+
+
+
+
+
+
+
+     socket.on("all_groups_of_sender",async(senderId:string)=>{
+        try{
+           const allGroups=await allGroupsOfSender(senderId);
+           socket.emit("got_all_groups_of_sender",(allGroups));
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("err_msg",(error));
+        }
+     });
 
     socket.on('disconnect',async()=>{
         console.log("disconnected",socket.id);

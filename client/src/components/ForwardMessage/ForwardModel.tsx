@@ -10,6 +10,7 @@ interface ForwardModalProps {
     groups: any[];
     selectedMessageIds: string[];
     onForwarded?: () => void;
+    sourceType?: "group" | "personal";
 }
 
 interface Target {
@@ -30,6 +31,7 @@ export function ForwardModal({
     groups,
     selectedMessageIds,
     onForwarded,
+    sourceType = "group", // NAYA
 }: ForwardModalProps) {
     const [search, setSearch] = useState("");
     const [selectedTargets, setSelectedTargets] = useState<Target[]>([]);
@@ -111,6 +113,7 @@ const getDisabledReason = (group: any): string | null => {
             messageIds: selectedMessageIds,
             senderId,
             targets: selectedTargets,
+            sourceType, // NAYA
         });
         onForwarded?.();
         onClose();
