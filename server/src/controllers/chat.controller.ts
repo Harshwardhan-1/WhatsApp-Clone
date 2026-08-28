@@ -6,6 +6,7 @@ import { disappearingModel } from '../models/disappearing.message.model';
 import { durationtoMs } from '../helper/durationtoMs';
 import { notification } from '../models/mute.notification.model';
 import { groupChatModel } from '../models/group.create.model';
+import {Server} from 'socket.io';
 
 
 interface personalMsg{
@@ -378,6 +379,29 @@ export const allGroupsOfSender=async(senderId:string)=>{
     try{
         const group=await groupChatModel.find({peoplesId:senderId});
         return group;
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const emitPendingCountToUser=async(userId:string,io:Server,users:{[key:string]:string})=>{
+    try{
+        const receiverId=users[userId];
+        if(!receiverId)return;
+        const response=await totalPendingMessage({userId});
+        io.to(receiverId).emit("unseen_message_count",(response));
     }catch(err){
         throw err;
     }

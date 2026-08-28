@@ -9,6 +9,7 @@ import { notification } from "../models/mute.notification.model";
 import { durationtoMs } from "../helper/durationtoMs";
 import { createMessage } from "./group.message.controller";
 import { storeGroupLastMessage } from "./group.lastMessage.controller";
+import { emitPendingCountToUser } from "./chat.controller";
 
 
 interface targetType{
@@ -101,6 +102,9 @@ export const forward_messages=async(data:
                     }
                     socket.emit("receive_message",(create));
                     socket.emit("chat_list_update",(chatListUpdate));
+                }
+                if(activeChats[id]!==data.senderId){
+                  await emitPendingCountToUser(id,io,users);
                 }
             }
 

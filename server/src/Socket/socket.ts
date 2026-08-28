@@ -13,7 +13,7 @@ import { emojiOnMessages } from "./emoji.socket";
 import { allPinnedMessage } from "../controllers/profile.controller";
 import { stories } from "./stories.socket";
 import { groupChat } from "./group.message.socket";
-
+import { emitPendingCountToUser } from "../controllers/chat.controller";
 
 
 
@@ -99,6 +99,7 @@ io.on('connection',(socket)=>{
             socket.emit("chat_list_update",update_last_message);
           }
         }
+         await emitPendingCountToUser(data.receiverId, io, users);
         }catch(err){
             const error=err instanceof Error ?err.message:"Unknown Error"
             socket.emit("error_msg",error);
