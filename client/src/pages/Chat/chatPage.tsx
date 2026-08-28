@@ -96,7 +96,9 @@ const ChatPage = ({ data, data2 }: Props) => {
       if(data._id==senderId){
         setTyping(false);
       }
-     })
+     });
+
+     socket.emit("all_groups_of_receiver",(data2.loginUserId))
 
      return()=>{
       notActiveChats({senderId:data2.loginUserId,receiverId:data._id});

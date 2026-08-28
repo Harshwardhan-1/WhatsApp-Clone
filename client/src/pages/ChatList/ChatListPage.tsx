@@ -56,27 +56,48 @@ const ChatListPage = ({  setSelectedUser }: Props) => {
         setLastMessage(data);
     }
 
+// const handleChatListUpdate = (data: chatlistUpdate) => {
+//   setLastMessage((prev) => {
+//     const index = prev.findIndex((msg) => (msg.senderId === data?.senderId && msg.receiverId === data?.receiverId) || (msg.senderId === data?.receiverId && msg.receiverId === data?.senderId));
+//     if (!data?.lastmessage) {if (index !== -1) {const temp = [...prev];temp.splice(index, 1);return temp;}return prev;}
+// if (index !== -1) {const temp = [...prev];temp[index] = {...temp[index],lastmessage: data?.lastmessage, messageType: data?.messageType,updatedAt: data?.updatedAt,};return temp;}
+//     return [
+//       {
+//         senderId: data?.senderId,
+//         receiverId: data?.receiverId,
+//         lastmessage: data?.lastmessage,
+//         messageType: data?.messageType,
+//         IsSend: false,
+//         isDelivered: false,
+//         isSeen: false,
+//         updatedAt: data?.updatedAt,
+//       },
+//       ...prev,
+//     ];
+//   });
+// };
+
 const handleChatListUpdate = (data: chatlistUpdate) => {
   setLastMessage((prev) => {
-    const index = prev.findIndex((msg) => (msg.senderId === data?.senderId && msg.receiverId === data?.receiverId) || (msg.senderId === data?.receiverId && msg.receiverId === data?.senderId));
-    if (!data?.lastmessage) {if (index !== -1) {const temp = [...prev];temp.splice(index, 1);return temp;}return prev;}
-if (index !== -1) {const temp = [...prev];temp[index] = {...temp[index],lastmessage: data?.lastmessage, messageType: data?.messageType,updatedAt: data?.updatedAt,};return temp;}
-    return [
-      {
-        senderId: data?.senderId,
-        receiverId: data?.receiverId,
-        lastmessage: data?.lastmessage,
-        messageType: data?.messageType,
-        IsSend: false,
-        isDelivered: false,
-        isSeen: false,
-        updatedAt: data?.updatedAt,
-      },
-      ...prev,
-    ];
+    const index = prev.findIndex((msg) =>
+      (msg.senderId === data?.senderId && msg.receiverId === data?.receiverId) ||
+      (msg.senderId === data?.receiverId && msg.receiverId === data?.senderId));
+
+    const isActuallyCleared = data?.messageType === "text" && !data?.lastmessage;
+
+    if (isActuallyCleared) {
+      if (index !== -1) { const temp = [...prev]; temp.splice(index, 1); return temp; }
+      return prev;
+    }
+
+    if (index !== -1) {
+      const temp = [...prev];
+      temp[index] = { ...temp[index], lastmessage: data?.lastmessage, messageType: data?.messageType, updatedAt: data?.updatedAt };
+      return temp;
+    }
+    return [{ senderId: data?.senderId, receiverId: data?.receiverId, lastmessage: data?.lastmessage, messageType: data?.messageType, IsSend: false, isDelivered: false, isSeen: false, updatedAt: data?.updatedAt }, ...prev];
   });
 };
-
 
 const handleUnseenMessage=(data:UnseenCount[])=>{
   setUnseenCountNumber(data);

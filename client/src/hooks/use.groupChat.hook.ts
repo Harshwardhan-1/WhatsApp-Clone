@@ -222,6 +222,24 @@ const handleEmojiOperation = (msg: any) => {
     }
 
 
+    const checkIsCreator=async(data:{_id:string,senderId:string})=>{
+        socket.emit("isCreator",(data));
+    }
+
+
+    const deleteGroup=async(data:{_id:string,senderId:string})=>{
+        socket.emit("delete_group",data);
+    }
+
+
+    const exitGroup=async(data:{_id:string,senderId:string})=>{
+        socket.emit("exit_and_delete",(data));
+    }
+
+    
+    const exitThisGroup=async(data:{_id:string,senderId:string})=>{
+        socket.emit("exit_this_group",(data));
+    }
     
     
 
@@ -240,5 +258,9 @@ const handleEmojiOperation = (msg: any) => {
     groupEmoji,
     groupFile,
     clearGroupChatUser,
+    checkIsCreator,
+    deleteGroup,
+    exitGroup,
+    exitThisGroup,
 };
 }

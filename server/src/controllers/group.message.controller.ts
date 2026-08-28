@@ -18,12 +18,14 @@ import { Socket,Server } from "socket.io";
 import mongoose from 'mongoose';
 import { groupLastMessage } from "../models/group.conversion.model";
 import { getMuteExpiry } from "../helper/durationtoMs";
-
+import { storeGroupLastMessage, update_group_chatlist_delete, updateGroupChatListEdit } from "./group.lastMessage.controller";
 
 
 //group message is which we send message to person ok
 //here _id is the group id 
-export const createMessage=async(data:createGroupMessageConfig)=>{
+export const createMessage=async(
+    data:createGroupMessageConfig,
+)=>{
     try{
         const [group,checkDuration,muteGroupNotification]=await Promise.all([
             groupChatModel.findById(data._id),
@@ -73,6 +75,16 @@ export const createMessage=async(data:createGroupMessageConfig)=>{
          createGroupMessage.seenBy.push(id);
          createGroupMessage.deliveredTo.push(id);
          await createGroupMessage.save();
+         await storeGroupLastMessage({
+            groupId:createGroupMessage.groupId.toString(),
+            senderId:data.senderId,
+            msgId:createGroupMessage._id.toString(),
+            message:createGroupMessage.message,
+            messageType:createGroupMessage.messageType,
+            filename:createGroupMessage?.filename,
+            orignalname:createGroupMessage?.orignalname,
+            mimetype:createGroupMessage?.mimetype,
+         },group);
         return createGroupMessage;
     }catch(err){
         console.log(err);
@@ -83,7 +95,7 @@ export const createMessage=async(data:createGroupMessageConfig)=>{
 
 
 
-
+ 
 
 
 // this is basically delete for everyone query
@@ -128,6 +140,8 @@ export const deleteMessageFromEveryone=async(data:
             {groupId:data._id,hideIt:{$nin:[data.senderId]}
             }).sort({createdAt:1});
         socket.emit("delete_message_db",(allMsg));
+
+        await update_group_chatlist_delete({_id:data._id,senderId:data.senderId},socket,io,users,group)
     }catch(err){
         console.log(err);
         throw err;
@@ -179,6 +193,7 @@ export const editGroupMessage=async(
             }
          }
          socket.emit("group_message_edited",(msg));
+         await updateGroupChatListEdit({_id:group._id.toString(),msgId:msg._id.toString(),senderId:data.senderId},socket,io,users,group);
     }catch(err){
         console.log(err);
         throw err;
@@ -855,6 +870,9 @@ export const allLinks=async(_id:string)=>{
 
 
 //_id is groupId basically
+
+//   socket.on("group_chat_list_update", handleGroupChatListUpdate);
+//         socket.on("allPendingMessage", handlePendingMessages);
 export const emitMessageInGroup=async(
     data:{_id:string,senderId:string},
     msgData:any,
@@ -1089,131 +1107,57 @@ export const showAllMessage=async(data:{_id:string,senderId:string})=>{
 
 
 
-
-export const store_group_last_message=async(data:groupLastMessageConfig)=>{
-    try{
-        const id=new mongoose.Types.ObjectId(data.groupId);//data._id is groupId
-        const sID=new mongoose.Types.ObjectId(data.senderId);
-        const msg=await groupLastMessage.create({
-            groupId:id,
-            senderId:sID,
-            msgId:data.msgId,
-            message:data.message,
-            messageType:data.messageType,
-            filename:data?.filename,
-            orignalname:data?.orignalname,
-            mimetype:data?.mimetype,
-        });
-        if(!msg){
-            throw new Error("failed to store last message");
+const computePendingForUser=async(userId:string):Promise<{id:string;count:number}[]>=>{
+    let response:{id:string;count:number}[]=[];
+    const groups=await groupChatModel.find({peoplesId:userId});
+    for(let i=0;i<groups.length;i++){
+        const id=groups[i]._id.toString();
+        const msg=await groupMessage.find({groupId:id, messageType:{$ne:"system"}});
+        let count=0;
+        for(let j=0;j<msg.length;j++){
+            const checkIt=msg[j].seenBy.some(
+                (sid:any)=>sid.toString()===userId.toString()
+            );
+            if(!checkIt) count++;
         }
-        return msg;
-    }catch(err){
-        throw err;
+        response.push({id,count});
     }
+    return response;
 }
 
-
-
-
-
-
-
-
-
-export const allGroupLastMessages=async(data:{senderId:string})=>{
+export const allPendingMessage=async(senderId:string,socket:Socket)=>{
     try{
-        const allGroups=await groupChatModel.find({peoplesId:data.senderId});
-
-        let response=[];
-        for(let i=0;i<allGroups.length;i++){
-            //all yaha sair id bhi aaengi sab group jo bana ha unki apana pass
-            const lastMessage=await groupLastMessage.findOne(
-                {groupId:allGroups[i]._id,messageType:{$ne:"system"}}).sort({createdAt:-1});
-            if(!lastMessage){
-                continue;
-            }else{
-                //here groupId is basically the data of last message
-                await lastMessage.populate("senderId","name avatar");
-                response.push(lastMessage);
-            }
-        }
+        const response = await computePendingForUser(senderId);
+        socket.emit("allPendingMessage",(response));
         return response;
     }catch(err){
         throw err;
     }
 }
 
-
-
-
-
-
-//delete for everyont this is
-//_id is groupId
-export const update_chat_list_delete=async(data:{_id:string,msgId:string,senderId:string})=>{
+export const emitPendingCountToUser=async(userId:string, io:Server, users:{[key:string]:string})=>{
     try{
-        const [group,msg]=await Promise.all([
-            groupChatModel.findById(data._id),
-            groupLastMessage.findOne({groupId:data._id,msgId:data.msgId}),
-        ]); 
-         if(!group){
-            throw new Error("group not found");
-         }
-         if(!msg){
-            throw new Error("something went wrong");
-         }
-        await msg.deleteOne();
-        //now again fetch last message of group and send to frontend so chatlist show correct data
-        const lastMessage=await groupLastMessage.findOne(
-            {groupId:data._id,
-            messageType:{$ne:"system"}})
-            .sort({updatedAt:-1});
-
-            if(!lastMessage){
-                return;
-            }
-            return lastMessage;
+        const receiverSocketId = users[userId];
+        if(!receiverSocketId) return;
+        const response = await computePendingForUser(userId);
+        io.to(receiverSocketId).emit("allPendingMessage",(response));
     }catch(err){
         throw err;
     }
 }
 
-
-
-
-
-
-
-
-//edit message 
-//edit only if it is last message of group because on prev we don't update chatlist
-export const editChatListMessage=async(data:
-    {_id:string,msgId:string,senderId:string,message:string,messageType:string,
-})=>{
+export const clearSomePendingMessage=async(data:{_id:string,senderId:string},socket:Socket,io:Server)=>{
     try{
-        if(data.messageType!=="text"){
-            throw new Error("not a valid message type to edit");
+        const group=await groupChatModel.findById(data._id);
+        if(!group){
+            throw new Error("group not found");
         }
-        const msg=await groupLastMessage.findOne(
-            {groupId:data._id,messageType:{$ne:"system"}}
-        ).sort({createdAt:-1});
-    
-        if(!msg){
-            return;
-        }
-        //if this is the case this is the last message of this group 
-        //and we have to update chat list
-        if(msg.msgId.toString()===data.msgId.toString()){
-            msg.message=data.message;
-            msg.messageType=data.messageType;
-            await msg.save();
-            
-            return msg;
-        }else{
-            return null;
-        }
+        await groupMessage.updateMany(
+            { groupId: data._id, seenBy: { $ne: data.senderId } },
+            { $push: { seenBy: data.senderId } }
+        );
+        await allPendingMessage(data.senderId,socket);
     }catch(err){
         throw err;
     }
-} 
+}

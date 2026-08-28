@@ -16,16 +16,18 @@ import { groupChat } from "./group.message.socket";
 
 
 
+
+export let io:Server;
+export const users:{[key:string]:string}={};
 export const userChat=(server:httpServer,FRONTEND_URL:string)=>{
     try{
-const io=new Server(server,{
+ io=new Server(server,{
   cors:{
     origin:FRONTEND_URL,
     methods:["POST","GET","DELETE","PUT"],
     credentials:true,
   }  
 });
-const users:{[key:string]:string}={};
 let activeChats:Record<string,string>={};
 let activeGroupChats:Record<string,string>={};
 io.on('connection',(socket)=>{
@@ -39,7 +41,7 @@ io.on('connection',(socket)=>{
     profileSocket(socket,users,io);
     emojiOnMessages(socket,users,io);
     stories(socket,users,io);
-    groupChat(socket,users,io,activeGroupChats);
+    groupChat(socket,users,io,activeChats,activeGroupChats);
 
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{

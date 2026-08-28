@@ -8,6 +8,8 @@ import { disappearingModel } from "../models/disappearing.message.model";
 import { notification } from "../models/mute.notification.model";
 import { durationtoMs } from "../helper/durationtoMs";
 import { createMessage } from "./group.message.controller";
+import { storeGroupLastMessage } from "./group.lastMessage.controller";
+
 
 interface targetType{
     type:string,
@@ -116,6 +118,21 @@ export const forward_messages=async(data:
                         sizeInKb:msg?.sizeInKb,
                         sizeInMb:msg?.sizeInMb,
                     });
+
+                    //here we find group
+                    const group=await groupChatModel.findById(id);
+                    if(!group)continue;
+
+                    await storeGroupLastMessage({
+                        groupId:id.toString(),
+                        senderId:data.senderId,
+                        msgId:msgData._id.toString(),
+                        message:msgData.message,
+                        messageType:msgData.messageType,
+                        orignalname:msgData.orignalname,
+                        filename:msgData.filename,
+                        mimetype:msgData.mimetype,
+                    },group)
 
                     await emitMessageInGroup({_id:id,senderId:data.senderId},msgData,users,activeGroupChats,socket,io);
                 }

@@ -860,3 +860,13 @@ export const groups=async(data:{senderId:string})=>{
         throw err;
     }
 }
+
+
+export const currentGroups=async(data:{senderId:string})=>{
+    try{
+        const find=await groupChatModel.find({peoplesId:data.senderId});
+        return find;
+    }catch(err){
+        throw err;
+    }
+}

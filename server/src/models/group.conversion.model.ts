@@ -29,6 +29,7 @@ const groupConversion=new mongoose.Schema<IGroupConversion>({
     },
      msgId:{
         type:mongoose.Schema.Types.ObjectId,
+        ref:"group_messages",
         required:[true,'msgId is missing'],
     },
     message:{
