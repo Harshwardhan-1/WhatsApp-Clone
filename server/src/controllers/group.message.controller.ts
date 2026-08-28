@@ -904,7 +904,7 @@ export const emitMessageInGroup=async(
                 msg.seenBy.push(id);
                 const receiverSocketId=users[receiverId];
                 if(receiverSocketId){
-                io.to(receiverSocketId).emit("receive_group_message",{...msg.toObject(),notificationSound:toNotify});
+                    io.to(receiverSocketId).emit("receive_group_message",{...msg.toObject(),notificationSound:toNotify});
                 }
             }else if(activeGroupChats[receiverId]!==data._id && users[receiverId]){
                 const id=new mongoose.Types.ObjectId(receiverId);
@@ -917,6 +917,14 @@ export const emitMessageInGroup=async(
         }
         socket.emit("receive_group_message",(msg));
         await msg.save();
+
+        
+        for(let i=0;i<group.peoplesId.length;i++){
+            const receiverId=group.peoplesId[i].toString();
+            if(receiverId===data.senderId.toString())continue;
+            await emitPendingCountToUser(receiverId, io, users);
+        }
+
          if(group.peoplesId.length===msg.deliveredTo.length){
             msg.isDelivered=true;
             await msg.save();
