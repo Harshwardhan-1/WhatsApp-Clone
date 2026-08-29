@@ -98,7 +98,7 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
     ],
     messageType:{
         type:String,
-        enum:["text","file","system"],
+        enum:["text","file","system","poll"],
         required:[true,'message type is missing'],
     },
     fileUrl:{

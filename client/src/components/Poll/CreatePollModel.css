@@ -1,0 +1,14 @@
+.pollModalOverlay{ position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.pollModalBox{ background:#fff; border-radius:10px; padding:20px; width:360px; max-width:90vw; max-height:80vh; overflow-y:auto; }
+.pollModalBox h3{ margin:0 0 14px 0; color:#111b21; }
+.pollTitleInput{ width:100%; padding:10px; border:1px solid #d1d7db; border-radius:6px; font-size:14px; box-sizing:border-box; margin-bottom:14px; }
+.pollOptionsList{ display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
+.pollOptionRow{ display:flex; align-items:center; gap:6px; }
+.pollOptionRow input{ flex:1; padding:8px; border:1px solid #d1d7db; border-radius:6px; font-size:13px; box-sizing:border-box; }
+.pollOptionRow button{ background:none; border:none; color:#667781; cursor:pointer; font-size:14px; }
+.pollAddOptionBtn{ background:none; border:none; color:#00a884; cursor:pointer; font-size:13px; font-weight:600; padding:6px 0; text-align:left; }
+.pollMultiSelectLabel{ display:flex; align-items:center; gap:8px; font-size:13px; color:#111b21; margin:14px 0; }
+.pollModalActions{ display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
+.pollModalActions button{ padding:8px 16px; border-radius:6px; border:none; cursor:pointer; font-size:13px; }
+.pollModalActions button[type="submit"]{ background:#00a884; color:#fff; }
+.pollModalActions button[type="button"]{ background:#f0f2f5; color:#111b21; }

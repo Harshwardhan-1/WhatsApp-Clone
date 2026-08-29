@@ -286,7 +286,6 @@ export const clearChat=async(data:clearChatConfig)=>{
 
 export const messageInfo=async(data:messageInfoConfig)=>{
     try{
-        console.log(data);
         const [group,msg]=await Promise.all([
             groupChatModel.findById(data._id),
             groupMessage.findById(data.msgId),
@@ -301,30 +300,25 @@ export const messageInfo=async(data:messageInfoConfig)=>{
         }
         await msg.populate("deliveredTo","name avatar");
         await msg.populate("seenBy","name avatar");
-        //
-        //here we will check like how many are remaing in delivered and seen by
-            let seenBy=0,delivered=0;
-            for(let i=0;i<group.peoplesId.length;i++){
-                const peoplesId=group.peoplesId[i].toString();
-                const deliveredCheck=msg.deliveredTo.some(
-                    (user:any)=>user._id.toString()===peoplesId.toString()
-                );
-                if(deliveredCheck){
-                    delivered++;
-                }
-                const seenByCheck=msg.seenBy.some(
-                    (user)=>user._id.toString()===peoplesId.toString()
-                );
-                if(seenByCheck){
-                   seenBy++; 
-                }
-            }
+        const uniqueDeliveredTo = Array.from(
+            new Map(msg.deliveredTo.map((u:any)=>[u._id.toString(), u])).values()
+        );
+        const uniqueSeenBy = Array.from(
+            new Map(msg.seenBy.map((u:any)=>[u._id.toString(), u])).values()
+        );
+
+        let seenBy=0,delivered=0;
+        for(let i=0;i<group.peoplesId.length;i++){
+            const peoplesId=group.peoplesId[i].toString(); 
+            if(uniqueDeliveredTo.some((user:any)=>user._id.toString()===peoplesId.toString())) delivered++;
+            if(uniqueSeenBy.some((user:any)=>user._id.toString()===peoplesId.toString())) seenBy++;
+        }
          return {
             _id: msg._id,
             message: msg.message,
             messageType: msg.messageType,
-            deliveredTo: msg.deliveredTo,
-            seenBy: msg.seenBy,
+            deliveredTo: uniqueDeliveredTo,
+            seenBy: uniqueSeenBy,
             deliveredRemaining: group.peoplesId.length - delivered,
             seenRemaining: group.peoplesId.length - seenBy,
         };
@@ -336,35 +330,53 @@ export const messageInfo=async(data:messageInfoConfig)=>{
 
 
 
-//in this we emit a particular group all message to the frontend
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const seenByy=async(data:{_id:string,senderId:string},socket:Socket,io:Server,users:{[key:string]:string})=>{
     try{
-        const [group,msg]=await Promise.all([
-             groupChatModel.findById(data._id),
-             groupMessage.find({groupId:data._id}),
-        ]);
+        const group=await groupChatModel.findById(data._id);
         if(!group){
             throw new Error("group not found");
         }
-        for(let i=0;i<msg.length;i++){
-            const check=msg[i].seenBy.some(
-                (id)=>id.toString()===data.senderId.toString()
-            );
-            if(!check){
-                msg[i].seenBy.push(new mongoose.Types.ObjectId(data.senderId));
-            }
-            await msg[i].save();
-        }
+        const id=new mongoose.Types.ObjectId(data.senderId);
+
+        // atomic - duplicate kabhi push nahi hoga
+        await groupMessage.updateMany(
+            {groupId:data._id},
+            {$addToSet:{seenBy:id}}
+        );
+
         const groupPersonsLength=group.peoplesId.length;
-        for(let i=0;i<msg.length;i++){
-            if(msg[i].seenBy.length===groupPersonsLength){
-                msg[i].isSeen=true;
-            }
-             await msg[i].save();
-        }
+
+        await groupMessage.updateMany(
+            {groupId:data._id,$expr:{$eq:[{$size:"$seenBy"},groupPersonsLength]}},
+            {$set:{isSeen:true}}
+        );
+
+        const msg=await groupMessage.find({groupId:data._id});
+
         for(let i=0;i<group.peoplesId.length;i++){
-            const id=group.peoplesId[i].toString();
-            const receiverSocketId=users[id];
+            const pid=group.peoplesId[i].toString();
+            const receiverSocketId=users[pid];
+            if(pid===data.senderId.toString())continue;
             if(receiverSocketId){
                 io.to(receiverSocketId).emit("group_message_seen",(msg));
             }
@@ -376,11 +388,6 @@ export const seenByy=async(data:{_id:string,senderId:string},socket:Socket,io:Se
 }
 
 
-
-
-
-
-//when user comes online
 export const delieveredTo=async(
     data:{senderId:string},
     users:{[key:string]:string},
@@ -389,36 +396,124 @@ export const delieveredTo=async(
 )=>{
     try{
         const findAllGroups=await groupChatModel.find({peoplesId:data.senderId});
+        const id=new mongoose.Types.ObjectId(data.senderId);
+
         for(let i=0;i<findAllGroups.length;i++){
             const groupId=findAllGroups[i]._id;
-            const allMessages=await groupMessage.find({groupId:groupId});   
+            const totalMembersInGroup=findAllGroups[i].peoplesId.length;
 
-            for(let j=0;j<allMessages.length;j++){
-                const checkToPush=allMessages[j].deliveredTo.some(
-                    (id)=>id.toString()===data.senderId.toString()
-                );
-                if(!checkToPush){
-                    const id=new mongoose.Types.ObjectId(data.senderId);
-                    allMessages[j].deliveredTo.push(id);
-                }
-                const totalMembersInGroup=findAllGroups[i].peoplesId.length;
-                if(allMessages[j].deliveredTo.length===totalMembersInGroup){
-                    allMessages[j].isDelivered=true;
-                }
-                await allMessages[j].save();
-            }        
+            await groupMessage.updateMany(
+                {groupId:groupId},
+                {$addToSet:{deliveredTo:id}}
+            );
+
+            await groupMessage.updateMany(
+                {groupId:groupId,$expr:{$eq:[{$size:"$deliveredTo"},totalMembersInGroup]}},
+                {$set:{isDelivered:true}}
+            );
+
+            const allMessages=await groupMessage.find({groupId:groupId});
+
             for(let k=0;k<findAllGroups[i].peoplesId.length;k++){
-                const id=findAllGroups[i].peoplesId[k].toString();
-                    const receiverId=users[id];
-                    if(receiverId){
-                    io.to(receiverId).emit("group_message_delivered",(allMessages));    
-                    }
+                const pid=findAllGroups[i].peoplesId[k].toString();
+                const receiverId=users[pid];
+                if(receiverId){
+                    io.to(receiverId).emit("group_message_delivered",(allMessages));
                 }
+            }
         }
     }catch(err){
         throw err;
     }
 }
+
+
+
+
+//in this we emit a particular group all message to the frontend
+// export const seenByy=async(data:{_id:string,senderId:string},socket:Socket,io:Server,users:{[key:string]:string})=>{
+//     try{
+//         const [group,msg]=await Promise.all([
+//              groupChatModel.findById(data._id),
+//              groupMessage.find({groupId:data._id}),
+//         ]);
+//         if(!group){
+//             throw new Error("group not found");
+//         }
+//         for(let i=0;i<msg.length;i++){
+//             const check=msg[i].seenBy.some(
+//                 (id)=>id.toString()===data.senderId.toString()
+//             );
+//             if(!check){
+//                 msg[i].seenBy.push(new mongoose.Types.ObjectId(data.senderId));
+//             }
+//             await msg[i].save();
+//         }
+//         const groupPersonsLength=group.peoplesId.length;
+//         for(let i=0;i<msg.length;i++){
+//             if(msg[i].seenBy.length===groupPersonsLength){
+//                 msg[i].isSeen=true;
+//             }
+//              await msg[i].save();
+//         }
+//         for(let i=0;i<group.peoplesId.length;i++){
+//             const id=group.peoplesId[i].toString();
+//             const receiverSocketId=users[id];
+//             if(id===data.senderId.toString())continue;
+//             if(receiverSocketId){
+//                 io.to(receiverSocketId).emit("group_message_seen",(msg));
+//             }
+//         }
+//         socket.emit("group_message_seen",(msg))
+//     }catch(err){
+//         throw err;
+//     }
+// }
+
+
+
+
+
+
+// //when user comes online
+// export const delieveredTo=async(
+//     data:{senderId:string},
+//     users:{[key:string]:string},
+//     socket:Socket,io:Server,
+//     activeGroupChats:Record<string,string>
+// )=>{
+//     try{
+//         const findAllGroups=await groupChatModel.find({peoplesId:data.senderId});
+//         for(let i=0;i<findAllGroups.length;i++){
+//             const groupId=findAllGroups[i]._id;
+//             const allMessages=await groupMessage.find({groupId:groupId});   
+
+//             for(let j=0;j<allMessages.length;j++){
+//                 const checkToPush=allMessages[j].deliveredTo.some(
+//                     (id)=>id.toString()===data.senderId.toString()
+//                 );
+//                 if(!checkToPush){
+//                     const id=new mongoose.Types.ObjectId(data.senderId);
+//                     allMessages[j].deliveredTo.push(id);
+//                 }
+//                 const totalMembersInGroup=findAllGroups[i].peoplesId.length;
+//                 if(allMessages[j].deliveredTo.length===totalMembersInGroup){
+//                     allMessages[j].isDelivered=true;
+//                 }
+//                 await allMessages[j].save();
+//             }        
+//             for(let k=0;k<findAllGroups[i].peoplesId.length;k++){
+//                 const id=findAllGroups[i].peoplesId[k].toString();
+//                     const receiverId=users[id];
+//                     if(receiverId){
+//                     io.to(receiverId).emit("group_message_delivered",(allMessages));    
+//                     }
+//                 }
+//         }
+//     }catch(err){
+//         throw err;
+//     }
+// }
 
 
 
@@ -897,18 +992,21 @@ export const emitMessageInGroup=async(
             if (receiverId===data.senderId.toString()){
                 continue;
             }
-            const toNotify = (await muteNotificattion({_id: data._id, senderId: receiverId})) || "off";
+            const toNotify: string = (await muteNotificattion({_id: data._id, senderId: receiverId})) || "off";
+            const alreadyDelivered: boolean = msg.deliveredTo.some((id: any)=>id.toString()===receiverId);
+            const alreadySeen: boolean = msg.seenBy.some((id: any)=>id.toString()===receiverId);
+
             if(activeGroupChats[receiverId]===data._id){
                 const id=new mongoose.Types.ObjectId(receiverId);
-                msg.deliveredTo.push(id); 
-                msg.seenBy.push(id);
+                if(!alreadyDelivered) msg.deliveredTo.push(id);
+                if(!alreadySeen) msg.seenBy.push(id);
                 const receiverSocketId=users[receiverId];
                 if(receiverSocketId){
                     io.to(receiverSocketId).emit("receive_group_message",{...msg.toObject(),notificationSound:toNotify});
                 }
             }else if(activeGroupChats[receiverId]!==data._id && users[receiverId]){
                 const id=new mongoose.Types.ObjectId(receiverId);
-                msg.deliveredTo.push(id);
+                if(!alreadyDelivered) msg.deliveredTo.push(id);
                 const receiverSocketId=users[receiverId];
                 if(receiverSocketId){
                     io.to(receiverSocketId).emit("receive_group_message",{...msg.toObject(),notificationSound:toNotify});
@@ -918,7 +1016,6 @@ export const emitMessageInGroup=async(
         socket.emit("receive_group_message",(msg));
         await msg.save();
 
-        
         for(let i=0;i<group.peoplesId.length;i++){
             const receiverId=group.peoplesId[i].toString();
             if(receiverId===data.senderId.toString())continue;
@@ -940,8 +1037,6 @@ export const emitMessageInGroup=async(
         throw err;
     }
 }
-
-
 
 
 
@@ -1154,6 +1249,13 @@ export const emitPendingCountToUser=async(userId:string, io:Server, users:{[key:
     }
 }
 
+
+
+
+
+
+
+
 export const clearSomePendingMessage=async(data:{_id:string,senderId:string},socket:Socket,io:Server)=>{
     try{
         const group=await groupChatModel.findById(data._id);
@@ -1161,8 +1263,8 @@ export const clearSomePendingMessage=async(data:{_id:string,senderId:string},soc
             throw new Error("group not found");
         }
         await groupMessage.updateMany(
-            { groupId: data._id, seenBy: { $ne: data.senderId } },
-            { $push: { seenBy: data.senderId } }
+            { groupId: data._id },
+            { $addToSet: { seenBy: data.senderId } }
         );
         await allPendingMessage(data.senderId,socket);
     }catch(err){

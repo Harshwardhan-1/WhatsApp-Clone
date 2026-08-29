@@ -14,6 +14,7 @@ import { allPinnedMessage } from "../controllers/profile.controller";
 import { stories } from "./stories.socket";
 import { groupChat } from "./group.message.socket";
 import { emitPendingCountToUser } from "../controllers/chat.controller";
+import { registerPollSocketHandlers } from "./poll.socket";
 
 
 
@@ -42,6 +43,7 @@ io.on('connection',(socket)=>{
     emojiOnMessages(socket,users,io);
     stories(socket,users,io);
     groupChat(socket,users,io,activeChats,activeGroupChats);
+    registerPollSocketHandlers(socket,io,users,activeGroupChats);
 
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{

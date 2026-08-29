@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { groupChatHook } from "../../hooks/use.groupChat.hook";
+import { usePollHook } from "../../hooks/Use.pole.hook";
 import { AddGroupMembersModal } from "../../components/AddGroupMembers/AddGroupMembersModel";
 import "./GroupChatPage.css";
 import "./GroupChatSelection.css";
@@ -20,6 +21,8 @@ import { GroupDisappearingMessage } from "../../components/GroupDisappearingMess
 import { GroupProfile } from "../../components/GroupProfile/GroupProfile";
 import { ForwardModal } from "../../components/ForwardMessage/ForwardModel";
 import { userChatListPresence } from "../../services/user.presence.service";
+import { PollMessage } from "../../components/Poll/PollMessage";
+import { CreatePollModal } from "../../components/Poll/CreatePollMode";
 
 const senderColors = ["#e542a3", "#f5793a", "#00a884", "#7c5cff", "#00afaf", "#e64980", "#f76707", "#1c7ed6"];
 
@@ -72,6 +75,19 @@ export function GroupChat() {
          exitGroup,
          exitThisGroup,
         } = groupChatHook(senderId);
+
+    // poll ke liye alag hook - isme sirf current group ka data aayega
+   const {
+    pollsById,
+    createPoll,
+    fetchPollDetails,
+    votePoll,
+    votePollMultiple,
+    updatePollTitle,
+    viewPollVotes,
+    voteDetails,
+} = usePollHook(senderId);
+
     const [showModal, setShowModal] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [selectedGroup, setSelectedGroup] = useState<any>(null);
@@ -93,6 +109,9 @@ export function GroupChat() {
     const [selectionMode, setSelectionMode] = useState<boolean>(false);
     const [selectedMsgIds, setSelectedMsgIds] = useState<string[]>([]);
     const [showForwardModal, setShowForwardModal] = useState<boolean>(false);
+
+    // poll create karne wala modal - iska data sirf isi selectedGroup ko jayega, kisi aur group ko nahi
+    const [showCreatePoll, setShowCreatePoll] = useState<boolean>(false);
 
     const [groupLastMessages, setGroupLastMessages] = useState<any[]>([]);
     const [groupPendingCounts, setGroupPendingCounts] = useState<{id:string; count:number}[]>([]);
@@ -447,6 +466,7 @@ export function GroupChat() {
           if (mime === "application/pdf") return "📄 PDF";
           return last.orignalname || last.filename || "📎 File";
       }
+      if (last.messageType === "poll") return "📊 Poll";
       return last.message || "";
   };
 
@@ -458,6 +478,11 @@ export function GroupChat() {
       return bTime - aTime;
   });
 
+  // poll sirf isi selectedGroup ke liye create hoga - kisi aur group ko nahi jayega
+  const handleCreatePoll = (data:{title:string,selectOptions:boolean,polldata:{msg:string,peoplesId:string[]}[]}) => {
+      if(!selectedGroup?._id)return;
+      createPoll({ _id: selectedGroup._id, ...data });
+  }
 
   
   return (
@@ -655,6 +680,7 @@ export function GroupChat() {
     const isSystem = msg.messageType === "system"; 
     const isText = msg.messageType === "text";
     const isFileMsg = msg.messageType === "file";
+    const isPoll = msg.messageType === "poll";
     const isImage = isFileMsg && msg.mimetype?.startsWith("image");
     const isVideo = isFileMsg && msg.mimetype?.startsWith("video");
     const isPdf = isFileMsg && msg.mimetype === "application/pdf";
@@ -666,6 +692,34 @@ export function GroupChat() {
       return (
         <div key={msg._id || index} className="system-message">
           {msg.message}
+        </div>
+      );
+    }
+
+    // poll message - sirf isi group ke andar render hota ha, forward/multi-group nahi
+    if (isPoll) {
+      return (
+        <div
+          key={msg._id || index}
+          className={`${isSender ? "message sender" : "message receiver"} poll-message-wrapper`}
+        >
+          {!isSender && (
+            <span className="message-sender-name" style={{ color: getSenderColor(msgSenderId?.toString() || "") }}>
+              {typeof msg.senderId === "object" ? msg.senderId?.name : ""}
+            </span>
+          )}
+          <PollMessage
+          msg={msg}
+          senderId={senderId}
+          groupId={selectedGroup._id}
+          pollsById={pollsById}
+          fetchPollDetails={fetchPollDetails}
+          votePoll={votePoll}
+          votePollMultiple={votePollMultiple}
+          updatePollTitle={updatePollTitle}
+          viewPollVotes={viewPollVotes}
+          voteDetails={voteDetails}
+/>
         </div>
       );
     }
@@ -860,6 +914,16 @@ export function GroupChat() {
             <button type="submit" disabled={groupStatus}>Send</button>
         </form>
 
+{/* poll button - sirf isi current group ke liye poll banega, kisi doosre group ko share nahi hoga */}
+        <button
+            type="button"
+            className="pollTriggerBtn"
+            disabled={groupStatus || leavesTheGroup || chatLocked}
+            onClick={() => setShowCreatePoll(true)}
+        >
+            📊 Create Poll
+        </button>
+
 
     </div> 
      )}
@@ -888,6 +952,13 @@ export function GroupChat() {
                     groups={allGroupsList}
                     selectedMessageIds={selectedMsgIds}
                     onForwarded={cancelSelection}
+                />
+            )}
+
+            {showCreatePoll && (
+                <CreatePollModal
+                    onClose={() => setShowCreatePoll(false)}
+                    onCreate={handleCreatePoll}
                 />
             )}
 
