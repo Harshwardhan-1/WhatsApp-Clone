@@ -17,12 +17,13 @@ import { ShowLinks } from "../../components/ChatMedia/links/link";
 import { renderMessageWithLinks } from "../../utils/linkify/linkify";
 import { addToFavourites } from "../../components/addToFavourites/addToFavourites";
 import { PinMessage } from "../../components/PinMessage/pinMessage";
-import { Bell,BellOff } from "lucide-react";
+import { Bell,BellOff,Phone,Video,PhoneOff } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { useRef } from "react";
 import { emojiOnMessages } from "../../hooks/use.emoji.hook";
 import { FooterEmoji } from "../../components/FooterEmoji/FooterEmoji";
 import { ForwardModal } from "../../components/ForwardMessage/ForwardModel"; // NAYA
+import { useCallHook } from "../../hooks/use.call.hook";
 
 
 interface User {
@@ -62,7 +63,17 @@ const ChatPage = ({ data, data2 }: Props) => {
   //pin message
   const {pinMessage,unpinnedMessage,pinData}=PinMessage(data2.loginUserId,data._id);
 
-  
+  // NAYA CALL — call hook yahi seedha use kiya
+  const {
+    localVideoRef,
+    remoteVideoRef,
+    callStatus,
+    incomingCall,
+    startCall,
+    acceptCall,
+    rejectCall,
+    endCall,
+  } = useCallHook(data2.loginUserId);
 
 
   //chat page option
@@ -399,6 +410,13 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
 
 
       </div>
+
+      {/* NAYA CALL — call buttons */}
+      <div className="chatHeaderCallBtns">
+          <Phone size={20} className="callIconBtn" onClick={() => startCall(data._id, "audio")} />
+          <Video size={20} className="callIconBtn" onClick={() => startCall(data._id, "video")} />
+      </div>
+
           <div className="chatOptions">
         <button className="threeDotBtn"onClick={() => setShowMenu(prev => !prev)}>⋮</button>
         {showMenu && (
@@ -417,6 +435,39 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
         )}
     </div>
       </div>
+
+      {/* NAYA CALL — incoming call / calling / ongoing call UI */}
+      {callStatus !== "idle" && (
+        <div className="callOverlay">
+
+            {callStatus === "ringing" && incomingCall && (
+                <div className="incomingCallBox">
+                    <p>Incoming {incomingCall.callType} call...</p>
+                    <div className="incomingCallActions">
+                        <button className="acceptBtn" onClick={acceptCall}>Accept</button>
+                        <button className="rejectBtn" onClick={rejectCall}>Reject</button>
+                    </div>
+                </div>
+            )}
+
+            {callStatus === "calling" && (
+                <div className="callingBox">
+                    <p>Calling...</p>
+                    <video ref={localVideoRef} autoPlay muted playsInline className="localVideoSmall" />
+                    <button className="endCallBtn" onClick={endCall}><PhoneOff size={18}/> Cancel</button>
+                </div>
+            )}
+
+            {callStatus === "ongoing" && (
+                <div className="ongoingCallBox">
+                    <video ref={remoteVideoRef} autoPlay playsInline className="remoteVideo" />
+                    <video ref={localVideoRef} autoPlay muted playsInline className="localVideoSmall" />
+                    <button className="endCallBtn" onClick={endCall}><PhoneOff size={18}/> End Call</button>
+                </div>
+            )}
+
+        </div>
+      )}
 
       {/* NAYA — jab message select mode on ho tab ye bar dikhega */}
       {selectionMode && (
