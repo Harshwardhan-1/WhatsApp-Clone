@@ -1,5 +1,8 @@
 import {Socket,Server} from 'socket.io';
-import { store_last_message, storeLastMessageForwardMessage } from './last.message.controller';
+import { store_last_message } from './last.message.controller';
+import { PersonalChat } from './chat.controller';
+
+
 
 export const callingUser=async(data:
     {senderId:string,receiverId:string,offer:RTCSessionDescriptionInit,callType:string},
@@ -33,15 +36,34 @@ export const callingUser=async(data:
         }
 
         ///store last message as call
+        const callMessage=data.callType==="video"?" 📹 Video call":"📞 Voice call";
+
 
         const lastMessage=await store_last_message(
-            {senderId:data.senderId,receiverId:data.receiverId,msg:"call",messageType:"call"});
+            {senderId:data.senderId,receiverId:data.receiverId,msg:`${callMessage}`,messageType:"call"});
 
             if(isUserOnline){
                 io.to(isUserOnline).emit("chat_list_update",lastMessage);
             }
             socket.emit("chat_list_update",(lastMessage));
-    }catch(err){
+            const personalMsgStoreData={
+                senderId:data.senderId,
+                receiverId:data.receiverId,
+                msg:`${callMessage}`,
+                messageType:"call",
+                filename:"",
+                orignalname:"",
+                sizeInKb:0,
+                sizeInMb:0,
+            }
+
+
+           const msg=await PersonalChat(personalMsgStoreData);
+           if(isUserOnline){
+            io.to(isUserOnline).emit("receive_message",(msg));
+           }
+           socket.emit("receive_message",(msg));
+        }catch(err){
         throw err;
     }
 } 
