@@ -6,7 +6,8 @@ import { disappearingModel } from '../models/disappearing.message.model';
 import { durationtoMs } from '../helper/durationtoMs';
 import { notification } from '../models/mute.notification.model';
 import { groupChatModel } from '../models/group.create.model';
-import {Server} from 'socket.io';
+import {Socket,Server} from 'socket.io';
+import { update_chat_list } from './last.message.controller';
 
 
 interface personalMsg{
@@ -185,6 +186,43 @@ try{
 
 
 
+export const deleteFromEveryone=async(data:{senderId:string,receiverId:string,msgIds:string[]},
+    socket:Socket,io:Server,users:{[key:string]:string},
+)=>{
+    try{
+        for(let i=0;i<data.msgIds.length;i++){
+            const msg=await personalChat.findById(data.msgIds[i]);
+            if(!msg || msg.senderId!==data.senderId)continue;
+            await msg.deleteOne();
+        }
+        //chatlist update and emit
+        const msg=await personalChat.find({
+            $or:[
+            {senderId:data.senderId,receiverId:data.receiverId},
+            {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+            hideIt:{$nin:[data.senderId]}
+        });
+        
+        const chatList=await update_chat_list({senderId:data.senderId,receiverId:data.receiverId});
+      
+        const receiverSocketId=users[data.receiverId];
+        if(receiverSocketId){
+            io.to(receiverSocketId).emit("multiple_msg_delete_personal_chat",(msg));
+        }
+        socket.emit("multiple_msg_delete_personal_chat",(msg));
+
+        if(chatList){
+        io.to(receiverSocketId).emit("chat_list_update",(chatList))
+        socket.emit("chat_list_update",(chatList));
+        }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
 
 export const edit=async(data:{_id:string,msg:string})=>{
     try{
@@ -217,6 +255,76 @@ export const delete_from_me=async(data:{_id:string,senderId:string,receiverId:st
         throw new Error("error in deleting");
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//this delete for me we will do it like user can delete multiple message like it hide multile 
+//from user screen
+
+
+
+//this is for one to one only 
+export const deleteForMe=async(data:{senderId:string,receiverId:string,msgIds:string[]},socket:Socket)=>{
+    try{
+        for(let i=0;i<data.msgIds.length;i++){
+            const msg=await personalChat.findById(data.msgIds[i]);
+            if(!msg)continue;
+            msg.hideIt.push(data.senderId);
+            await msg.save();
+        }
+        const messages=await personalChat.find({
+            $or:[
+                {senderId:data.senderId,receiverId:data.receiverId},
+                {senderId:data.receiverId,receiverId:data.senderId},
+            ],
+            hideIt:{$nin:[data.senderId]}
+        });
+        socket.emit("msg_delete_from_user_side_personalChat",(messages));
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -156,6 +156,65 @@ export const deleteMessageFromEveryone=async(data:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const delete_msg_from_everyone=async(data:
+    {groupId:string,senderId:string,msgIds:string[]},
+    socket:Socket,io:Server,
+    users:{[key:string]:string}
+)=>{
+    try{
+        const group=await groupChatModel.findById(data.groupId);
+        if(!group){
+            throw new Error("group not found");
+        }
+        for(let i=0;i<data.msgIds.length;i++){
+            const msg=await groupMessage.findById(data.msgIds[i]);
+            if(!msg || msg.senderId.toString()!==data.senderId.toString())continue;
+            await msg.deleteOne();
+        }
+        for(let i=0;i<group.peoplesId.length;i++){
+            const receiverSocketId=users[group.peoplesId[i].toString()];
+            if(group.peoplesId[i].toString()===data.senderId.toString()){
+                continue;
+            }
+           const allMsg=await groupMessage.find({groupId:data.groupId,hideIt:{$nin:[group.peoplesId[i].toString()]}});
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("group_messages_deleted_from_db",(allMsg));
+            }
+        }
+        const allMsg=await groupMessage.find({groupId:data.groupId,hideIt:{$nin:[data.senderId.toString()]}});
+        socket.emit("group_messages_deleted_from_db",(allMsg));
+
+
+        //group chat list update
+        await update_group_chatlist_delete({_id:data.groupId,senderId:data.senderId},socket,io,users,group);
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
 //edit message
 export const editGroupMessage=async(
     data:messageAction,socket:Socket,io:Server,
@@ -228,6 +287,66 @@ export const deleteFromMe=async(data:messageAction)=>{
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//delete for me multiple messages delete for me
+
+
+export const delete_from_me=async(data:{groupId:string,senderId:string,receiverId:string,msgIds:string[]},socket:Socket)=>{
+    try{
+        for(let i=0;i<data.msgIds.length;i++){
+            const msg=await groupMessage.findById(data.msgIds[i]);
+            if(!msg)continue;
+            msg.hideIt.push(data.senderId);
+            await msg.save();
+        }
+        const allMessages=await groupMessage.find({groupId:data.groupId,hideIt:{$nin:[data.senderId]}});
+        socket.emit("msg_delete_from_user_side_groupChat",(allMessages));
+    }catch(err){
+        throw err;
+    }
+}
 
 
 
@@ -426,98 +545,6 @@ export const delieveredTo=async(
         throw err;
     }
 }
-
-
-
-
-//in this we emit a particular group all message to the frontend
-// export const seenByy=async(data:{_id:string,senderId:string},socket:Socket,io:Server,users:{[key:string]:string})=>{
-//     try{
-//         const [group,msg]=await Promise.all([
-//              groupChatModel.findById(data._id),
-//              groupMessage.find({groupId:data._id}),
-//         ]);
-//         if(!group){
-//             throw new Error("group not found");
-//         }
-//         for(let i=0;i<msg.length;i++){
-//             const check=msg[i].seenBy.some(
-//                 (id)=>id.toString()===data.senderId.toString()
-//             );
-//             if(!check){
-//                 msg[i].seenBy.push(new mongoose.Types.ObjectId(data.senderId));
-//             }
-//             await msg[i].save();
-//         }
-//         const groupPersonsLength=group.peoplesId.length;
-//         for(let i=0;i<msg.length;i++){
-//             if(msg[i].seenBy.length===groupPersonsLength){
-//                 msg[i].isSeen=true;
-//             }
-//              await msg[i].save();
-//         }
-//         for(let i=0;i<group.peoplesId.length;i++){
-//             const id=group.peoplesId[i].toString();
-//             const receiverSocketId=users[id];
-//             if(id===data.senderId.toString())continue;
-//             if(receiverSocketId){
-//                 io.to(receiverSocketId).emit("group_message_seen",(msg));
-//             }
-//         }
-//         socket.emit("group_message_seen",(msg))
-//     }catch(err){
-//         throw err;
-//     }
-// }
-
-
-
-
-
-
-// //when user comes online
-// export const delieveredTo=async(
-//     data:{senderId:string},
-//     users:{[key:string]:string},
-//     socket:Socket,io:Server,
-//     activeGroupChats:Record<string,string>
-// )=>{
-//     try{
-//         const findAllGroups=await groupChatModel.find({peoplesId:data.senderId});
-//         for(let i=0;i<findAllGroups.length;i++){
-//             const groupId=findAllGroups[i]._id;
-//             const allMessages=await groupMessage.find({groupId:groupId});   
-
-//             for(let j=0;j<allMessages.length;j++){
-//                 const checkToPush=allMessages[j].deliveredTo.some(
-//                     (id)=>id.toString()===data.senderId.toString()
-//                 );
-//                 if(!checkToPush){
-//                     const id=new mongoose.Types.ObjectId(data.senderId);
-//                     allMessages[j].deliveredTo.push(id);
-//                 }
-//                 const totalMembersInGroup=findAllGroups[i].peoplesId.length;
-//                 if(allMessages[j].deliveredTo.length===totalMembersInGroup){
-//                     allMessages[j].isDelivered=true;
-//                 }
-//                 await allMessages[j].save();
-//             }        
-//             for(let k=0;k<findAllGroups[i].peoplesId.length;k++){
-//                 const id=findAllGroups[i].peoplesId[k].toString();
-//                     const receiverId=users[id];
-//                     if(receiverId){
-//                     io.to(receiverId).emit("group_message_delivered",(allMessages));    
-//                     }
-//                 }
-//         }
-//     }catch(err){
-//         throw err;
-//     }
-// }
-
-
-
-
 
 
 
