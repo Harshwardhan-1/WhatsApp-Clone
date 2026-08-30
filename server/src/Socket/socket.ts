@@ -15,6 +15,7 @@ import { stories } from "./stories.socket";
 import { groupChat } from "./group.message.socket";
 import { emitPendingCountToUser } from "../controllers/chat.controller";
 import { registerPollSocketHandlers } from "./poll.socket";
+import { callHandlers } from "./call.socket";
 
 
 
@@ -31,6 +32,9 @@ export const userChat=(server:httpServer,FRONTEND_URL:string)=>{
 });
 let activeChats:Record<string,string>={};
 let activeGroupChats:Record<string,string>={};
+//we will initialize it when we place call because if someone else place the call to 
+//same person we will emit sound like on another call busy 
+let activeCalls:Record<string,{with:string,status:string}>={};
 io.on('connection',(socket)=>{
     console.log("connected:",socket.id);
 
@@ -44,7 +48,7 @@ io.on('connection',(socket)=>{
     stories(socket,users,io);
     groupChat(socket,users,io,activeChats,activeGroupChats);
     registerPollSocketHandlers(socket,io,users,activeGroupChats);
-
+    callHandlers(socket,io,users,activeCalls);
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;
@@ -319,6 +323,18 @@ io.on('connection',(socket)=>{
                 //this 2 line are extra
                 delete activeChats[disconnectUserId];
                 delete activeGroupChats[disconnectUserId];
+
+
+                const activeCall=activeCalls[disconnectUserId];
+                if(activeCall){
+                 const otherUserId=activeCall.with;
+                 const otherUserSocketId=users[otherUserId];
+                 delete activeCalls[disconnectUserId];
+                 delete activeCalls[otherUserId];
+                 if(otherUserSocketId){
+                    io.to(otherUserSocketId).emit("call_ended",({senderId:disconnectUserId,receiverId:otherUserId}))
+                 }    
+                }
                 break;
             }
         }
