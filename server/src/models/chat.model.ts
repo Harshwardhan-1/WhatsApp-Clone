@@ -33,6 +33,7 @@ export interface IChat extends Document{
     expiresAt?:Date | null,
     notificationSound?:string,
     reaction?:reaction[],
+    channelInvite?:string,
 }
 
 
@@ -132,6 +133,10 @@ const chatSchema=new mongoose.Schema<IChat>({
         },
 
     ],
+    channelInvite:{
+        type:String,
+        default:"",
+    },
 },
 {timestamps:true}, 
 )
