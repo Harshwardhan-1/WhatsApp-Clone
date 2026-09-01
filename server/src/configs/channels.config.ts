@@ -5,3 +5,22 @@ export interface createChannelConfig{
     profilePic?:string,
     category:string,
 }
+
+
+
+
+
+
+
+
+
+//message config
+
+export interface createChannelMsgConfig{
+    channelId:string,
+    senderId:string,
+    message:string,
+    messageType:string,
+    orignalname?:string,
+    mimetype?:string,
+}
