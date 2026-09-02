@@ -16,7 +16,7 @@ import { groupChat } from "./group.message.socket";
 import { emitPendingCountToUser } from "../controllers/chat.controller";
 import { registerPollSocketHandlers } from "./poll.socket";
 import { callHandlers } from "./call.socket";
-
+import { channelsSocket } from "./channels.socket";
 
 
 export let io:Server;
@@ -32,6 +32,7 @@ export const userChat=(server:httpServer,FRONTEND_URL:string)=>{
 });
 let activeChats:Record<string,string>={};
 let activeGroupChats:Record<string,string>={};
+const activeChannels:Record<string,string>={};
 //we will initialize it when we place call because if someone else place the call to 
 //same person we will emit sound like on another call busy 
 let activeCalls:Record<string,{with:string,status:string}>={};
@@ -49,6 +50,7 @@ io.on('connection',(socket)=>{
     groupChat(socket,users,io,activeChats,activeGroupChats);
     registerPollSocketHandlers(socket,io,users,activeGroupChats);
     callHandlers(socket,io,users,activeCalls);
+    channelsSocket(socket,io,users,activeChats,activeChannels);
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;
@@ -57,7 +59,7 @@ io.on('connection',(socket)=>{
 
     socket.on("active_group_user",(data:{senderId:string,groupId:string})=>{
         activeGroupChats[data.senderId]=data.groupId;
-    })
+    });
 
 
     socket.on("not_active_user",(data:{senderId:string,receiverId:string})=>{
@@ -66,7 +68,18 @@ io.on('connection',(socket)=>{
 
     socket.on("not_activeGroupChatUser",(data:{senderId:string,groupId:string})=>{
         delete activeGroupChats[data.senderId];
-    })
+    });
+
+
+
+    socket.on("active_channel_user",(data:{channelId:string,senderId:string})=>{
+        activeChannels[data.senderId]=data.channelId;
+    });
+    
+
+    socket.on("not_active_channel_user",(data:{channelId:string,senderId:string})=>{
+        delete activeChannels[data.senderId];
+    });
 
 
 

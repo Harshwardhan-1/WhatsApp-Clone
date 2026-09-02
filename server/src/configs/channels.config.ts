@@ -19,6 +19,7 @@ export interface createChannelConfig{
 export interface createChannelMsgConfig{
     channelId:string,
     senderId:string,
+    msgId:string,
     message:string,
     messageType:string,
     orignalname?:string,
