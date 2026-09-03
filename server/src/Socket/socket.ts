@@ -55,7 +55,7 @@ io.on('connection',(socket)=>{
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;
     });
-
+  
 
     socket.on("active_group_user",(data:{senderId:string,groupId:string})=>{
         activeGroupChats[data.senderId]=data.groupId;

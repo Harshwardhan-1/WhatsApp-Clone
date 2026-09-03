@@ -6,6 +6,7 @@ interface optionsConfig{
     peoplesId:Types.ObjectId[],
 }
 export interface IPollInterface extends Document{
+    channelId?:Types.ObjectId,
     title:string,
     senderId:string,
     canSelectMultiple:boolean,
@@ -16,6 +17,10 @@ export interface IPollInterface extends Document{
 
 
 const pollSchema=new mongoose.Schema<IPollInterface>({
+    channelId:{
+        type:mongoose.SchemaTypes.ObjectId,
+        ref:"channels",
+    },
     title:{
         type:String,
         required:[true,'title is missing for pole'],
