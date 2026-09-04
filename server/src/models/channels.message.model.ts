@@ -2,7 +2,7 @@ import mongoose,{Document,Types} from 'mongoose';
 
 
 interface react{
-    userId:string,
+    userId:Types.ObjectId,
     emoji:string,
 }
 
@@ -46,7 +46,7 @@ const message=new mongoose.Schema<IChannelMessage>({
     },
     messageType:{
         type:String,
-        enum:["text","file","system"],
+        enum:["text","file","system","poll"],
         default:"text",
     },
     orignalname:{
