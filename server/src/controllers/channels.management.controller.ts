@@ -33,11 +33,30 @@ export const create_channel=async(data:createChannelConfig,
         create.admin.push(new mongoose.Types.ObjectId(id));
         await create.save();
         socket.emit("channel_created",(create));
+        const allChannel=await allUserChannel({senderId:data.senderId},socket);
+        socket.emit("all_user_channel",(allChannel));
     }catch(err){
         throw err; 
     }
 }
 
+
+
+
+export const allUserChannel=async(data:{senderId:string},socket:Socket)=>{
+    try{
+        const channel=await channels.find({
+            $or:[
+                {channelCreator:data.senderId},
+                {followers:data.senderId},
+            ]
+    });
+        socket.emit("all_user_channel",(channel));
+        return channel;
+    }catch(err){
+        throw err;
+    }
+}
 
 
 
@@ -72,7 +91,7 @@ export const toggleFollow=async(data:{_id:string,senderId:string},
         await channel.save();
         const totalFollowersCount=channel.followers.length;
         const msg=checkAlreadyFollow?"Unfollow":"Follow";
-        socket.emit("toggle_follow",({count:totalFollowersCount,message:msg}));
+        socket.emit("toggle_follow",({_id:channel._id.toString(),count:totalFollowersCount,message:msg}));
 
 
         //now we have to emit the follow count to all the users
@@ -82,7 +101,7 @@ export const toggleFollow=async(data:{_id:string,senderId:string},
             if(id===data.senderId.toString())continue;
             const receiverSocketId=users[id];
             if(receiverSocketId){
-                io.to(receiverSocketId).emit("toggle_follow",{count:totalFollowersCount,message:msg})
+             io.to(receiverSocketId).emit("toggle_follow",{_id:channel._id.toString(),count:totalFollowersCount,message:msg});
             }
         }
     }catch(err){
@@ -481,8 +500,12 @@ export const hideFromUserScreen=async(data:
 
 export const showRandomChannels=async(data:{senderId:string},socket:Socket,io:Server,users:{[key:string]:string})=>{
     try{
-        const channel=await channels.find({hideIt:{$nin:[data.senderId]}}).limit(10);
-        socket.emit("random_channels",(channel));
+        const channel=await channels.find(
+            {hideIt:{$nin:[data.senderId]},
+            channelCreator:{$ne:data.senderId},
+            followers:{$ne:data.senderId}}
+        ).limit(10);
+        socket.emit("got_all_random_channels",(channel));
     }catch(err){
         throw err;
     }
@@ -513,6 +536,11 @@ export const categoryData=async(data:
                 {
                     $match:{
                         category:data.category,
+
+                        $nor:[
+                            {followers:new mongoose.Types.ObjectId(data.senderId)},
+                            {channelCreator:new mongoose.Types.ObjectId(data.senderId)},
+                        ],
                     },
                 },
                 {
@@ -605,6 +633,68 @@ export const profileData=async(data:{_id:string,senderId:string},socket:Socket)=
 
         socket.emit("profile_data",(channel));
         //we will fetch group creator id and show him the group settings and admin data
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+export const getChannelFollowers=async(data:{channelId:string,senderId:string},socket:Socket)=>{
+    try{
+        const channel=await channels.findById(data.channelId);
+        if(!channel){
+            throw new Error("channel not found");
+        }
+        if(channel.channelCreator.toString()!==data.senderId.toString()){
+            throw new Error("don't have access to view the followers list");
+        }
+       await channel.populate("followers","name profilePic");
+       socket.emit("channel_followers_list",(channel.followers));
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const canSendMessage=async(data:{channelId:string,senderId:string},socket:Socket)=>{
+    try{
+        const channel=await channels.findById(data.channelId);
+        if(!channel){
+            throw new Error("channel not found");
+        }
+        //here we check is Admin or creator then only he can send message
+
+        const isAdmin=channel.admin.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        if(isAdmin){
+            const msg="canSend";
+            socket.emit("canSendMessage",(msg));
+        }else{
+            const msg="cannotSend";
+            socket.emit("canSendMessage",(msg));
+        }
     }catch(err){
         throw err;
     }

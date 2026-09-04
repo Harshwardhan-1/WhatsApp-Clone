@@ -203,6 +203,10 @@ const handleGroups=async()=>{
 }
   
 
+const handleChannel=()=>{
+  navigate("/channel",{state:{senderId:userData?.loginUserId}})
+}
+
   return (
     <>
     <div className="chatPage__container">
@@ -221,6 +225,7 @@ const handleGroups=async()=>{
         <button >Favorites</button>
         <button onClick={handleGroups}>Groups</button>
         <button onClick={handleStories}>Stories</button>
+        <button onClick={handleChannel}>Channels</button>
       </div>
 
       <div className="chatPage__userList">

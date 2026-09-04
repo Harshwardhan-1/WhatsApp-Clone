@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { socket } from './utils/socket';
 import { Stories } from './components/Stories/stories';
 import { GroupChat } from './pages/Chat/groupChatPage';
+import { ChannelChat } from './pages/Chat/channelChat';
 import "./App.css";
 
 const RegisterPage=lazy(()=>import("./pages/Auth/signup"));
@@ -46,6 +47,7 @@ function App() {
         <Route path='/chat' element={<ChatLayout />}></Route>
         <Route path='/story' element={<Stories />}></Route>
         <Route path='/group' element={<GroupChat />}></Route>
+        <Route path='/channel' element={<ChannelChat />}></Route>
       </Routes>
       </Suspense>
     </>

@@ -57,7 +57,7 @@ export const createMsg=async(data:createChannelMsgConfig,
             const id=channel.followers[i].toString();
             if(id===data.senderId.toString())continue;
             const checkNotification=channel.muteNotification.some(
-                (id)=>id.toString()===id.toString()
+                (mutedId)=>mutedId.toString()===id.toString()
             );
             let sound="off";
             if(!checkNotification){
@@ -357,7 +357,7 @@ export const groupEmoji=async(data:{channelId:string,msgId:string,senderId:strin
             const {userId,emoji}=msg.reaction[i];
 
             if(!map[emoji]){
-                map[emoji]={emoji,count:0};
+                map[emoji]={emoji,count:1};
             }else{
                 map[emoji].count++;
             }
