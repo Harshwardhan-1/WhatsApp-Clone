@@ -14,6 +14,9 @@ export interface IChannelMessage extends Document{
     orignalname?:string,
     mimetype?:string,
 
+    sizeInKb?:number,
+    sizeInMb?:number,
+
     isEdited?:boolean,
 
     hideIt:string[],
@@ -56,6 +59,14 @@ const message=new mongoose.Schema<IChannelMessage>({
     mimetype:{
         type:String,
         default:"",
+    },
+    sizeInKb:{
+        type:Number,
+        default:0,
+    },
+    sizeInMb:{
+        type:Number,
+        default:0,
     },
     isEdited:{
         type:Boolean,

@@ -24,4 +24,6 @@ export interface createChannelMsgConfig{
     messageType:string,
     orignalname?:string,
     mimetype?:string,
+    sizeInKb:number,
+    sizeInMb:number,
 }

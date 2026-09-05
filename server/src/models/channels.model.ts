@@ -10,7 +10,6 @@ export interface IChannels extends Document{
     category:string,
     hideIt:Types.ObjectId[],
     muteNotification:Types.ObjectId[],
-    channelSettings:string,
 };
 
 
@@ -71,11 +70,6 @@ const channelsSchema=new mongoose.Schema<IChannels>({
             ref:"user",
         },
     ],
-    channelSettings:{
-        type:String,
-        enum:["Any emoji","Default only","None"],
-        default:"Any emoji",
-    },
 },
 {timestamps:true},
 );

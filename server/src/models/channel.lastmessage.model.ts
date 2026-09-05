@@ -9,6 +9,8 @@ export interface IChannelChatlist extends Document{
     messageType:string,
     orignalname?:string,
     mimetype?:string,
+    sizeInKb?:number,
+    sizeInMb?:number,
 }
 
 
@@ -44,6 +46,14 @@ const chatlistSchema=new mongoose.Schema<IChannelChatlist>({
     mimetype:{
         type:String,
         default:"",
+    },
+    sizeInKb:{
+        type:Number,
+        default:0,
+    },
+    sizeInMb:{
+        type:Number,
+        default:0,
     },
 },
 
