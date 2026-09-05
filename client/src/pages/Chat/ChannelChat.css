@@ -485,3 +485,135 @@
     color: var(--wa-text-secondary);
     font-size: 14px;
 }
+
+
+
+/* ---- header ka 3-dot menu (Channel info / Mute / Unfollow) ---- */
+.chatOptions {
+    position: relative;
+}
+
+.threeDotBtn {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: #54656f;
+}
+
+.optionsMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    min-width: 200px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+}
+
+.optionsMenu button {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #111b21;   /* yehi missing tha, isliye text invisible tha */
+    cursor: pointer;
+}
+
+.optionsMenu button:hover {
+    background-color: #f5f6f6;
+}
+
+.optionsMenu button:disabled {
+    color: #aebac1;
+    cursor: not-allowed;
+}
+
+/* ---- har message ke andar wala 3-dot menu ---- */
+.message-menu {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+}
+
+.menu-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #54656f;
+    opacity: 0;
+}
+
+.channel-window-messages .message:hover .menu-button {
+    opacity: 1;
+}
+
+.message-menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #ffffff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    min-width: 160px;
+    z-index: 50;
+    flex-direction: column;
+}
+
+.message-menu:hover .message-menu-dropdown,
+.message-menu:focus-within .message-menu-dropdown {
+    display: flex;
+}
+
+.message-menu-dropdown button {
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #111b21;
+    cursor: pointer;
+}
+
+.message-menu-dropdown button:hover {
+    background-color: #f5f6f6;
+}
+
+
+.unread-badge {
+    background-color: #00a884;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 2px 7px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+
+.reaction-pill--mine {
+    border: 1px solid var(--border-accent, #00a884);
+    cursor: pointer;
+}
+.reaction-pill:not(.reaction-pill--mine) {
+    cursor: default;
+}
+
+
+.channel-window {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}

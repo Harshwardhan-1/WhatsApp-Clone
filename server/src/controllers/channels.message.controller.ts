@@ -6,7 +6,26 @@ import { storeLastMessage } from "./channels.lastmessage.controller";
 import { update_last_message_delete } from "./channels.lastmessage.controller";
 import { channel_last_message_edit } from "./channels.lastmessage.controller";
 import { pollModel } from "../models/poll.model";
+import { channelLastMessage } from "../models/channel.lastmessage.model";
 import mongoose,{Types} from 'mongoose';
+import { allUserChannel, showRandomChannels, toggleFollow } from "./channels.management.controller";
+
+
+
+
+
+
+
+
+export const allPrevMessage=async(data:{channelId:string,senderId:string},socket:Socket)=>{
+    try{
+        const messages=await channelMessage.find({channelId:data.channelId,hideIt:{$nin:[data.senderId]}});
+        socket.emit("got_all_prev_message",(messages));
+    }catch(err){
+        throw err;
+    }
+}
+
 
 
 export const createMsg=async(data:createChannelMsgConfig,
@@ -19,7 +38,6 @@ export const createMsg=async(data:createChannelMsgConfig,
         if(!channel){
             throw new Error("the channel don't exist or something went wrong");
         }
-        //check senderId
         const canSendMsg=channel.admin.some(
             (id)=>id.toString()===data.senderId.toString()
         );
@@ -33,12 +51,13 @@ export const createMsg=async(data:createChannelMsgConfig,
             messageType:data.messageType,
             orignalname:data?.orignalname,
             mimetype:data?.mimetype,
+            sizeInKb:data?.sizeInKb,
+            sizeInMb:data?.sizeInMb,
             expiresAt:new Date(Date.now()+30*24*60*60*1000)
         });
         if(!create){
             throw new Error("failed to create Msg");
         }
-
 
         const lastMsg=await storeLastMessage({
             channelId:data.channelId,
@@ -48,10 +67,9 @@ export const createMsg=async(data:createChannelMsgConfig,
             messageType:data.messageType,
             orignalname:data?.orignalname,
             mimetype:data?.mimetype,
+            sizeInKb:create?.sizeInKb || 0,
+            sizeInMb:create?.sizeInMb || 0,
         });
-
-        //here we will update channel chat list
-
 
         for(let i=0;i<channel.followers.length;i++){
             const id=channel.followers[i].toString();
@@ -65,19 +83,18 @@ export const createMsg=async(data:createChannelMsgConfig,
             }
             const receiverSocketId=users[id];
 
-            if(receiverSocketId && activeChannels[data.senderId]===data.channelId){
-                create.seenBy.push(new mongoose.Types.ObjectId(data.senderId));
+            if(activeChannels[id]===data.channelId){
+                create.seenBy.push(new mongoose.Types.ObjectId(id));
             }
             await create.save();
-            
-
-            //here now we emit the entire all channels pedning message to user
-
-
 
             if(receiverSocketId){
                 io.to(receiverSocketId).emit("channel_receive_message",({...create.toObject(),notificationSound:sound}));
                 io.to(receiverSocketId).emit("update_channel_chatlist",(lastMsg));
+                const receiverSocketInstance=io.sockets.sockets.get(receiverSocketId);
+                if(receiverSocketInstance){
+                    await allPendingChannelMessage({senderId:id},receiverSocketInstance);
+                }
             }
         }
         socket.emit("channel_receive_message",(create));
@@ -86,9 +103,6 @@ export const createMsg=async(data:createChannelMsgConfig,
         throw err;
     }
 }
-
-
-
 
 
 
@@ -139,7 +153,7 @@ export const deleteMsg=async(data:
 
 
 //we have to show delete for me message only to admin not to anyone
-export const delete_msg_from_me=async(data:{channelId:string,msgId:string,senderId:string},socket:Socket)=>{
+export const delete_msg_from_me=async(data:{channelId:string,senderId:string,msgId:string},socket:Socket)=>{
     try{
         const channel=await channels.findById(data.channelId);
         if(!channel){
@@ -151,17 +165,17 @@ export const delete_msg_from_me=async(data:{channelId:string,msgId:string,sender
         }
         msg.hideIt.push(data.senderId);
         await msg.save();
-        socket.emit("delete_channel_msg",({channelId:data.channelId,mzgId:data.msgId}));
+        socket.emit("delete_channel_msg",({channelId:data.channelId,msgId:data.msgId}));
     }catch(err){
         throw err;
-    }
+    } 
 }
 
 
 
 
 export const msgEditted=async(data:
-    {channelId:string,msgId:string,senderId:string,message:string},
+    {channelId:string,senderId:string,msgId:string,message:string},
     socket:Socket,io:Server,users:{[key:string]:string},
 )=>{
     try{
@@ -173,7 +187,7 @@ export const msgEditted=async(data:
         if(!msg){
             throw new Error("msg not found");
         }
-        if(msg.senderId.toString() !==data.senderId.toString()){
+        if(msg.senderId.toString()!==data.senderId.toString()){
             throw new Error("don't have access to edit this message");
         }
         msg.message=data.message;
@@ -184,14 +198,14 @@ export const msgEditted=async(data:
             if(id===data.senderId.toString())continue;
             const receiverSocketId=users[id];
             if(receiverSocketId){
-                io.to(receiverSocketId).emit("channel_msg_updated",(msg));
+                io.to(receiverSocketId).emit("channel_msg_updated",({channelId:data.channelId,msg}));
                 //chat list update
                 if(updated){
                 io.to(receiverSocketId).emit("update_channel_chatlist",(updated));
             }
             }
         }
-        socket.emit("channel_msg_updated",(msg));
+        socket.emit("channel_msg_updated",({channelId:data.channelId,msg}));
         if(updated){
         socket.emit("update_channel_chatlist",(updated));
         }
@@ -280,8 +294,6 @@ export const userOpenChannelPage=async(data:{channelId:string,senderId:string},s
 
 
 
-
-
 export const reaction=async(data:
     {channelId:string,msgId:string,senderId:string,emoji:string},
     socket:Socket,io:Server,users:{[key:string]:string},activeChannels:Record<string,string>
@@ -312,11 +324,13 @@ export const reaction=async(data:
             msg.reaction.push({userId:new mongoose.Types.ObjectId(data.senderId),emoji:data.emoji});
         }
         await msg.save();
-        for(let i=0;i<channel.followers.length;i++){
-            const id=channel.followers[i].toString();
+        const notifyIds=new Set<string>();
+        channel.followers.forEach((id)=>notifyIds.add(id.toString()));
+        channel.admin.forEach((id)=>notifyIds.add(id.toString()));
+        notifyIds.delete(data.senderId.toString());
+        for(const id of notifyIds){ 
             const receiverSocketId=users[id];
-            if(id===data.senderId.toString())continue;
-            if(receiverSocketId && activeChannels[id]===data.channelId){
+            if(receiverSocketId){
                 io.to(receiverSocketId).emit("update_channel_emoji_reaction",(msg));
             }
         }
@@ -422,6 +436,8 @@ export const createChannelPole=async(data:
             msgId:msg._id.toString(),
             message:"poll",
             messageType:"poll",
+            sizeInKb:msg?.sizeInKb || 0,
+            sizeInMb:msg?.sizeInMb || 0,
         });
         
         for(let i=0;i<channel.followers.length;i++){
@@ -659,6 +675,132 @@ export const toggleLikeMultiple=async(data:
             }
         }
         socket.emit("channel_pole_updated",(poll));
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+export const getAllChannelLastMessageStored=async(data:{senderId:string},socket:Socket)=>{
+    try{
+        const followedChannels=await channels.find({
+            $or:[
+                {followers:data.senderId},
+                {admin:data.senderId},
+            ],
+        });
+        const response=[];
+        for (let i=0;i<followedChannels.length;i++){
+            const channelId = followedChannels[i]._id.toString();
+            const lastMessageOfChannel=await channelLastMessage.findOne({channelId}).sort({updatedAt:-1});
+            if (lastMessageOfChannel){
+                response.push({channelId,lastMessageOfChannel});
+            }
+        }
+        socket.emit("all_last_message_of_channels",response);
+    }catch(err){
+        throw err;
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+export const checkFollowing=async(data:{channelId:string,senderId:string},socket:Socket)=>{
+    try{
+        const channel=await channels.findById(data.channelId);
+        if(!channel){
+            throw new Error("channel not found");
+        }
+        const isInFollowers=channel.followers.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        let channelCreator="";
+        if(channel.channelCreator.toString()===data.senderId.toString()){
+            channelCreator="yes";
+        }else{
+            channelCreator="no";
+        }
+        if(isInFollowers){
+            socket.emit("channel_following",(
+                {channelId:data.channelId,senderId:data.senderId,msg:"Following",channelCreator:channelCreator}
+            ));
+        }else{
+            socket.emit("channel_following",(
+                {channelId:data.channelId,senderId:data.senderId,msg:"Not Following",channelCreator:channelCreator}
+            ));
+        }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+export const updateFollowersCount=async(data:
+    {channelId:string,senderId:string},
+    socket:Socket,io:Server,users:{[key:string]:string}
+)=>{
+    try{
+        const channel=await channels.findById(data.channelId);
+        if(!channel){
+            throw new Error("channel not found");
+        }
+        await toggleFollow({_id:data.channelId,senderId:data.senderId},socket,io,users);
+        const updateChannel=await channels.findById(data.channelId);
+        if(!updateChannel){
+            throw new Error("channel not found");
+        }
+        await allUserChannel({senderId:data.senderId},socket);
+        await getAllChannelLastMessageStored({senderId:data.senderId},socket);
+        await checkFollowing({channelId:data.channelId,senderId:data.senderId},socket);
+        await showRandomChannels({senderId:data.senderId},socket,io,users);
+
+
+        const followersCount=updateChannel.followers.length;
+        for(let i=0;i<channel.followers.length;i++){
+            const id=channel.followers[i].toString();
+            const receiverSocketId=users[id];
+            if(id===data.senderId.toString())continue;
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("channel_followers_update_toggle",({channelId:data.channelId,count:followersCount}));
+            }   
+        }
+        socket.emit("channel_followers_update_toggle",({channelId:data.channelId,count:followersCount}));
+
+        for(let i=0;i<channel.admin.length;i++){
+            const id=channel.admin[i].toString();
+            const receiverSocketId=users[id];
+            if(id===data.senderId.toString())continue;
+            if(receiverSocketId){
+              io.to(receiverSocketId).emit("channel_followers_update_toggle",({channelId:data.channelId,count:followersCount}));
+            }
+        }
+        socket.emit("channel_followers_update_toggle",({channelId:data.channelId,count:followersCount}));
     }catch(err){
         throw err;
     }

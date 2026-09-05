@@ -1,10 +1,11 @@
 import {Socket,Server} from 'socket.io';
-import { create_channel, showRandomChannels, allUserChannel, toggleFollow, hideFromUserScreen, categoryData, canSendMessage } from '../controllers/channels.management.controller';
+import { create_channel, showRandomChannels, allUserChannel, toggleFollow, hideFromUserScreen, categoryData, canSendMessage, profileInfo, updateChannelProfilePic, editChannelName, allMedia, channelDocs, channelLinks } from '../controllers/channels.management.controller';
 import { allPrevMessage, checkFollowing, createMsg, delete_msg_from_me, deleteMsg, msgEditted, updateFollowersCount } from '../controllers/channels.message.controller';
 import { getAllChannelLastMessageStored } from '../controllers/channels.message.controller';
 import { allPendingChannelMessage } from '../controllers/channels.message.controller';
 import { userOpenChannelPage } from '../controllers/channels.message.controller';
 import { reaction } from '../controllers/channels.message.controller';
+import { channelDescription } from '../controllers/channels.management.controller';
 
 export const channelsSocket=async(socket:Socket,io:Server,users:{[key:string]:string},activeChats:Record<string,string>,activeChannels:Record<string,string>)=>{
         try{
@@ -165,6 +166,81 @@ socket.on("channel_reaction",async(data)=>{
       });
 
 
+
+
+      //channel profile
+      //now channel profile data to show to user in real time 
+
+      socket.on("channel_profile_info",async(data)=>{
+        try{
+            await profileInfo(data,socket);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+
+      socket.on("edit_channel_description",async(data)=>{
+        try{
+            await channelDescription(data,socket,io,users);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+
+
+      socket.on("edit_channel_profile_pic",async(data)=>{
+        try{
+            await updateChannelProfilePic(data,socket,io,users);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+      socket.on("edit_channel_name",async(data)=>{
+        try{
+            await editChannelName(data,socket,io,users);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+
+
+
+      //media links docs
+      socket.on("all_channel_media",async(data)=>{
+        try{
+            await allMedia(data,socket);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+      socket.on("all_channel_docs",async(data)=>{
+        try{
+            await channelDocs(data,socket);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+
+      socket.on("all_channel_links",async(data)=>{
+        try{
+            await channelLinks(data,socket);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
       
         }catch(err){
             throw err;
