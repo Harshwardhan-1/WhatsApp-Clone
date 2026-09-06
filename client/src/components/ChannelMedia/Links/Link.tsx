@@ -54,7 +54,7 @@ export function ChannelLinks({onBack,channelId,senderId}:prop){
             showMessage(err);
         }
     }
-
+      
     useEffect(()=>{
         socket.emit("all_channel_links",({channelId,senderId}));
         socket.on("got_all_channel_links",handleLinks);
