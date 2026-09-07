@@ -52,7 +52,7 @@ export function ChannelMedia({onBack,channelId,senderId}:prop){
             <div className="mediaHeader">
                 <span className="backArrow" onClick={onBack}>←</span>
                 <h2>Media</h2>
-            </div>
+            </div>   
 
             <div className="mediaGrid">
                 {data.length===0 && (

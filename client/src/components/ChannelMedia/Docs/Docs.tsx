@@ -66,7 +66,7 @@ export function ChannelDocs({onBack,channelId,senderId}:prop){
             socket.off("got_all_channel_docs",handleDocs);
         }
     },[]);
-    
+        
     return(
         <div className="docsPage">
             <div className="docsHeader">
