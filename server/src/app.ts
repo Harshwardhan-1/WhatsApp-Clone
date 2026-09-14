@@ -42,6 +42,6 @@ export default app;
 
 
 
-
 //add task
-//show input icon for image upload and video upload
+
+//want to add Location based community Chat
