@@ -16,8 +16,6 @@ export interface ICommunity extends Document{
 
 
     members:Types.ObjectId[],
-
-    isEdited?:boolean,
     
     expiresAt:Date,
 }
@@ -59,10 +57,6 @@ const communitySchema=new mongoose.Schema<ICommunity>({
             ref:"user",
         },
     ],
-    isEdited:{
-        type:Boolean,
-        default:false,
-    },
     expiresAt:{
         type:Date,
         default:()=>new Date(Date.now()+24*60*60*1000),
