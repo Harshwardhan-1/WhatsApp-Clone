@@ -9,6 +9,7 @@ import { pollModel } from "../models/poll.model";
 import { channelLastMessage } from "../models/channel.lastmessage.model";
 import mongoose,{Types} from 'mongoose';
 import { allUserChannel, showRandomChannels, toggleFollow } from "./channels.management.controller";
+import { create } from "qrcode";
 
 
 
@@ -58,6 +59,8 @@ export const createMsg=async(data:createChannelMsgConfig,
         if(!create){
             throw new Error("failed to create Msg");
         }
+        create.seenBy.push(new mongoose.Types.ObjectId(data.senderId));
+        await create.save();
 
         const lastMsg=await storeLastMessage({
             channelId:data.channelId,

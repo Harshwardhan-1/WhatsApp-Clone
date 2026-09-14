@@ -129,14 +129,32 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
         setFollowersCount(data?.count);
     }
 
-    const handleMuteNotificationInfo=(data:{channelId:string,senderId:string,message:string})=>{
+ const [hide,setHide]=useState<boolean>(false);
+
+    const handleMuteNotificationInfo=(data:{channelId:string,senderId:string,message:string,followingMsg:string})=>{
         if(channelId!==data.channelId || senderId!==data.senderId){
             return;
         }
+        if(data.followingMsg=== "off"){
+            setHide(true);
+            return;
+        }
+        setHide(false);
         if(data.message==="on"){
             setIsMuted(true);
         }else{
             setIsMuted(false);
+        }
+    }
+
+    const handleNotification=async(data:{channelId:string,senderId:string,message:string})=>{
+        if(channelId!==data.channelId || senderId!==data.senderId){
+            return;
+        }
+        if(data.message=== "show_nfb"){
+            setHide(false);
+        }else{
+            setHide(true);
         }
     }
 
@@ -159,6 +177,7 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
         }
     }
 
+
     useEffect(() => {
         if (!channelId || !senderId) return;
 
@@ -171,6 +190,7 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
         socket.on("channel_followers_update_toggle", handleChannelFollowers);
         socket.on("got_mute_notification_info",(handleMuteNotificationInfo));
         socket.on("toggle_mute_notification",handleToggleMute);
+        socket.on("channel_notification_system",handleNotification);
 
 
 
@@ -182,6 +202,7 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
             socket.off("channel_followers_update_toggle", handleChannelFollowers);
             socket.off("got_mute_notification_info",handleMuteNotificationInfo);
             socket.off("toggle_mute_notification",handleToggleMute);
+            socket.off("channel_notification_system",handleNotification);
         };
     }, [channelId, senderId]);
 
@@ -387,11 +408,14 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
 
                 <p className="channel-profile-created">{formatCreatedAt(channel.createdAt)}</p>
             </div>
-            <div className="mute-row"><span>Mute notifications</span>
+         
+          {!hide && (
+                <div className="mute-row"><span>Mute notifications</span>
          <button className={`toggle ${isMuted ? "active" : ""}`}onClick={handleMuteClick}>
              <span className="toggle-circle"></span>
         </button>
-</div>
+                </div>
+          )}
         </div>
     );
 }

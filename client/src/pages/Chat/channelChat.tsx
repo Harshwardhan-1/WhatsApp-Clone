@@ -464,7 +464,7 @@ const renderFindRow = (ch: ChannelListItem) => (
         </div>
         <div className="find-row-info">
             <span className="find-row-name">{ch.name}</span>
-            <span className="find-row-count">{formatFollowers(getFollowerCount(ch))}</span>
+            {/* <span className="find-row-count">{formatFollowers(getFollowerCount(ch))}</span> */}
         </div>
         <button className="find-follow-btn" onClick={handleFollowButton}
             type="button">Follow</button>

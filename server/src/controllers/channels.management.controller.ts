@@ -86,8 +86,14 @@ export const toggleFollow=async(data:{_id:string,senderId:string},
             channel.followers=channel.followers.filter(
             (id)=>id.toString()!==data.senderId.toString()
             );   
+            socket.emit("channel_notification_system",({channelId:data._id,senderId:data.senderId,message:"hide_nfb"}));
+            channel.muteNotification=channel.muteNotification.filter(
+                (id)=>id.toString()!==data.senderId.toString()
+            );
         }else{
             channel.followers.push(new mongoose.Types.ObjectId(data.senderId));
+            //here to show mute notification option to user
+            socket.emit("channel_notification_system",({channelId:data._id,senderId:data.senderId,message:"show_nfb"}));
         }
         await channel.save();
         const totalFollowersCount=channel.followers.length;
@@ -796,7 +802,20 @@ export const muteNotification=async(data:{channelId:string,senderId:string},sock
         if(check){
             message="on";
         }
-        socket.emit("got_mute_notification_info",({channelId:data.channelId,senderId:data.senderId,message}));
+        
+         //here we will add one extra field that if the person following channel then only show mute 
+         //notification otherwise hide it
+         const isFollowingChannel=channel.followers.some(
+            (id)=>id.toString()===data.senderId.toString()
+         );
+         const isAdmin=channel.admin.some(
+            (id)=>id.toString()===data.senderId.toString()
+         );
+         let following="off";
+         if(isFollowingChannel || isAdmin){
+            following="on";
+         }
+        socket.emit("got_mute_notification_info",({channelId:data.channelId,senderId:data.senderId,message,followingMsg:following}));
     }catch(err){
         throw err;
     }
