@@ -5,6 +5,7 @@ import axios from 'axios';
 import { ChannelMedia } from "../ChannelMedia/Media/Media";
 import { ChannelDocs } from "../ChannelMedia/Docs/Docs";
 import { ChannelLinks } from "../ChannelMedia/Links/Link";
+import { ChannelHook } from "../../hooks/use.channel.hook";
 
 import "./ChannelsProfile.css";
 
@@ -128,15 +129,50 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
         setFollowersCount(data?.count);
     }
 
+    const handleMuteNotificationInfo=(data:{channelId:string,senderId:string,message:string})=>{
+        if(channelId!==data.channelId || senderId!==data.senderId){
+            return;
+        }
+        if(data.message==="on"){
+            setIsMuted(true);
+        }else{
+            setIsMuted(false);
+        }
+    }
+
+
+    const {muteToggle}=ChannelHook();
+
+
+    const handleMuteClick=()=>{
+        muteToggle({channelId,senderId});
+    }
+
+    const handleToggleMute=(data:{channelId:string,senderId:string,message:string})=>{
+        if(channelId!==data.channelId || senderId!==data.senderId){
+            return;
+        }
+        if(data.message==="on"){
+            setIsMuted(true);
+        }else{
+            setIsMuted(false);
+        }
+    }
+
     useEffect(() => {
         if (!channelId || !senderId) return;
 
         socket.emit("channel_profile_info", { channelId, senderId });
+        socket.emit("mute_notification_info",({channelId,senderId}));
         socket.on("got_channel_profile_info", handleChannelInfo);
         socket.on("channel_description_changed", handleDescriptionUpdated);
         socket.on("channel_pic_updated", handleProfilePicUpdated);
         socket.on("channel_name_updated", handleNameUpdated);
         socket.on("channel_followers_update_toggle", handleChannelFollowers);
+        socket.on("got_mute_notification_info",(handleMuteNotificationInfo));
+        socket.on("toggle_mute_notification",handleToggleMute);
+
+
 
         return () => {
             socket.off("got_channel_profile_info", handleChannelInfo);
@@ -144,8 +180,15 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
             socket.off("channel_pic_updated", handleProfilePicUpdated);
             socket.off("channel_name_updated", handleNameUpdated);
             socket.off("channel_followers_update_toggle", handleChannelFollowers);
+            socket.off("got_mute_notification_info",handleMuteNotificationInfo);
+            socket.off("toggle_mute_notification",handleToggleMute);
         };
     }, [channelId, senderId]);
+
+    
+
+    //toggle mute notification
+    const [isMuted,setIsMuted]=useState(false);
 
     const startEditDescription = () => {
         setDescriptionText(channel?.description || "");
@@ -344,6 +387,11 @@ export function ChannelProfile({ onBack, senderId, channelId, isCreator }: Props
 
                 <p className="channel-profile-created">{formatCreatedAt(channel.createdAt)}</p>
             </div>
+            <div className="mute-row"><span>Mute notifications</span>
+         <button className={`toggle ${isMuted ? "active" : ""}`}onClick={handleMuteClick}>
+             <span className="toggle-circle"></span>
+        </button>
+</div>
         </div>
     );
 }

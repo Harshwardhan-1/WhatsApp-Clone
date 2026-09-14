@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { socket } from "../utils/socket";
+import { notificationSound } from "../notification/notification.sound";
 
 interface ChannelMessage {
     _id: string;
@@ -10,6 +11,7 @@ interface ChannelMessage {
     mimetype?: string;
     orignalname?: string;
     reaction?: { userId: string; emoji: string }[];
+    notificationSound:string,
 }
 
 export function ChannelHook(channelId?: string, senderId?: string) {
@@ -20,13 +22,20 @@ export function ChannelHook(channelId?: string, senderId?: string) {
         setMsg(prev=>prev.filter((m)=>m._id.toString()!==data.msgId.toString()))
     }
 
-    const handleReceiveMessage = (data: ChannelMessage) => {
-        if (data.channelId !== channelId) return; 
-        setMsg(prev => {
-            if (prev.some(m => m._id === data._id)) return prev;
-            return [...prev, data];
+
+
+    const handleReceiveMessage=(data:ChannelMessage)=>{
+        if(data.channelId!==channelId)return; 
+            if(data.senderId!==senderId && data.notificationSound=== "on"){
+                notificationSound();
+            }
+        setMsg(prev=>{
+            if(prev.some(m=>m._id===data._id))return prev;
+            return[...prev, data];
         });
     };
+
+
 
     const handleDelMsgFromMe=async(data:{channelId:string,msgId:string})=>{
         if(data.channelId!==channelId)return;
@@ -96,5 +105,9 @@ export function ChannelHook(channelId?: string, senderId?: string) {
         socket.emit("channel_reaction", data);
     };
 
-    return { msg, editMsg, deleteForMe, deleteForEveryone, sendFileMsg, sendMessage, sendReaction };
+    const muteToggle=(data:{channelId:string,senderId:string})=>{
+        socket.emit("mute_toggle",(data));
+    }
+
+    return { msg, editMsg, deleteForMe, deleteForEveryone, sendFileMsg, sendMessage, sendReaction,muteToggle };
 }

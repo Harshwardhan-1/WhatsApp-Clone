@@ -278,3 +278,43 @@
     color:#667781;
     font-size:14px;
 }
+
+
+
+
+
+
+.mute-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: black;
+  margin-left: 15px;
+}
+
+.toggle {
+  width: 44px;
+  height: 24px;
+  border: none;
+  border-radius: 20px;
+  background: #ccc;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.toggle-circle {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.toggle.active {
+  background: #25d366;
+}
+
+.toggle.active .toggle-circle {
+  transform: translateX(20px);
+}

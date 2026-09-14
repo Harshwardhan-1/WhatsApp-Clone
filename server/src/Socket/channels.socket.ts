@@ -1,5 +1,5 @@
 import {Socket,Server} from 'socket.io';
-import { create_channel, showRandomChannels, allUserChannel, toggleFollow, hideFromUserScreen, categoryData, canSendMessage, profileInfo, updateChannelProfilePic, editChannelName, allMedia, channelDocs, channelLinks } from '../controllers/channels.management.controller';
+import { create_channel, showRandomChannels, allUserChannel, toggleFollow, hideFromUserScreen, categoryData, canSendMessage, profileInfo, updateChannelProfilePic, editChannelName, allMedia, channelDocs, channelLinks, muteNotification, MuteToggle } from '../controllers/channels.management.controller';
 import { allPrevMessage, checkFollowing, createMsg, delete_msg_from_me, deleteMsg, msgEditted, updateFollowersCount } from '../controllers/channels.message.controller';
 import { getAllChannelLastMessageStored } from '../controllers/channels.message.controller';
 import { allPendingChannelMessage } from '../controllers/channels.message.controller';
@@ -174,6 +174,25 @@ socket.on("channel_reaction",async(data)=>{
       socket.on("channel_profile_info",async(data)=>{
         try{
             await profileInfo(data,socket);
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+      socket.on("mute_notification_info",async(data)=>{
+        try{
+           await muteNotification(data,socket); 
+        }catch(err){
+            const error=err instanceof Error?err.message:"Unknown Error";
+            socket.emit("channel_error",(error));
+        }
+      });
+
+      
+      socket.on("mute_toggle",async(data)=>{
+        try{
+          await MuteToggle(data,socket);
         }catch(err){
             const error=err instanceof Error?err.message:"Unknown Error";
             socket.emit("channel_error",(error));

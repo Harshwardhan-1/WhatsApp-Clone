@@ -773,3 +773,62 @@ export const channelLinks=async(data:{channelId:string,senderId:string},socket:S
         throw err;
     }
 }
+
+
+
+
+
+
+
+
+
+
+export const muteNotification=async(data:{channelId:string,senderId:string},socket:Socket)=>{
+    try{
+        const channel=await channels.findById(data.channelId);
+        if(!channel){
+            throw new Error("channel not found");
+        }
+        const check=channel.muteNotification.some(
+            (id)=>id.toString()===data.senderId.toString()
+        );
+        let message="off";
+        if(check){
+            message="on";
+        }
+        socket.emit("got_mute_notification_info",({channelId:data.channelId,senderId:data.senderId,message}));
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
+//handleMuteNotification
+
+export const MuteToggle=async(data:{channelId:string,senderId:string},socket:Socket)=>{
+    try{
+        const channel=await channels.findById(data.channelId);
+        if(!channel){
+            throw new Error("channel not found");
+        }
+         const checkAlreadyMuted=channel.muteNotification.some(
+            (id)=>id.toString()===data.senderId.toString()
+         );
+         if(checkAlreadyMuted){
+            channel.muteNotification=channel.muteNotification.filter(
+                (id)=>id.toString()!==data.senderId.toString()
+            );
+         }else{
+            channel.muteNotification.push(new mongoose.Types.ObjectId(data.senderId));
+         }
+         await channel.save();
+         let message=checkAlreadyMuted?"off":"on";
+         socket.emit("toggle_mute_notification",({channelId:data.channelId,senderId:data.senderId,message}));
+    }catch(err){
+        throw err;
+    }
+}
