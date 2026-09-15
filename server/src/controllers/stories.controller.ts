@@ -4,7 +4,7 @@ deleteStoryConfig,
 toggleLikeConfig,
 viewedByConfig,
 addReplyConfig
-} from "../configs/stories.config"
+} from "../types/stories.types"
 
 import {Request,Response,NextFunction} from 'express';
 import { stories } from "../models/stories.model";

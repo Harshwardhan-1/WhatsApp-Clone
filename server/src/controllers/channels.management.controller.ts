@@ -1,5 +1,5 @@
 import { channels } from "../models/channels.model";
-import type { createChannelConfig } from "../configs/channels.config";
+import type { createChannelConfig } from "../types/channels.types";
 import { createChannelValidate } from "../validators/channels.validator";
 import {Socket,Server } from "socket.io";
 import mongoose from 'mongoose';

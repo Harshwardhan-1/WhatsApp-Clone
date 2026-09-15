@@ -6,7 +6,7 @@ messageInfoConfig,
 seenByConfig,
 deleiveredToConfig,
 groupLastMessageConfig,
-} from "../configs/group.message.config";
+} from "../types/group.message.types";
 import { groupMessage } from "../models/group.message.model";
 import { groupDisappearingMessageModel } from "../models/disappearing.message.model";
 import { durationtoMs } from "../helper/durationtoMs";

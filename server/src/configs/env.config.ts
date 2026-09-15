@@ -9,4 +9,7 @@ export const{
     NODE_ENV,
     PORT,
     JWT_EXPIRES_IN,
+    LIVEKIT_URL,
+    LIVEKIT_API_KEY,
+    LIVEKIT_API_SECRET
 }=process.env     

@@ -1,5 +1,5 @@
 import { channelLastMessage } from "../models/channel.lastmessage.model";
-import { createChannelMsgConfig } from "../configs/channels.config";
+import { createChannelMsgConfig } from "../types/channels.types";
 import mongoose from 'mongoose';
 import { channelMessage } from "../models/channels.message.model";
 

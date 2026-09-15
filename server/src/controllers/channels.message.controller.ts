@@ -1,6 +1,6 @@
 import { channels } from "../models/channels.model";
 import { channelMessage } from "../models/channels.message.model";
-import type { createChannelMsgConfig } from "../configs/channels.config";
+import type { createChannelMsgConfig } from "../types/channels.types";
 import {Socket,Server} from 'socket.io';
 import { storeLastMessage } from "./channels.lastmessage.controller";
 import { update_last_message_delete } from "./channels.lastmessage.controller";
