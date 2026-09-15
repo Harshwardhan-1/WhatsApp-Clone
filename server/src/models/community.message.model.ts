@@ -2,6 +2,11 @@ import mongoose,{Document,Types} from 'mongoose';
 
 
 
+interface reaction{
+    userId:Types.ObjectId,
+    emoji:string,
+}
+
 export interface ICommunityMessage extends Document{
     communityId:Types.ObjectId,
 
@@ -9,11 +14,14 @@ export interface ICommunityMessage extends Document{
     message:string,
     mimetype?:string,
     orignalname?:string,
-    
-    messageType:["text","file"],
+    messageType:string,
+
+    isEdited?:boolean,
 
 
     expiresAt:Date,
+
+    reaction:reaction[],
 }
 
 
@@ -36,7 +44,7 @@ const communityMessage=new mongoose.Schema({
    },
    messageType:{
     type:String,
-    enum:["text","file"],
+    enum:["text","file","system"],
     default:"text",
    },
    mimetype:{
@@ -51,6 +59,21 @@ const communityMessage=new mongoose.Schema({
     type:Date,
     default:new Date(Date.now()+24*60*60*1000),
    },
+   isEdited:{
+    type:Boolean,
+    default:false,
+   },
+   reaction:[
+    {
+        userId:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"user",
+        },
+        emoji:{
+            type:String,
+        },
+    },
+   ],
 },
 {timestamps:true},
 );
@@ -59,3 +82,7 @@ const communityMessage=new mongoose.Schema({
 
 
 export const communityMsg=mongoose.model("communityMessageModel",communityMessage);
+
+
+
+communityMessage.index({expiresAt:1},{expireAfterSeconds:0});

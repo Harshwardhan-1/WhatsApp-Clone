@@ -5,6 +5,7 @@ import { socket } from './utils/socket';
 import { Stories } from './components/Stories/stories';
 import { GroupChat } from './pages/Chat/groupChatPage';
 import { ChannelChat } from './pages/Chat/channelChat';
+import { NearByChat } from './pages/Chat/NearByChat';
 import "./App.css";
 
 const RegisterPage=lazy(()=>import("./pages/Auth/signup"));
@@ -48,6 +49,7 @@ function App() {
         <Route path='/story' element={<Stories />}></Route>
         <Route path='/group' element={<GroupChat />}></Route>
         <Route path='/channel' element={<ChannelChat />}></Route>
+        <Route path='/NearByChats' element={<NearByChat />}></Route>
       </Routes>
       </Suspense>
     </>

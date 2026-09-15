@@ -17,10 +17,12 @@ import { emitPendingCountToUser } from "../controllers/chat.controller";
 import { registerPollSocketHandlers } from "./poll.socket";
 import { callHandlers } from "./call.socket";
 import { channelsSocket } from "./channels.socket";
+import { communitySocket } from "./community.socket";
 
 
 export let io:Server;
 export const users:{[key:string]:string}={};
+
 export const userChat=(server:httpServer,FRONTEND_URL:string)=>{
     try{
  io=new Server(server,{
@@ -33,6 +35,13 @@ export const userChat=(server:httpServer,FRONTEND_URL:string)=>{
 let activeChats:Record<string,string>={};
 let activeGroupChats:Record<string,string>={};
 const activeChannels:Record<string,string>={};
+
+
+//community record 
+//community record,senderId
+let communityRecord:Record<string,string>={};
+
+//end of community record
 //we will initialize it when we place call because if someone else place the call to 
 //same person we will emit sound like on another call busy 
 let activeCalls:Record<string,{with:string,status:string}>={};
@@ -51,6 +60,7 @@ io.on('connection',(socket)=>{
     registerPollSocketHandlers(socket,io,users,activeGroupChats);
     callHandlers(socket,io,users,activeCalls);
     channelsSocket(socket,io,users,activeChats,activeChannels);
+    communitySocket(socket,io,communityRecord,users);
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;
@@ -336,6 +346,7 @@ io.on('connection',(socket)=>{
                 //this 2 line are extra
                 delete activeChats[disconnectUserId];
                 delete activeGroupChats[disconnectUserId];
+                delete communityRecord[disconnectUserId];
 
 
                 const activeCall=activeCalls[disconnectUserId];

@@ -15,6 +15,7 @@ export const createCommunity=async(data:createCommunityType,socket:Socket,io:Ser
             creatorId:id,
             communityName:data.communityName,
             searchRadius:data.searchRadius,
+            communityImage:data.communityImage,
             location:{
                 type:"Point",
                 coordinates:data.location.coordinates,
@@ -24,6 +25,7 @@ export const createCommunity=async(data:createCommunityType,socket:Socket,io:Ser
             throw new Error("failed to create Community");
         }
         create.members.push(new mongoose.Types.ObjectId(data.creatorId));
+        create.joinTime.push({userId:new mongoose.Types.ObjectId(data.creatorId),date:new Date(Date.now())});
         await create.save();
         
 
@@ -37,7 +39,7 @@ export const createCommunity=async(data:createCommunityType,socket:Socket,io:Ser
         const createMsg=await communityMsg.create({
             communityId:create._id,
             senderId:data.creatorId,
-            message:`Start Chatting  community created At ${new Date(Date.now()).toLocaleDateString}`,
+            message:`Start Chatting  community created At ${new Date(Date.now()).toLocaleDateString()}`,
             messageType:"system",
         });
         if(!createMsg){
@@ -48,6 +50,31 @@ export const createCommunity=async(data:createCommunityType,socket:Socket,io:Ser
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+export const allUserCommunity=async(data:{senderId:string},socket:Socket)=>{
+    try{
+        const now=Date.now();
+        const allCommunity=await community.find({
+            $or:[
+                {members:data.senderId},
+                {creatorId:data.senderId},
+            ],
+            expiresAt:{$gt:now},
+        });
+        socket.emit("all_user_community",(allCommunity));
+    }catch(err){
+        throw err;
+    }
+}
 
 
 
@@ -143,7 +170,7 @@ export const editCommunityName=async(data:
                 ));
             }
         }
-        socket.emit("community_name_updated",({communityid:data.communityId,communityName:data.communityName}));
+        socket.emit("community_name_updated",({communityId:data.communityId,communityName:data.communityName}));
     }catch(err){
         throw err;
     }
@@ -154,13 +181,46 @@ export const editCommunityName=async(data:
 
 
 
+export const editCommunityImage=async(data:
+    {communityId:string,creatorId:string,communityImage:string},socket:Socket,io:Server,
+    users:{[key:string]:string}
+)=>{
+    try{
+        const c=await community.findById(data.communityId);
+        if(!c || Date.now()>=c.expiresAt.getTime()){
+            throw new Error("community not found");
+        }
+        if(c.creatorId.toString()!==data.creatorId.toString()){
+            throw new Error("don't have access to edit image");
+        }
+        c.communityImage=data.communityImage;
+        await c.save();
+        for(let i=0;i<c.members.length;i++){
+            const id=c.members[i].toString();
+            if(id==data.creatorId)continue;
+            const receiverSocketId=users[id];
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("community_image_updated",(
+                    {communityId:data.communityId,communityImage:c.communityImage}
+                ));
+            }
+        }
+        socket.emit("community_image_updated",(
+            {communityId:data.communityId,communityImage:c.communityImage}
+        ));
+    }catch(err){
+        throw err;
+    }
+}
 
 
 
 
 
 export const editSearchRadius=async(data:
-    {communityId:string,creatorId:string,searchRadius:string},socket:Socket
+    {communityId:string,creatorId:string,searchRadius:string},
+    socket:Socket,io:Server,
+    users:{[key:string]:string}
 )=>{
     try{
         const c=await community.findById(data.communityId);
@@ -176,7 +236,17 @@ export const editSearchRadius=async(data:
         }
         c.searchRadius=data.searchRadius;
         await c.save();
-        socket.emit("search_radius_updated",(data));
+        for(let i=0;i<c.members.length;i++){
+            const id=c.members[i].toString();
+            if(id===data.creatorId)continue;
+            const receiverSocketId=users[id];
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("search_radius_updated",(
+                    {communityId:data.communityId,searchRadius:c.searchRadius}
+                ));
+            }
+        }
+        socket.emit("search_radius_updated",({communityId:data.communityId,searchRadius:c.searchRadius}));
     }catch(err){
         throw err;
     }
@@ -192,7 +262,10 @@ export const editSearchRadius=async(data:
 
 
 //here user Id means the person who want to join the community
-export const userJoinCommunity=async(data:{communityId:string,userId:string},socket:Socket)=>{
+export const userJoinCommunity=async(data:{communityId:string,userId:string},
+    socket:Socket,io:Server,
+    users:{[key:string]:string}
+)=>{
     try{
         const c=await community.findById(data.communityId);
         if(!c){
@@ -209,7 +282,25 @@ export const userJoinCommunity=async(data:{communityId:string,userId:string},soc
             throw new Error("you are already joined as a member");
         }
         c.members.push(new mongoose.Types.ObjectId(data.userId));
+
+
+        //join time store 
+
+        //first we remove it from join array if it is there
+
+        c.joinTime=c.joinTime.filter(
+            (id)=>id.userId.toString()!==data.userId.toString()
+        );       
+        const userId=new mongoose.Types.ObjectId(data.userId);
+        const date=new Date(Date.now());
+        c.joinTime.push({userId,date});
         await c.save();
+
+        //sabhi online users ko naya count bhejna hai - jo already member hain unko bhi,
+        //aur jo abhi "nearby" mein dekh rahe hain (member nahi bane) unko bhi taaki unki list bhi update ho
+        const totalMembersLength=c.members.length;
+        io.emit("community_members",{communityId:data.communityId,totalMembersLength});
+
         socket.emit("user_joined_community",(data));
     }catch(err){
         throw err;
@@ -241,6 +332,9 @@ export const userLeaveCommunity=async(data:{communityId:string,userId:string},
         c.members=c.members.filter(
             (id)=>id.toString()!==data.userId.toString()
         );
+        c.joinTime=c.joinTime.filter(
+            (id)=>id.userId.toString()!==data.userId.toString()
+        );
         await c.save();
         
 
@@ -249,13 +343,9 @@ export const userLeaveCommunity=async(data:{communityId:string,userId:string},
              delete communityRecord[data.userId];
         }
         const totalMembersLength=c.members.length;
-        for(let i=0;i<c.members.length;i++){
-            const id=c.members[i].toString();
-            const receiverSocketId=users[id];
-            if(receiverSocketId){
-                io.to(receiverSocketId).emit("community_members",{communityId:data.communityId,totalMembersLength});
-            }
-        }
+        //sabhi online users ko bhejna hai (join wale jaisa hi), sirf remaining members ko nahi
+        io.emit("community_members",{communityId:data.communityId,totalMembersLength});
+
         socket.emit("community_left",({communityId:data.communityId,userId:data.userId}));
     }catch(err){
         throw err;
@@ -286,6 +376,7 @@ export const communityData=async(data:{communityId:string,userId:string},socket:
             return;
         }
         if(c.creatorId.toString()!==data.userId.toString()){
+            socket.emit("community_data",({communityId:data.communityId,userId:data.userId,showEditOption}));
             return;
         }
         //show edit options

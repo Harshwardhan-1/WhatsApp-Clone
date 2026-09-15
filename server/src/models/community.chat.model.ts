@@ -7,10 +7,17 @@ interface location{
     coordinates:number[],
 }
 
+interface joinTime{
+    userId:Types.ObjectId,
+    date:Date,
+}
+
 export interface ICommunity extends Document{
     creatorId:Types.ObjectId,
     communityName:string,
     searchRadius?:string,
+
+    communityImage?:string,
 
     location:location,
 
@@ -18,6 +25,8 @@ export interface ICommunity extends Document{
     members:Types.ObjectId[],
     
     expiresAt:Date,
+
+    joinTime:joinTime[],
 }
 
 
@@ -40,6 +49,10 @@ const communitySchema=new mongoose.Schema<ICommunity>({
         enum:["5km","10km","15km","20km","30km"],
         default:"5km"
     },
+    communityImage:{
+        type:String,
+        default:"./default.webp",
+    },
     location:{
         type:{
             type:String,
@@ -61,6 +74,17 @@ const communitySchema=new mongoose.Schema<ICommunity>({
         type:Date,
         default:()=>new Date(Date.now()+24*60*60*1000),
     },
+    joinTime:[
+        {
+            userId:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"user",
+            },
+            date:{
+                type:Date,
+            },
+        },
+    ],
 },{
     timestamps:true,
 });
