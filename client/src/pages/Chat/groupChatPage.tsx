@@ -23,6 +23,9 @@ import { ForwardModal } from "../../components/ForwardMessage/ForwardModel";
 import { userChatListPresence } from "../../services/user.presence.service";
 import { PollMessage } from "../../components/Poll/PollMessage";
 import { CreatePollModal } from "../../components/Poll/CreatePollMode";
+import { Phone,Video } from "lucide-react";
+import { GroupCall } from "../../components/GroupCall/GroupCall";
+import {groupCall as useGroupCallHook} from "../../hooks/use.group.call.hook";
 
 const senderColors = ["#e542a3", "#f5793a", "#00a884", "#7c5cff", "#00afaf", "#e64980", "#f76707", "#1c7ed6"];
 
@@ -75,6 +78,26 @@ export function GroupChat() {
          exitGroup,
          exitThisGroup,
         } = groupChatHook(senderId);
+
+
+
+            // groupChatHook destructure ke turant baad ye add karo:
+    const {
+        incomingCall,
+        activeCall,
+        calling,
+        callError,
+        startGroupCall,
+        acceptGroupCall,
+        rejectGroupCall,
+        joinOngoingCall,
+        leaveGroupCall: hangUpGroupCall,
+        setCallError,
+    } = useGroupCallHook(senderId);
+
+
+
+        
 
     // poll ke liye alag hook - isme sirf current group ka data aayega
    const {
@@ -484,7 +507,61 @@ export function GroupChat() {
       createPoll({ _id: selectedGroup._id, ...data });
   }
 
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // handleGroupVoiceCall / handleGroupVideoCall ki jagah ye rakho:
+
+  const buildReceiverIds = () => {
+      const ids = new Set<string>();
+      (liveSelectedGroup?.peoplesId || []).forEach((p: any) => {
+          const id = typeof p === "object" ? p._id : p;
+          if (id && id.toString() !== senderId?.toString()) ids.add(id.toString());
+      });
+      (liveSelectedGroup?.admin || []).forEach((a: any) => {
+          const id = typeof a === "object" ? a._id : a;
+          if (id && id.toString() !== senderId?.toString()) ids.add(id.toString());
+      });
+      return Array.from(ids);
+  };
+
+  // ===== NEW: group ki SABSE RECENT call-message hi "abhi chal rahi" call maani jayegi =====
+  // isi ki wajah se Join button sirf usi ek call-message pe dikhega, purani call-messages pe nahi
+  const lastCallMessage = [...(messages || [])].reverse().find((m: any) => m.messageType === "call");
+  const ongoingCallMsgId = liveSelectedGroup?.callStatus === "busy" ? lastCallMessage?._id : null;
+
+  const handleGroupVoiceCall=()=>{
+      if(groupStatus || leavesTheGroup || !selectedGroup?._id) return;
+      const receiverId = buildReceiverIds();
+      if(receiverId.length===0){
+          alert("No other members to call");
+          return;
+      }
+      startGroupCall({ groupId: selectedGroup._id, receiverId, messageType: "voice" });
+  }
+
+  const handleGroupVideoCall=()=>{
+      if(groupStatus || leavesTheGroup || !selectedGroup?._id) return;
+      const receiverId = buildReceiverIds();
+      if(receiverId.length===0){
+          alert("No other members to call");
+          return;
+      }
+      startGroupCall({ groupId: selectedGroup._id, receiverId, messageType: "video" });
+  }
+
+
+
   return (
         <div className="group-chat">
 
@@ -529,13 +606,58 @@ export function GroupChat() {
             {/* RIGHT : CHAT */}
             <div className="group-chat-area">
                 {!selectedGroup ? (
+                  <>
                     <div className="whatsapp-screen">
                         <img src="/WhatsApp.svg"  alt="WhatsApp"/>
                     </div>
+                    </> 
                 ) : ( 
-                 <div className="chat-screen"> 
 
+                 <div className="chat-screen"> 
           <div className="chatOptions">
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      <div className="chatHeaderCallBtns">
+                 <Phone size={20} className="callIconBtn" onClick={handleGroupVoiceCall}  />
+                 <Video size={20} className="callIconBtn" onClick={handleGroupVideoCall} />
+                          </div>
+
+
         <button className="threeDotBtn" onClick={() => {setShowMenu(prev => !prev); emitTheSocket()}}>⋮</button>
         {showMenu && (
             <div className="optionsMenu">
@@ -681,6 +803,10 @@ export function GroupChat() {
     const isText = msg.messageType === "text";
     const isFileMsg = msg.messageType === "file";
     const isPoll = msg.messageType === "poll";
+    const isVoiceCall = msg.messageType === "call" && msg.message === "voice";
+    const isVideoCall = msg.messageType === "call" && msg.message === "video";
+    // ===== CHANGE: call messages ke liye emoji/tick/3-dot menu sab hide karne ke liye ye flag =====
+    const isCallMsg = isVoiceCall || isVideoCall;
     const isImage = isFileMsg && msg.mimetype?.startsWith("image");
     const isVideo = isFileMsg && msg.mimetype?.startsWith("video");
     const isPdf = isFileMsg && msg.mimetype === "application/pdf";
@@ -749,6 +875,44 @@ export function GroupChat() {
           <span className="message-text">{renderMessageWithLinks(msg.message)}</span>
         )}
 
+        {isVoiceCall && (
+    <div className="call-message voice-call-message">
+        <Phone size={22} />
+        <div className="call-message-info">
+            <span>Voice call</span>
+            <small>{isSender ? "Outgoing" : "Incoming"}</small>
+        </div>
+        {!isSender && ongoingCallMsgId === msg._id && !activeCall && (
+            <button
+                type="button"
+                className="joinOngoingCallBtn"
+                onClick={(e) => { e.stopPropagation(); joinOngoingCall(selectedGroup._id, msg._id, "voice"); }}
+            >
+                Join
+            </button>
+        )}
+    </div>
+)}
+
+{isVideoCall && (
+    <div className="call-message video-call-message">
+        <Video size={22} />
+        <div className="call-message-info">
+            <span>Video call</span>
+            <small>{isSender ? "Outgoing" : "Incoming"}</small>
+        </div>
+        {!isSender && ongoingCallMsgId === msg._id && !activeCall && (
+            <button
+                type="button"
+                className="joinOngoingCallBtn"
+                onClick={(e) => { e.stopPropagation(); joinOngoingCall(selectedGroup._id, msg._id, "video"); }}
+            >
+                Join
+            </button>
+        )}
+    </div>
+)}
+
         {isImage && (
           <div className="message-file message-image">
             <img
@@ -792,11 +956,14 @@ export function GroupChat() {
           </a>
         )}
 
+        {/* ===== CHANGE: emoji reaction button ab call messages pe nahi dikhega ===== */}
+        {!isCallMsg && (
         <button className="reaction-btn" disabled={groupStatus || leavesTheGroup}  onClick={(e) => { e.stopPropagation(); setReactionMessage(msg._id); }}>
           😊
         </button>
+        )}
 
-        {reactionMessage === msg._id && !groupStatus && !leavesTheGroup && (
+        {!isCallMsg && reactionMessage === msg._id && !groupStatus && !leavesTheGroup && (
           <div className="emoji-picker-popup" ref={reactionRef}>
             <EmojiPicker
               onEmojiClick={(emojiData) => {
@@ -807,7 +974,7 @@ export function GroupChat() {
           </div>
         )}
 
-        {msg.reaction && msg.reaction.length > 0 && (
+        {!isCallMsg && msg.reaction && msg.reaction.length > 0 && (
           <div className="reaction-badge" onClick={(e) => { e.stopPropagation(); setShowReactionDetail(msg._id); }}>
             {Object.keys(groupReactions(msg.reaction)).slice(0, 3).map((emoji: string) => (
               <span key={emoji}>{emoji}</span>
@@ -816,7 +983,7 @@ export function GroupChat() {
           </div>
         )}
 
-        {showReactionDetail === msg._id && (
+        {!isCallMsg && showReactionDetail === msg._id && (
           <div className="reaction-detail-popup" ref={reactionDetailRef}>
             <div className="reaction-detail-header">
               {msg.reaction.length} reaction{msg.reaction.length > 1 ? "s" : ""}
@@ -856,10 +1023,16 @@ export function GroupChat() {
           </div>
         )}
 
+        {/* ===== CHANGE: tick/edited label ab call messages pe nahi dikhega ===== */}
+        {!isCallMsg && (
         <span className="message-meta">
           {msg.isEdited && <span className="message-edited">edited</span>}
           {isSender && (<Tick isSeen={msg.isSeen} isDelivered={msg.isDelivered} isSend={msg.isSend} />)}
         </span>
+        )}
+
+        {/* ===== CHANGE: 3-dot menu (Forward/Delete/Edit/Copy/Msg Info) ab call messages pe nahi dikhega ===== */}
+        {!isCallMsg && (
         <div className="message-menu">
           <button className="menu-button" onClick={(e)=>e.stopPropagation()}>⋮</button>
           <div className="message-menu-dropdown">
@@ -885,6 +1058,7 @@ export function GroupChat() {
             )}
           </div>
         </div>
+        )}
 
         {editingMsgId === msg._id && (
           <div className="inline-edit-box" onClick={(e)=>e.stopPropagation()}>
@@ -960,6 +1134,51 @@ export function GroupChat() {
                     onClose={() => setShowCreatePoll(false)}
                     onCreate={handleCreatePoll}
                 />
+            )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+            {incomingCall && (
+                <div className="incoming-call-overlay">
+                    <div className="incoming-call-box">
+                        <p>Incoming {incomingCall.messageType} call</p>
+                        <div className="incoming-call-actions">
+                            <button onClick={acceptGroupCall}>Accept</button>
+                            <button onClick={rejectGroupCall}>Reject</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {calling && !activeCall && (
+                <div className="calling-overlay">
+                    <p>Calling...</p>
+                    <button onClick={hangUpGroupCall}>Cancel</button>
+                </div>
+            )}
+
+            {activeCall && (
+                <GroupCall
+                    token={activeCall.liveKitData}
+                    callType={activeCall.messageType}
+                    onClose={hangUpGroupCall}
+                />
+            )}
+
+            {callError && (
+                <div className="call-error-banner" onClick={() => setCallError("")}>
+                    {callError}
+                </div>
             )}
 
         </div>

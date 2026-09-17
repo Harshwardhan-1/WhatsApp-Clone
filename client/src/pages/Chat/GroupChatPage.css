@@ -626,3 +626,319 @@
 .message-menu-dropdown button:disabled:hover {
     background: transparent;
 }
+
+
+
+
+
+
+/* ================= GROUP CALL UI ================= */
+
+.incoming-call-overlay,
+.calling-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.incoming-call-box {
+    width: 330px;
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 30px 25px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: callPopup 0.25s ease-out;
+}
+
+.incoming-call-box::before {
+    content: "📞";
+    width: 75px;
+    height: 75px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: #00a884;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    animation: callPulse 1.5s infinite;
+}
+
+.incoming-call-box p {
+    margin: 0 0 25px;
+    color: #111b21;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.incoming-call-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.incoming-call-actions button {
+    border: none;
+    min-width: 115px;
+    padding: 12px 22px;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.incoming-call-actions button:first-child {
+    background: #00a884;
+    color: white;
+}
+
+.incoming-call-actions button:first-child:hover {
+    background: #008f72;
+    transform: translateY(-2px);
+}
+
+.incoming-call-actions button:last-child {
+    background: #f15c6d;
+    color: white;
+}
+
+.incoming-call-actions button:last-child:hover {
+    background: #d94b5c;
+    transform: translateY(-2px);
+}
+
+
+/* ================= CALLING SCREEN ================= */
+
+.calling-overlay {
+    background: rgba(17, 27, 33, 0.92);
+    flex-direction: column;
+    color: white;
+}
+
+.calling-overlay p {
+    margin: 0 0 25px;
+    font-size: 25px;
+    font-weight: 500;
+    animation: callingText 1.4s infinite;
+}
+
+.calling-overlay p::after {
+    content: "...";
+    display: inline-block;
+    width: 20px;
+    overflow: hidden;
+    vertical-align: bottom;
+    animation: dots 1.4s infinite;
+}
+
+.calling-overlay button {
+    border: none;
+    background: #f15c6d;
+    color: white;
+    padding: 13px 32px;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.calling-overlay button:hover {
+    background: #d94b5c;
+    transform: translateY(-2px);
+}
+
+
+/* ================= CALL ERROR ================= */
+
+.call-error-banner {
+    position: fixed;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    min-width: 280px;
+    max-width: 500px;
+    padding: 13px 20px;
+    border-radius: 10px;
+    background: #f15c6d;
+    color: white;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    animation: errorSlideDown 0.3s ease-out;
+}
+
+
+/* ================= CALL ICONS ================= */
+
+.chatHeaderCallBtns {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.callIconBtn {
+    cursor: pointer;
+    color: #54656f;
+    transition: 0.2s ease;
+}
+
+.callIconBtn:hover {
+    color: #00a884;
+    transform: scale(1.12);
+}
+
+.callIconBtn:active {
+    transform: scale(0.95);
+}
+
+
+/* ================= ANIMATIONS ================= */
+
+@keyframes callPopup {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes callPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 168, 132, 0.5);
+    }
+
+    70% {
+        box-shadow: 0 0 0 18px rgba(0, 168, 132, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 168, 132, 0);
+    }
+}
+
+@keyframes callingText {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.55;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes dots {
+    0% {
+        width: 0;
+    }
+
+    50% {
+        width: 10px;
+    }
+
+    100% {
+        width: 20px;
+    }
+}
+
+@keyframes errorSlideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 600px) {
+
+    .incoming-call-box {
+        width: calc(100% - 40px);
+        max-width: 330px;
+        padding: 25px 20px;
+    }
+
+    .incoming-call-actions {
+        gap: 10px;
+    }
+
+    .incoming-call-actions button {
+        min-width: 105px;
+        padding: 11px 15px;
+    }
+
+    .calling-overlay p {
+        font-size: 22px;
+    }
+
+    .call-error-banner {
+        width: calc(100% - 30px);
+        min-width: unset;
+    }
+}
+
+
+
+
+
+
+/* ================= CALL MESSAGE ================= */
+
+.call-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 180px;
+    padding: 10px 12px;
+    border-radius: 12px;
+}
+
+.voice-call-message svg {
+    color: #00a884;
+}
+
+.video-call-message svg {
+    color: #00a884;
+}
+
+.call-message-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.call-message-info span {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111b21;
+}
+
+.call-message-info small {
+    font-size: 12px;
+    color: #667781;
+}

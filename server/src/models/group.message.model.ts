@@ -13,6 +13,11 @@ interface ParentReply{
     messageType:string,
 }
 
+interface callStatus{
+    userId:Types.ObjectId,
+    status:string,
+}
+
 export interface IGroupMessage extends Document{
     
     groupId:Types.ObjectId,
@@ -53,6 +58,9 @@ export interface IGroupMessage extends Document{
   
 
     reaction:Reaction[],
+
+
+    callStatus:callStatus[],
 }
 
 
@@ -98,7 +106,7 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
     ],
     messageType:{
         type:String,
-        enum:["text","file","system","poll"],
+        enum:["text","file","system","poll","call"],
         required:[true,'message type is missing'],
     },
     fileUrl:{
@@ -181,6 +189,18 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
                 ref:"user"
             },
             emoji:{
+                type:String,
+                default:"",
+            },
+        },
+    ],
+    callStatus:[
+        {
+            userId:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"user",
+            },
+            status:{
                 type:String,
                 default:"",
             },

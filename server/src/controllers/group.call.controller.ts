@@ -9,6 +9,30 @@ import { createLiveKitToken } from '../utils/liveKitToken';
 
 
 
+
+const isUserEngagedElsewhere = async (userId: string, excludeGroupId: string): Promise<boolean> => {
+    const busyGroups = await groupChatModel.find({
+        $or: [{ peoplesId: userId }, { admin: userId }],
+        callStatus: "busy",
+        _id: { $ne: excludeGroupId },
+    });
+
+    for (const grp of busyGroups) {
+        const latestCallMsg = await groupMessage
+            .findOne({ groupId: grp._id.toString(), messageType: "call" })
+            .sort({ createdAt: -1 });
+
+        if (!latestCallMsg) continue;
+
+        const isOngoingHere = (latestCallMsg.callStatus ?? []).some(
+            (entry) => entry.userId.toString() === userId.toString() && entry.status === "ongoing"
+        );
+        if (isOngoingHere) return true;
+    }
+    return false;
+};
+
+
 //user click on create group call
 
 export const groupCall=async(data:groupCallCreatedType,
@@ -61,12 +85,15 @@ export const groupCall=async(data:groupCallCreatedType,
         if(!create){
             throw new Error("failed to create Msg");
         }
+        create.isSend = true;
+        const senderObjId = new mongoose.Types.ObjectId(data.senderId);
+        create.seenBy.push(senderObjId);
+        create.deliveredTo.push(senderObjId);
+        await create.save();
 
         g.callStatus="busy";
         await g.save();
 
-
-       
 
         await storeGroupLastMessage({
             groupId:data.groupId,
@@ -81,64 +108,41 @@ export const groupCall=async(data:groupCallCreatedType,
         await emitMessageInGroup({_id:data.groupId,senderId:data.senderId},create,users,activeGroupChats,socket,io);
 
 
-
-        //now we check if it is online or offline and give data to frontend based on that
-
-
+       
         for(let i=0;i<data.receiverId.length;i++){
             const id=data.receiverId[i].toString();
-            let isEngage="not engaged"
             if(id===data.senderId.toString())continue;
             const receiverSocketId=users[id];
 
-            //check if a person is not on another call
+            const isEngaged = await isUserEngagedElsewhere(id, data.groupId);
 
-            //find all groups in which user is involved and it is call message
-
-            const findAllGroups=await groupChatModel.find({
-                $or:[
-                    {peoplesId:id},
-                    {admin:id},
-                ],
-            });
-
-            //now we will check that all the message of messageType call message 
-            //and check is the user is 
-
-            for(let i=0;i<findAllGroups.length;i++){
-                const groupId=findAllGroups[i]._id.toString();
-                const allMsg=await groupMessage.find({groupId:groupId,messageType:"call"});
-                if(allMsg.length===0)continue;
-
-                for(let i=0;i<allMsg.length;i++){
-                    //here we check that person is not engage on another call
-                    const check=allMsg[i].callStatus!.some(
-                        (msgId)=>msgId.userId.toString()===id.toString() && msgId.status==="ongoing"
-                    );
-                    if(check){
-                        isEngage="engaged";
-                        break;
-                    }
-                }
-                if(isEngage==="engaged"){
-                    break;
-                }
-            }
-
-
-
-            if(receiverSocketId && isEngage==="not engaged"){
+            if(receiverSocketId && !isEngaged){
                 //from frontend we will call accepted for it and then join them at accepted function
                 create.callStatus!.push({userId:new mongoose.Types.ObjectId(id),status:"ongoing"});
                 io.to(receiverSocketId).emit("user_available_for_call",(
-                    {groupId:data.groupId,senderId:data.senderId,receiverId:id}
+                    {
+                        groupId:data.groupId,
+                        senderId:data.senderId,
+                        receiverId:id,
+                        msgId:create._id.toString(),
+                        messageType:data.messageType,
+                    }
                 ));
             }
         }
         await create.save();
-        socket.emit("user_available_for_call",({groupId:data.groupId,senderId:data.senderId,receiverId:data.senderId}));
+
+        // caller ko khud ka LiveKit token bhejo aur call active kar do
         const LiveKitData=await createLiveKitToken(data.senderId,data.groupId);
-        socket.emit("user_accepted_group_call",({groupId:data.groupId,senderId:data.senderId,LiveKitData}))
+        socket.emit("user_accepted_group_call",(
+            {
+                groupId:data.groupId,
+                senderId:data.senderId,
+                LiveKitData,
+                msgId:create._id.toString(),
+                messageType:data.messageType,
+            }
+        ));
     }catch(err){
         throw err;
     }
@@ -205,7 +209,7 @@ export const callRejected=async(data:
 
 //call accepted 
 //jisna call accept kiya ha wo ha senderId 
-export const callAccepted=async(data:{groupId:string,senderId:string},
+export const callAccepted=async(data:{groupId:string,senderId:string,msgId:string,messageType:string},
     socket:Socket,io:Server,
     users:{[key:string]:string},
 )=>{
@@ -214,24 +218,40 @@ export const callAccepted=async(data:{groupId:string,senderId:string},
         if(!group){
             throw new Error("group not found");
         }
-        //sender id is the person who accepts the call
-        for(let i=0;i<group.peoplesId.length;i++){
-            const id=group.peoplesId[i].toString();
-            const liveKitData=await createLiveKitToken(id,data.groupId);
-            const receiverSocketId=users[id];
-            if(receiverSocketId){
-                io.to(receiverSocketId).emit("new_member_added_in_groupCall",(
-                    {groupId:data.groupId,userId:id,newMemberId:data.senderId,liveKitData}
-                ));
-            }
+        const memberIds = Array.from(new Set([
+            ...group.peoplesId.map((p) => p.toString()),
+            ...group.admin.map((a) => a.toString()),
+        ]));
+        const msg=await groupMessage.findById(data.msgId);
+
+        if(!msg){
+            throw new Error("call message not found");
         }
-        for(let i=0;i<group.admin.length;i++){
-            const id=group.admin[i].toString();
+        const userId=data.senderId.toString();
+
+        if(!msg.seenBy.some((id)=>id.toString()===userId)){
+            msg.seenBy.push(new mongoose.Types.ObjectId(data.senderId));
+        }
+
+        if(!msg.deliveredTo.some((id)=>id.toString()===userId)){
+            msg.deliveredTo.push(new mongoose.Types.ObjectId(data.senderId));
+        }
+
+        await msg.save();
+
+        for(const id of memberIds){
             const receiverSocketId=users[id];
             if(receiverSocketId){
                 const liveKitData=await createLiveKitToken(id,data.groupId);
                 io.to(receiverSocketId).emit("new_member_added_in_groupCall",(
-                    {groupId:data.groupId,userId:id,newMemberId:data.senderId,liveKitData}
+                    {
+                        groupId:data.groupId,
+                        userId:id,
+                        newMemberId:data.senderId,
+                        liveKitData,
+                        msgId:data.msgId,
+                        messageType:data.messageType,
+                    }
                 ));
             }
         }
@@ -277,24 +297,26 @@ export const leaveGroupCall=async(data:
         }
         await group.save();
         await msg.save();
-        
-        for(let i=0;i<group.peoplesId.length;i++){
-            const id=group.peoplesId[i].toString();
+
+        // ===== FIX: yahan bhi peoplesId + admin dedupe kar diya =====
+        const memberIds = Array.from(new Set([
+            ...group.peoplesId.map((p) => p.toString()),
+            ...group.admin.map((a) => a.toString()),
+        ]));
+
+        for(const id of memberIds){
             const receiverSocketId=users[id];
             if(receiverSocketId){
                 const liveKitData=await createLiveKitToken(id,data.groupId);
                 io.to(receiverSocketId).emit("member_left_from_group_call",(
-                    {groupId:data.groupId,userId:id,leftMemberId:data.senderId,liveKitData}
-                ));
-            }
-        }
-        for(let i=0;i<group.admin.length;i++){
-            const id=group.admin[i].toString();
-            const receiverSocketId=users[id];
-            if(receiverSocketId){
-                const liveKitData=await createLiveKitToken(id,data.groupId);
-                io.to(receiverSocketId).emit("member_left_from_group_call",(
-                   {groupId:data.groupId,userId:id,leftMemberId:data.senderId,liveKitData}
+                    {
+                        groupId:data.groupId,
+                        userId:id,
+                        leftMemberId:data.senderId,
+                        liveKitData,
+                        msgId:data.msgId,
+                        messageType:msg.message,
+                    }
                 ));
             }
         }
@@ -352,3 +374,65 @@ export const noResponseOfCall=async(data:
         throw err;
     }
 }
+
+
+
+
+
+
+
+
+
+
+export const cleanupUserFromCalls = async (
+    userId: string,
+    io: Server,
+    users: { [key: string]: string }
+) => {
+    try{
+        const stuckMsgs = await groupMessage.find({
+            messageType: "call",
+            callStatus: { $elemMatch: { userId: new mongoose.Types.ObjectId(userId), status: "ongoing" } },
+        });
+
+        for (const msg of stuckMsgs) {
+            msg.callStatus = (msg.callStatus ?? []).filter(
+                (entry) => entry.userId.toString() !== userId.toString()
+            );
+
+            const group = await groupChatModel.findById(msg.groupId);
+            if (!group) {
+                await msg.save();
+                continue;
+            }
+
+            if (msg.callStatus.length === 0) {
+                group.callStatus = "free";
+            }
+            await group.save();
+            await msg.save();
+
+            const notifyIds = Array.from(new Set([
+                ...group.peoplesId.map((p) => p.toString()),
+                ...group.admin.map((a) => a.toString()),
+            ]));
+
+            for (const id of notifyIds) {
+                const receiverSocketId = users[id];
+                if (receiverSocketId) {
+                    const liveKitData = await createLiveKitToken(id, group._id.toString());
+                    io.to(receiverSocketId).emit("member_left_from_group_call", {
+                        groupId: group._id.toString(),
+                        userId: id,
+                        leftMemberId: userId,
+                        liveKitData,
+                        msgId: msg._id.toString(),
+                        messageType: msg.message,
+                    });
+                }
+            }
+        }
+    }catch(err){
+        console.error("cleanupUserFromCalls failed:", err);
+    }
+};

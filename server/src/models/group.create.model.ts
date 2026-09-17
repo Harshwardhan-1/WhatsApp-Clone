@@ -5,6 +5,8 @@ export interface IGroupMessage extends Document{
 
     inviteToken:string,
     groupName:string,
+
+    callStatus:string,
     //this sender id is basically for a person who create group
      groupCreatorId:Types.ObjectId,
       
@@ -54,6 +56,11 @@ const groupChat=new mongoose.Schema<IGroupMessage>({
         trim:true,
         minLength:[3,"groupName must be atleast 3 characters"],
         maxLength:[100,'groupName should not be greater than 100 characters'],
+    },
+    callStatus:{
+        type:String,
+        enum:["busy","free"],
+        default:"",
     },
         groupCreatorId:{
           type:Types.ObjectId,
