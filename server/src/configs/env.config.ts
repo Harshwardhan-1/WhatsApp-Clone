@@ -11,5 +11,7 @@ export const{
     JWT_EXPIRES_IN,
     LIVEKIT_URL,
     LIVEKIT_API_KEY,
-    LIVEKIT_API_SECRET
+    LIVEKIT_API_SECRET,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
 }=process.env     

@@ -189,3 +189,29 @@
 
 
 
+
+
+
+
+
+
+.wa-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 16px;
+  color: #8696a0;
+  font-size: 13px;
+}
+.wa-auth-divider::before,
+.wa-auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(134, 150, 160, 0.3);
+}
+.wa-auth-google {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}

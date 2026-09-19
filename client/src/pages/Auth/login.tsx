@@ -4,7 +4,10 @@ import { env } from "../../configs/env.config";
 import { Link } from "react-router-dom";
 import { showApiError } from "../../utils/showApiError";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import "./Auth.css";
+
+
 const Login=()=>{
     const navigate=useNavigate();
     const [email,setEmail]=useState("");
@@ -60,6 +63,35 @@ const Login=()=>{
       Don't have an account?{" "}
       <Link to="/Signup" className="wa-auth-link">Sign Up</Link>
     </div>
+
+ 
+    <div className="wa-auth-divider"><span>or</span></div>
+     <div className="wa-auth-google">
+       <GoogleLogin
+        onSuccess={async(res)=>{
+      try {
+        const response = await axios.post(
+          `${env.backendUrl}/api/v1/auth/google`,
+          { credential: res.credential },
+          { withCredentials: true }
+        );
+        if (response.data.success) {
+          localStorage.setItem("token", response.data.token);
+          navigate("/chat");
+        }
+      } catch (err) {
+        showApiError(err);
+      }
+    }}
+    onError={() => console.log("Google login fail")}
+    theme="outline"
+    size="large"
+    shape="pill"
+    text="signin_with"
+    logo_alignment="left"
+    width="320"
+  />
+</div>
   </div>
 </div>
         </>

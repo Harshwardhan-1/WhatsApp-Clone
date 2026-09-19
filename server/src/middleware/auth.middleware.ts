@@ -19,9 +19,9 @@ export const isUserLoggedIn=async(req:authRequest,res:Response,next:NextFunction
         const decodedData=jwt.verify(token,JWT_SECRET as string)as userpayload;
         const user=await User.findOne({email:decodedData.email}).select("-password");
         if(!user){
-            return res.status(400).json({
+            return res.status(404).json({
                 success:false,
-                message:"login required",
+                message:"please do a sign up first",
             });
         }
         req.user=user;

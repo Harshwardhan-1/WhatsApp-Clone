@@ -369,7 +369,7 @@ export const getAllViewed=async(data:{groupId:string,msgId:string,senderId:strin
         if(msg.senderId.toString()!==data.senderId.toString()){
             throw new Error("don't have access to view this");
         }
-        await msg.populate("viewedBy","name username");
+        await msg.populate("viewedBy","name username avatar");
         socket.emit("group_call_msg_viewedBy",(msg));
     }catch(err){
         throw err;

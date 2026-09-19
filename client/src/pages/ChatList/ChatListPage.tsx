@@ -56,26 +56,6 @@ const ChatListPage = ({  setSelectedUser }: Props) => {
         setLastMessage(data);
     }
 
-// const handleChatListUpdate = (data: chatlistUpdate) => {
-//   setLastMessage((prev) => {
-//     const index = prev.findIndex((msg) => (msg.senderId === data?.senderId && msg.receiverId === data?.receiverId) || (msg.senderId === data?.receiverId && msg.receiverId === data?.senderId));
-//     if (!data?.lastmessage) {if (index !== -1) {const temp = [...prev];temp.splice(index, 1);return temp;}return prev;}
-// if (index !== -1) {const temp = [...prev];temp[index] = {...temp[index],lastmessage: data?.lastmessage, messageType: data?.messageType,updatedAt: data?.updatedAt,};return temp;}
-//     return [
-//       {
-//         senderId: data?.senderId,
-//         receiverId: data?.receiverId,
-//         lastmessage: data?.lastmessage,
-//         messageType: data?.messageType,
-//         IsSend: false,
-//         isDelivered: false,
-//         isSeen: false,
-//         updatedAt: data?.updatedAt,
-//       },
-//       ...prev,
-//     ];
-//   });
-// };
 
 const handleChatListUpdate = (data: chatlistUpdate) => {
   setLastMessage((prev) => {
@@ -115,34 +95,6 @@ const handleIncreaseUnseenCount = (data:{senderId:string}) => {
         return [...prev,{senderId:data.senderId,count:1}];
     });
 };
-  
-
-// useEffect(()=>{
-//   const userId=userData?.loginUserId;
-//   if(!userId)return;
-//      socket.emit("join",userId);
-//      socket.emit("user_online",{userId:userId}); 
-//      //this is for group online
-//      socket.emit("add_to_delivered",{senderId:userId});
-
-//      //gorup online off
-//      socket.emit("last_message",{userId:userId});
-//       socket.emit("unseen_message",{senderId:userId});
-//      socket.on("all_last_message",handleAllLastMessage);
-//      socket.on("chat_list_update",handleChatListUpdate);
-//      socket.on("unseen_message_count",handleUnseenMessage);
-//      socket.on("unseen_count_zero",handleUnseenCountZero);
-//      socket.on("increase_unseen_count",handleIncreaseUnseenCount);
-//      return()=>{
-//       socket.off("user_online");
-//       socket.off("all_last_message",handleAllLastMessage);
-//       socket.off("chat_list_update",handleChatListUpdate);
-//       socket.off("unseen_message_count",handleUnseenMessage);
-//       socket.off("unseen_count_zero",handleUnseenCountZero);
-//       socket.off("increase_unseen_count",handleIncreaseUnseenCount);
-//      }
-// },[userData?.loginUserId]);
-
 
 
 

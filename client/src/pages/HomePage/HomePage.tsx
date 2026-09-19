@@ -1,7 +1,25 @@
+import { useEffect } from "react";
+import axios from 'axios';
+import { env } from "../../configs/env.config";
 import "./HomePage.css";
 import { useNavigate } from "react-router-dom";
-const HomePage = () => {
+const HomePage=()=>{
     const navigate=useNavigate();
+
+    useEffect(()=>{
+        const fetch=async()=>{
+      try{
+        const response=await axios.get(`${env.backendUrl}/api/v1/auth/me`,{withCredentials:true});
+        if(response.data.success){
+          localStorage.setItem("token",(response.data.token));
+          navigate("/chat");
+        }
+      }catch(err){
+        console.log(err);
+      }
+    };
+    fetch();
+    },[]);
   return (
     <div className="wp-home-container">
       <div className="wp-home-bg-icons">

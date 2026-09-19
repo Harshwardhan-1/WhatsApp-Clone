@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { showApiError } from "../../utils/showApiError";
+import { GoogleLogin } from "@react-oauth/google";
 import "./Auth.css";
 
 const RegisterPage = () => {
@@ -66,6 +67,34 @@ const RegisterPage = () => {
           Already have an account?{" "}
           <Link to="/login" className="wa-auth-link">Login</Link>
         </div>
+         
+    <div className="wa-auth-divider"><span>or</span></div>
+     <div className="wa-auth-google">
+       <GoogleLogin
+        onSuccess={async(res)=>{
+      try {
+        const response = await axios.post(
+          `${env.backendUrl}/api/v1/auth/google`,
+          { credential: res.credential },
+          { withCredentials: true }
+        );
+        if (response.data.success) {
+          localStorage.setItem("token", response.data.token);
+          navigate("/chat");
+        }
+      } catch (err) {
+        showApiError(err);
+      }
+    }}
+    onError={() => console.log("Google login fail")}
+    theme="outline"
+    size="large"
+    shape="pill"
+    text="signin_with"
+    logo_alignment="left"
+    width="320"
+  />
+</div>
       </div>
     </div>
   );

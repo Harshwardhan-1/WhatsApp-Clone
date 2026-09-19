@@ -4,8 +4,9 @@ export interface IUser extends Document{
     _id:Types.ObjectId,
     name:string,
     email:string,
-    password:string,
+    password?:string,
     role:string,
+    googleId?:string,
     avatar?:string,
     createdAt:Date,
     updatedAt:Date,
@@ -28,9 +29,19 @@ const userSchema=new mongoose.Schema<IUser>({
     },
     password:{
         type:String,
-        required:[true,'password is required'],
-         minLength:[3,'password must be greter than equals to 3'],
-        //  match: [/^(?=.*\d).+$/, 'Password must contain at least one number'],
+        // required:[true,'password is required'],
+
+        //we make it false because for user login with google for that
+        required:false,
+        minLength:[3,'password must be greter than equals to 3'],
+    },
+    googleId:{
+        type:String,
+        unique:true,
+        //sparse true because for empty ones mongo db tell it is duplicate don;t consider
+        //them in unique if they dont have any googleId
+        sparse:true,
+        index:true,
     },
     role:{
         type:String,

@@ -42,6 +42,20 @@ export default app;
 
 
 
-//add task
+//OAUTH 2.0
 
-//want to add Location based community Chat
+
+
+//1 npm install google-auth-library
+//2 change in user model
+// 2.1 add googleId field
+// 2.2 change auth controller check !user.password only that
+//3 change auth controller
+    // 3.1 google client id
+    // 3.2 import Oauth2client,token pay laod
+    // 3.3 google client
+    // 3.4 function 
+    // 3.5 route
+
+//4 on frontend
+// 4.1  npm install @react-oauth/google
