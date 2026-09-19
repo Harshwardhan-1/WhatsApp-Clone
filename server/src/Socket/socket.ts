@@ -19,6 +19,7 @@ import { callHandlers } from "./call.socket";
 import { channelsSocket } from "./channels.socket";
 import { communitySocket } from "./community.socket";
 import { groupCallSocket } from "./group.call.socket";
+import { InCallSocket } from "./InCallChat.socket";
 
 
 export let io:Server;
@@ -63,6 +64,7 @@ io.on('connection',(socket)=>{
     channelsSocket(socket,io,users,activeChats,activeChannels);
     communitySocket(socket,io,communityRecord,users);
     groupCallSocket(socket,io,users,activeGroupChats);
+    InCallSocket(socket,io,users,activeGroupChats);
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;

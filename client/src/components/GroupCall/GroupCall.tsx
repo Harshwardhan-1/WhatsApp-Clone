@@ -11,11 +11,16 @@ import {
 import { Track } from "livekit-client";
 import "@livekit/components-styles";
 import "./GroupCall.css";
+import { CallChatPanel } from "../CallChatPanel/CallChatPanel";
 
 type GroupCallProps = {
     token: string;
     callType: "voice" | "video";
     onClose: () => void;
+    callId: string;
+    groupId: string;
+    senderId: string;
+    getMemberName: (id: string) => string;
 };
 
 function VideoCallStage() {
@@ -69,7 +74,7 @@ function VoiceCallStage() {
     );
 }
 
-export function GroupCall({ token, callType, onClose }: GroupCallProps) {
+export function GroupCall({ token, callType, onClose, callId, groupId, senderId, getMemberName }: GroupCallProps) {
 
     const liveKitUrl = import.meta.env.VITE_LIVEKIT_URL;
 
@@ -118,6 +123,13 @@ export function GroupCall({ token, callType, onClose }: GroupCallProps) {
                     <RoomAudioRenderer />
 
                 </LiveKitRoom>
+
+                <CallChatPanel
+                    callId={callId}
+                    groupId={groupId}
+                    senderId={senderId}
+                    getMemberName={getMemberName}
+                />
 
             </div>
 

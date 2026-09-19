@@ -1,0 +1,317 @@
+.callChatToggleBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 50;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.callChatUnreadBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff3040;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+.callChatPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 360px;
+  max-width: 90vw;
+  background: #111b21;
+  color: #e9edef;
+  display: flex;
+  flex-direction: column;
+  z-index: 60;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.4);
+}
+.callChatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #202c33;
+  font-weight: 600;
+}
+.callChatHeader button {
+  background: none;
+  border: none;
+  color: #e9edef;
+  cursor: pointer;
+}
+.callChatBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.callChatMsgRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+.callChatMsgRow.sender {
+  justify-content: flex-end;
+}
+.callChatMsgRow.receiver {
+  justify-content: flex-start;
+}
+.callChatBubble {
+  max-width: 75%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  position: relative;
+  font-size: 13px;
+}
+.callChatMsgRow.sender .callChatBubble {
+  background: #005c4b;
+}
+.callChatMsgRow.receiver .callChatBubble {
+  background: #202c33;
+}
+.callChatSenderName {
+  font-size: 11px;
+  font-weight: 600;
+  color: #00a884;
+  display: block;
+}
+.callChatQuoted {
+  border-left: 3px solid #00a884;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+.callChatQuotedName {
+  display: block;
+  color: #00a884;
+  font-weight: 600;
+}
+.callChatQuotedText {
+  display: block;
+  color: #c9c9c9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+.callChatText.deleted {
+  font-style: italic;
+  color: #8696a0;
+}
+.callChatEdited {
+  font-size: 10px;
+  color: #8696a0;
+}
+.callChatMsgActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+.callChatMsgActions button {
+  background: none;
+  border: none;
+  color: #e9edef;
+  cursor: pointer;
+}
+.callChatMenu {
+  position: relative;
+}
+.callChatMenuDropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 16px;
+  background: #233138;
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 5;
+  min-width: 170px;
+}
+.callChatMenu:hover .callChatMenuDropdown {
+  display: block;
+}
+.callChatMenuDropdown button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: #e9edef;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+.callChatMenuDropdown button:hover {
+  background: #2a3942;
+}
+.callChatLikeBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.callChatLikeBtn {
+  background: none;
+  border: none;
+  color: #8696a0;
+  cursor: pointer;
+}
+.callChatLikeBtn.liked {
+  color: #ff3040;
+}
+.callChatLikeCount {
+  font-size: 10px;
+  color: #8696a0;
+  cursor: pointer;
+}
+.callChatLikersPopup {
+  position: absolute;
+  bottom: 26px;
+  left: 0;
+  background: #233138;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 5;
+}
+.callChatEmojiPopup {
+  position: absolute;
+  bottom: 100%;
+  z-index: 10;
+}
+.callChatReactionBadge {
+  display: flex;
+  gap: 2px;
+  background: #233138;
+  border-radius: 10px;
+  padding: 2px 6px;
+  margin-top: 4px;
+  width: fit-content;
+  cursor: pointer;
+  font-size: 11px;
+}
+.callChatReactionCount {
+  color: #8696a0;
+}
+.callChatReactionDetail {
+  position: absolute;
+  bottom: 100%;
+  background: #233138;
+  border-radius: 6px;
+  padding: 6px;
+  z-index: 10;
+  min-width: 140px;
+}
+.callChatReactionRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.callChatReactionRow:hover {
+  background: #2a3942;
+}
+.callChatViewedByPopup {
+  position: absolute;
+  bottom: 100%;
+  background: #233138;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  z-index: 10;
+  min-width: 120px;
+}
+.callChatViewedByTitle {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.callChatEditBox {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.callChatEditBox input {
+  flex: 1;
+  background: #2a3942;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.callChatEditBox button {
+  background: #00a884;
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.callChatReplyPreview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #202c33;
+  padding: 8px 12px;
+  border-top: 1px solid #2a3942;
+}
+.callChatReplyPreview button {
+  background: none;
+  border: none;
+  color: #e9edef;
+  cursor: pointer;
+}
+.callChatComposer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #202c33;
+}
+.callChatComposer input {
+  flex: 1;
+  background: #2a3942;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: #fff;
+  outline: none;
+}
+.callChatComposer button {
+  background: #00a884;
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+}

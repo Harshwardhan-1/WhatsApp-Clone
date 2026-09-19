@@ -26,6 +26,7 @@ import { CreatePollModal } from "../../components/Poll/CreatePollMode";
 import { Phone,Video } from "lucide-react";
 import { GroupCall } from "../../components/GroupCall/GroupCall";
 import {groupCall as useGroupCallHook} from "../../hooks/use.group.call.hook";
+import { CallChatPanel } from "../../components/CallChatPanel/CallChatPanel";
 
 const senderColors = ["#e542a3", "#f5793a", "#00a884", "#7c5cff", "#00afaf", "#e64980", "#f76707", "#1c7ed6"];
 
@@ -1165,16 +1166,22 @@ export function GroupChat() {
                     <p>Calling...</p>
                     <button onClick={hangUpGroupCall}>Cancel</button>
                 </div>
-            )}
+                    )}
 
-            {activeCall && (
-                <GroupCall
-                    token={activeCall.liveKitData}
-                    callType={activeCall.messageType}
-                    onClose={hangUpGroupCall}
-                />
-            )}
 
+                    
+        {activeCall && (
+            <GroupCall
+                token={activeCall.liveKitData}
+                callType={activeCall.messageType}
+                onClose={hangUpGroupCall}
+                callId={activeCall.msgId}
+                groupId={activeCall.groupId}
+                senderId={senderId}
+                getMemberName={getMemberName}
+            />
+        )}
+        
             {callError && (
                 <div className="call-error-banner" onClick={() => setCallError("")}>
                     {callError}

@@ -21,6 +21,7 @@ interface callStatus{
 export interface IGroupMessage extends Document{
     
     groupId:Types.ObjectId,
+    callId?:string,
     senderId:string,
 
 
@@ -73,6 +74,10 @@ const groupChatSchema=new mongoose.Schema<IGroupMessage>({
         type:mongoose.Schema.Types.ObjectId,
         required:[true,'groupId is required'],
         index:true,
+    },
+    callId:{
+        type:String,
+        default:"",
     },
     senderId:{
         type:String,

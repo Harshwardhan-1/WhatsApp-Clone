@@ -6,6 +6,7 @@ import { groupChatModel } from '../models/group.create.model';
 import { groupCallCreatedType } from '../types/group.call.types';
 import { emitMessageInGroup } from './group.message.controller';
 import { createLiveKitToken } from '../utils/liveKitToken';
+import { callChat } from '../models/InCallChat.model';
 
 
 
@@ -75,9 +76,10 @@ export const groupCall=async(data:groupCallCreatedType,
 
 
         //check that some other person doesn't again call when the call is on going
-
+        const id=Math.floor(Math.random()*10).toString();
         const create=await groupMessage.create({
             groupId:data.groupId,
+            callId:id,
             senderId:data.senderId,
             message:`${data.messageType}`,
             messageType:"call",
@@ -236,9 +238,8 @@ export const callAccepted=async(data:{groupId:string,senderId:string,msgId:strin
         if(!msg.deliveredTo.some((id)=>id.toString()===userId)){
             msg.deliveredTo.push(new mongoose.Types.ObjectId(data.senderId));
         }
-
         await msg.save();
-
+        
         for(const id of memberIds){
             const receiverSocketId=users[id];
             if(receiverSocketId){
