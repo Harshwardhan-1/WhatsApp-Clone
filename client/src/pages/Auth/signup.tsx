@@ -86,7 +86,7 @@ const RegisterPage = () => {
         showApiError(err);
       }
     }}
-    onError={() => console.log("Google login fail")}
+    onError={() =>onsole.log("Google login fail")}
     theme="outline"
     size="large"
     shape="pill"
