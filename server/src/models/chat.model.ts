@@ -22,6 +22,7 @@ export interface IChat extends Document{
     IsSend:boolean,
     isSeen:boolean,
     isDelivered:boolean,
+    docsId?:string,
     hideIt:string[],
     isClear:string[],
     isSenderClear?:boolean,
@@ -95,6 +96,10 @@ const chatSchema=new mongoose.Schema<IChat>({
     isDelivered:{
         type:Boolean,
         default:false,
+    },
+    docsId:{
+        type:String,
+        default:"",
     },
     hideIt:{
         type:[String],

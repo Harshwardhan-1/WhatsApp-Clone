@@ -8,6 +8,7 @@ import { notification } from '../models/mute.notification.model';
 import { groupChatModel } from '../models/group.create.model';
 import {Socket,Server} from 'socket.io';
 import { update_chat_list } from './last.message.controller';
+import type{ IChat } from '../models/chat.model';
 
 
 interface personalMsg{
@@ -15,6 +16,7 @@ interface personalMsg{
     receiverId:string,
     msg:string,
     messageType:string,
+    docsId?:string,
     mimetype?:string,
     filename?:string,
     sizeInKb?:number,
@@ -62,7 +64,7 @@ const notificationSound=async(senderId:string,receiverId:string):Promise<string>
     }
 }
 
-export const PersonalChat=async(data:personalMsg)=>  {
+export const PersonalChat=async(data:personalMsg):Promise<IChat>=>  {
 try{
     //this is for testing whether it is working correctly or not
     // throw new Error("Test Error");
@@ -77,6 +79,7 @@ try{
         receiverId:data.receiverId,
         message:data.msg,
         messageType:data.messageType,
+        docsId:data?.docsId,
         mimetype:data?.mimetype,
         filename:data?.filename,
         sizeInKb:data?.sizeInKb,    
