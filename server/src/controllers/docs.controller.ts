@@ -10,14 +10,9 @@ import { emitPendingCountToUser } from "./chat.controller";
 import { isSend } from "./chat.controller";
 import mongoose from 'mongoose';
 import * as Y from "yjs";
-import {Request,Response,NextFunction} from 'express';
-import { authRequest } from '../types/auth.Requests.types';
 const liveDocs:Record<string,Y.Doc>={};
 const timers:Record<string,NodeJS.Timeout>={};
 const docEditors: Record<string, Set<string>> = {};
-
-
-
 
 
 export const create=async(data:createDocs,socket:Socket,io:Server,
@@ -42,59 +37,67 @@ export const create=async(data:createDocs,socket:Socket,io:Server,
         }
         create.editPermission.push(new mongoose.Types.ObjectId(data.creatorId));
         await create.save();
+
         const members=Array.from(new Set([
             ...editPermission.map(e=>e.toString()),
             ...viewPermission.map(v=>v.toString())
-        ]));
-        const senderId=data.creatorId;
+        ])).filter((id)=>id.toString()!==create.creatorId.toString());
+
+        // creator ko uski apni list turant mil jaye
+        await AllDocs({senderId:data.creatorId},socket);
+        socket.emit("docs_created",{docsId:create._id.toString()});
+
+        // har member ko sirf docs list refresh — chat me koi message nahi jayega
         for(let i=0;i<members.length;i++){
-            const receiverId=members[i];
-
-
-            //we will create Personal Msg for this and send to user
-           const savedMessage=await PersonalChat({
-                senderId,
-                receiverId,
-                msg:`${docsName}`,
-                messageType:"docs",
-                docsId:create._id.toString()
-            });
-             const update_last_message=await store_last_message(
-                {senderId:senderId,receiverId:receiverId,msg:savedMessage.message,messageType:savedMessage.messageType,originalname:savedMessage?.originalname}
-            );
-                   const receiverSocketId=users[receiverId];
-                    if(receiverSocketId){
-                        io.to(receiverSocketId).emit("receive_docs_message",({...savedMessage.toObject(),docsId:create._id.toString()}));
-                        //check if user is on current receiverId char or not 
-                        if(activeChats[receiverId]===senderId){
-                            socket.emit("receive_docs_message",({...savedMessage.toObject(),docsId:create._id.toString()}));
-                           const markSeen=await markIsSeen({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
-                           socket.emit("real_time_docs_isSeen",{messageId:markSeen?._id,senderId:markSeen?.senderId,receiverId:markSeen?.receiverId,isSeen:markSeen?.isSeen});
-                        }else{
-                        socket.emit("receive_docs_message",({...savedMessage.toObject(),docsId:create._id.toString()}));
-                        const msgDeliveredTick=await isDelivered({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
-                        socket.emit("isDelivered",{messageId:msgDeliveredTick._id,senderId:msgDeliveredTick.senderId,receiverId:msgDeliveredTick.receiverId,isDelivered:msgDeliveredTick.isDelivered})    
-                        // to increase unseen count number 
-                        io.to(receiverSocketId).emit("increase_unseen_docs_count",{senderId:senderId});
-                    }
-                        //chat list update
-                        if(update_last_message){
-                            io.to(receiverSocketId).emit("chat_list_docs_update",update_last_message);
-                        }
-                        if(update_last_message){
-                            socket.emit("chat_list_docs_update",update_last_message);
-                        }
-                        //chat list update end
-                    }else{
-                      socket.emit("receive_docs_message",({...savedMessage.toObject(),docsId:create._id.toString()}));
-                      const assignIsSend=await isSend({_id:savedMessage._id,senderId:savedMessage.senderId,receiverId:savedMessage.receiverId});
-                      socket.emit("isSendDocs",{messageId:assignIsSend._id,senderId:assignIsSend.senderId,receiverId:assignIsSend.receiverId,isSend:assignIsSend.IsSend});
-                      if(update_last_message){
-                        socket.emit("chat_list_docs_update",update_last_message);
-                      }
-                    }
-                     await emitPendingCountToUser(receiverId, io, users);
+            const id=members[i];
+            const receiverSocketId=users[id];
+            if(receiverSocketId){
+                const allDocs=await docs.find({
+                    $or:[
+                        {editPermission:id},
+                        {viewPermission:id},
+                    ],
+                }).select("-docsData").sort({createdAt:-1});
+                io.to(receiverSocketId).emit("all_docs",({senderId:id,allDocs}));
+            }
         }
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+export const deleteDocs=async(data:{docsId:string,senderId:string},
+    socket:Socket,io:Server,users:{[key:string]:string}
+)=>{
+    try{
+        const d=await docs.findById(data.docsId);
+        if(!d){
+            throw new Error("docs not found");
+        }
+        if(d.creatorId.toString()!==data.senderId.toString()){
+            throw new Error("don't have access to delete this docs");
+        }
+        await d.deleteOne();
+        const members=Array.from(new Set([
+            ...d.editPermission.map((e)=>e.toString()),
+            ...d.viewPermission.map((v)=>v.toString())
+        ]));
+        for(let i=0;i<members.length;i++){
+            const id=members[i].toString();
+            if(id===data.senderId.toString())continue;
+            const receiverSocketId=users[id];
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("docs_deleted",(
+                    {docsId:data.docsId,senderId:data.senderId,msg:"This Doc has been deleted by the owner"}
+                ));
+            }
+        }
+        socket.emit("docs_deleted",(
+            {docsId:data.docsId,senderId:data.senderId,msg:"This Doc has been deleted by the owner"}
+        ));
     }catch(err){
         throw err;
     }
@@ -110,6 +113,44 @@ export const create=async(data:createDocs,socket:Socket,io:Server,
 
 
 
+//basically we update the name
+export const updateDoc=async(data:{docsId:string,senderId:string,name:string},
+    socket:Socket,io:Server,users:{[key:string]:string}
+)=>{
+    try{
+        const d=await docs.findById(data.docsId);
+        if(!d){
+            throw new Error("docs not found");
+        }
+        if(d.creatorId.toString()!==data.senderId.toString()){
+            throw new Error("don't have access to update this docs");
+        }
+        d.docsName=data.name;
+        await d.save();
+        const members=Array.from(new Set([
+            ...d.editPermission.map((e)=>e.toString()),
+            ...d.viewPermission.map((v)=>v.toString())
+        ]));
+
+        for(let i=0;i<members.length;i++){
+            const id=members[i].toString();
+            if(id===data.senderId.toString())continue;
+            const receiverSocketId=users[id];
+            if(receiverSocketId){
+                io.to(receiverSocketId).emit("docs_name_updated",(data));
+            }
+        }
+        socket.emit("docs_name_updated",(data));
+    }catch(err){
+        throw err;
+    }
+}
+
+
+
+
+
+
 export const AllDocs=async(data:{senderId:string},socket:Socket)=>{
     try{
         const allDocs=await docs.find({
@@ -117,7 +158,7 @@ export const AllDocs=async(data:{senderId:string},socket:Socket)=>{
             {editPermission:data.senderId},
             {viewPermission:data.senderId},
             ],
-        }).select("-docsData");
+        }).select("-docsData").sort({createdAt:-1});
         socket.emit("all_docs",({senderId:data.senderId,allDocs}));
     }catch(err){
         throw err;
@@ -158,8 +199,10 @@ export const userOpenDocs=async(data:{senderId:string,docsId:string},socket:Sock
                 Y.applyUpdate(liveDocs[data.docsId],new Uint8Array(d.docsData));
             }
         }
-
-        socket.join(`doc:${data.docsId}`);
+        const room=`doc:${data.docsId}`;
+        socket.join(room);
+        //target this 
+        socket.nsp.to(room).emit("docs_online",{docsId:data.docsId,size:socket.nsp.adapter.rooms.get(room)?.size||0});
         //update ko binary format ma karka da raha ha 
         const update=Y.encodeStateAsUpdate(liveDocs[data.docsId]);
         socket.emit("docs_sync",({
@@ -381,6 +424,3 @@ export const downloadDocsFile=async(data:{senderId:string,docsId:string},socket:
         throw err;
     }
 }
-
-
-

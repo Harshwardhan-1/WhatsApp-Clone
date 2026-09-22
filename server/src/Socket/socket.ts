@@ -21,6 +21,7 @@ import { communitySocket } from "./community.socket";
 import { groupCallSocket } from "./group.call.socket";
 import { InCallSocket } from "./InCallChat.socket";
 import { docsSocket } from "./docs.socket";
+import { docsMessageSocket } from "./docs.message.socket";
 
 
 export let io:Server;
@@ -67,6 +68,7 @@ io.on('connection',(socket)=>{
     groupCallSocket(socket,io,users,activeGroupChats);
     InCallSocket(socket,io,users,activeGroupChats);
     docsSocket(socket,io,users,activeChats,activeDocs);
+    docsMessageSocket(socket,io,users,activeDocs);
 
     socket.on("active_user",(data:{senderId:string,receiverId:string})=>{
         activeChats[data.senderId]=data.receiverId;
