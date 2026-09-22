@@ -1,5 +1,6 @@
 import { FiPaperclip, FiSmile } from "react-icons/fi";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ChatTalk } from "../../hooks/use.chatTalk";
 import { showApiError } from "../../utils/showApiError";
 import { MessageAction } from "../../actions/message.action";
@@ -51,6 +52,13 @@ const ChatPage = ({ data, data2 }: Props) => {
   const reactionRef=useRef<HTMLDivElement | null>(null);
   const [reactionMessage,setReactionMessage]=useState<string | null>(null);  
   const colors = ["#FF6B6B","#4ECDC4","#45B7D1","#F7B731","#5F27CD","#10AC84","#EE5253","#2E86DE"];
+
+  // NAYA DOCS — docs message par click karke docs page kholne ke liye
+  const navigate = useNavigate();
+  const openDocsMessage = (docsId?: string) => {
+    if (!docsId) return;
+    navigate("/docs", { state: { senderId: data2.loginUserId, openDocsId: docsId } });
+  };
 
 
   const {userMessage,allmessages,userpresence,status,presence,activeChats,notActiveChats,user_open_chat,userfileData}=ChatTalk(data, data2);
@@ -575,6 +583,8 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
 <div className="chat-body">
   {allmessages.map((all, index) => {
     const isSender = all.senderId === data2.loginUserId;
+    // NAYA DOCS — docs message: koi edit/delete/forward/react/pin/select nahi, sirf click se docs page khulta hai
+    const isDocs = all.messageType === "docs";
 
     return (
 
@@ -583,11 +593,11 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
       <div
         key={index}
         id={`message-${all._id}`}
-        className={`message ${isSender ? "sender" : "receiver"}${selectionMode ? " selectable" : ""}${selectedMsgIds.includes(all._id) ? " selectedMsg" : ""}`}
-        onClick={() => { if (selectionMode) toggleMessageSelection(all._id); }}
+        className={`message ${isSender ? "sender" : "receiver"}${selectionMode && !isDocs ? " selectable" : ""}${selectedMsgIds.includes(all._id) ? " selectedMsg" : ""}`}
+        onClick={() => { if (selectionMode && !isDocs) toggleMessageSelection(all._id); }}
       >
      {/* NAYA — selection mode me checkbox */}
-     {selectionMode && (
+     {selectionMode && !isDocs && (
        <input
          type="checkbox"
          className="messageSelectCheckbox"
@@ -597,7 +607,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
        />
      )}
      {all.messageType !== "system" &&
- all.messageType !== "systemPinned" && (
+ all.messageType !== "systemPinned" && !isDocs && (
   <button
     className="reaction-btn"
     onClick={(e) => { e.stopPropagation(); setReactionMessage(all._id); }}
@@ -705,7 +715,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
     <span className="pin-icon-on-message">📌</span>
   )}
     {/* TEXT MESSAGE */}
-    {all.messageType !== "file" && all.messageType!=="system" && all.messageType!=="systemPinned" && (
+    {all.messageType !== "file" && all.messageType!=="system" && all.messageType!=="systemPinned" && !isDocs && (
       <div className="message-text">{renderMessageWithLinks(all.message)}</div>
     )}
     
@@ -722,6 +732,20 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
     {isSender?`You Pinned a message`:`They Pinned a message`}
   </div>
 )}
+
+    {/* DOCS MESSAGE — NAYA — sirf click se original docs page khulta hai, koi edit/delete nahi */}
+    {isDocs && (
+      <div
+        className="docs-message-card"
+        onClick={() => { if (!selectionMode) openDocsMessage(all.docsId); }}
+      >
+        <span className="docs-message-icon">📄</span>
+        <div>
+          <div className="docs-message-title">{all.message}</div>
+          <div className="docs-message-sub">Tap to open document</div>
+        </div>
+      </div>
+    )}
 
     {/* FILE MESSAGE — ab normal flow mein hai, absolute nahi */}
     {all.messageType === "file" && (
@@ -791,7 +815,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
 
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
 {/* SIRF MENU — ab isme fileMessage nahi hai */}
-{all.messageType !== "system" && all.messageType!=="systemPinned" &&  (
+{all.messageType !== "system" && all.messageType!=="systemPinned" && !isDocs && (
   <div className="menu-container">
     <button className="menu-btn" onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === index ? null : index); }}>⋮</button>
 

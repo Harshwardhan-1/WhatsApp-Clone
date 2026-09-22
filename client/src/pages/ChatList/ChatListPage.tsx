@@ -164,6 +164,12 @@ const handleRandom=()=>{
   navigate("/NearbyChats",{state:{senderId:userData?.loginUserId}});
 }
 
+
+
+const handleDocs=()=>{
+  navigate("/docs",{state:{senderId:userData?.loginUserId}});
+}
+
   return (
     <>
     <div className="chatPage__container">
@@ -184,6 +190,7 @@ const handleRandom=()=>{
         <button onClick={handleStories}>Stories</button>
         <button onClick={handleChannel}>Channels</button>
         <button onClick={handleRandom}>NearBy Chats</button>
+        <button onClick={handleDocs}>Docs Files</button>
       </div>
 
       <div className="chatPage__userList">

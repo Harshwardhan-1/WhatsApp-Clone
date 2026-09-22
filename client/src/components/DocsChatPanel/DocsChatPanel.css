@@ -1,0 +1,245 @@
+.docsChatToggleBtn {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: #00a884;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+.docsChatUnreadBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #ff3040;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.docsChatPanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  max-width: 90vw;
+  height: 100%;
+  background: #fff;
+  border-left: 1px solid #e9edef;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+}
+
+.docsChatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #008069;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+}
+.docsChatHeader button { border: none; background: none; color: #fff; cursor: pointer; display: flex; }
+
+.docsChatBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #efeae2;
+}
+
+.docsChatMsgRow { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+.docsChatMsgRow.sender { flex-direction: row-reverse; align-self: flex-end; }
+.docsChatMsgRow.receiver { align-self: flex-start; }
+
+.docsChatLikeBlock { position: relative; display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.docsChatLikeBtn { border: none; background: none; cursor: pointer; color: #667781; display: flex; padding: 2px; }
+.docsChatLikeBtn.liked { color: #ff3040; }
+.docsChatLikeCount { font-size: 11px; color: #667781; cursor: pointer; }
+.docsChatLikersPopup {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 4;
+  min-width: 120px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+}
+
+.docsChatBubble {
+  position: relative;
+  max-width: 220px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #fff;
+}
+.docsChatMsgRow.sender .docsChatBubble { background: #d9fdd3; }
+
+.docsChatSenderName { display: block; font-size: 12px; font-weight: 600; color: #008069; margin-bottom: 2px; }
+
+.docsChatQuoted {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  border-left: 3px solid #00a884;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.docsChatQuotedName { font-weight: 600; color: #008069; }
+.docsChatQuotedText { color: #667781; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.docsChatText { margin: 0; font-size: 14px; line-height: 1.4; word-break: break-word; color: #111b21; }
+.docsChatText.deleted { font-style: italic; color: #667781; }
+.docsChatEdited { font-size: 11px; color: #667781; }
+
+.docsChatMsgActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.docsChatBubble:hover .docsChatMsgActions { opacity: 1; }
+.docsChatMsgActions button { border: none; background: none; color: #667781; cursor: pointer; display: flex; padding: 2px; }
+
+.docsChatMenu { position: relative; }
+.docsChatMenuDropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 5;
+  min-width: 130px;
+  padding: 4px 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+.docsChatMenu:hover .docsChatMenuDropdown,
+.docsChatMenu:focus-within .docsChatMenuDropdown { display: block; }
+.docsChatMenuDropdown button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #111b21;
+}
+.docsChatMenuDropdown button:hover { background: #f0f2f5; }
+
+.docsChatEmojiPopup { position: absolute; bottom: 100%; right: 0; z-index: 6; }
+
+.docsChatReactionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 4px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  cursor: pointer;
+}
+.docsChatReactionCount { color: #667781; }
+
+.docsChatReactionDetail {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 5;
+  min-width: 140px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+.docsChatReactionRow { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.docsChatReactionRow:hover { background: #f0f2f5; }
+
+.docsChatViewedByPopup {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 5;
+  min-width: 140px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+}
+.docsChatViewedByTitle { display: block; font-weight: 600; margin-bottom: 4px; color: #008069; }
+
+.docsChatEditBox { display: flex; gap: 6px; margin-top: 4px; }
+.docsChatEditBox input { flex: 1; padding: 4px 6px; border: 1px solid #d1d7db; border-radius: 4px; font-size: 13px; }
+.docsChatEditBox button { border: none; background: none; color: #00a884; font-size: 12px; cursor: pointer; }
+
+.docsChatReplyPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f0f2f5;
+  border-top: 1px solid #e9edef;
+}
+.docsChatReplyPreview button { border: none; background: none; color: #667781; cursor: pointer; display: flex; }
+
+.docsChatComposer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f0f2f5;
+  border-top: 1px solid #e9edef;
+}
+.docsChatComposer input {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 20px;
+  background: #fff;
+  outline: none;
+  font-size: 14px;
+}
+.docsChatComposer button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #00a884;
+  color: #fff;
+  cursor: pointer;
+}

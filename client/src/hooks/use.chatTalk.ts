@@ -23,6 +23,7 @@ export interface MessageItem{
     createdAt:Date,
     updatedAt:Date,
     isPinned:boolean,
+    docsId?:string,
     reaction:{
         userId:string,
         emoji:string,
@@ -46,6 +47,7 @@ export interface Message{
     updatedAt:Date,
     notificationSound?:string | null,
     isPinned:boolean,
+    docsId?:string,
     reaction:{
         userId:string,
         emoji:string,
@@ -171,6 +173,15 @@ const handleUpdatePinMessage=(message:Message)=>{
             setAllMessages(prev=>prev.map(msg=>msg._id===message._id?message:msg));
         }
     }
+
+    // NAYA — docs create hone par jo message chat me aata hai, usko yaha handle karte hain
+    const handleReceiveDocs=(message:MessageItem)=>{
+        const isCurrentChat=(message.senderId===senderId && message.receiverId===receiverId)||
+            (message.senderId===receiverId && message.receiverId===senderId);
+        if(isCurrentChat){
+            setAllMessages(prev=>[...prev,message]);
+        }
+    }
     
 
  
@@ -210,6 +221,10 @@ const handleUpdatePinMessage=(message:Message)=>{
         socket.on("disappear_message",handleDisappearMsg);
         socket.on("update_pin_message",handleUpdatePinMessage);
         socket.on("emoji_updated",handleEmojiUpdate);
+        // NAYA — docs backend inhi 3 alag events se bhejta hai
+        socket.on("receive_docs_message",handleReceiveDocs);
+        socket.on("real_time_docs_isSeen",handleIsSeen);
+        socket.on("isSendDocs",handleIsSend);
         socket.on("chat_cleared",(data:{senderId:string,receiverId:string})=>{
             loadMessage();
         });
@@ -231,6 +246,10 @@ const handleUpdatePinMessage=(message:Message)=>{
          socket.off("disappear_message",handleDisappearMsg);
          socket.off("update_pin_message",handleUpdatePinMessage);
         socket.off("emoji_updated",handleEmojiUpdate);
+        // NAYA
+        socket.off("receive_docs_message",handleReceiveDocs);
+        socket.off("real_time_docs_isSeen",handleIsSeen);
+        socket.off("isSendDocs",handleIsSend);
 
         };
     },[locadata?._id,senderId,receiverId]);
