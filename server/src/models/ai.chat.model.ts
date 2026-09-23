@@ -1,20 +1,16 @@
 import mongoose,{Document,Types} from 'mongoose';
 
 
-interface reaction{
-    userId:Types.ObjectId,
-    emoji:string,
-}
+
 
 export interface IAIChat extends Document{
     senderId:Types.ObjectId,
     chatId:Types.ObjectId,
+   
+   
+    role:string,
     message:string,
-    
-
-    isEdited?:boolean,
-
-    reaction:reaction[],
+    emoji?:string,
     
 }
 
@@ -38,21 +34,15 @@ const chat=new mongoose.Schema<IAIChat>({
         required:[true,'message field is required'],
         minLength:[1,'message should be atleast consist of 1 character'],
     },
-    isEdited:{
-        type:Boolean,
-        default:false,
+    role:{
+        type:String,
+        enum:["user","ai"],
+        default:"user",
     },
-    reaction:[
-        {
-            userId:{
-                type:mongoose.Schema.Types.ObjectId,
-                ref:"user",
-            },
-            emoji:{
-                type:String,
-            },
-        },
-    ],
+    emoji:{
+        type:String,  
+        default:"",  
+    },
 },
 {timestamps:true}
 )
@@ -88,5 +78,5 @@ const chatlist=new mongoose.Schema<aiChatList>({
 
 
 
-
+ 
 export const aiChatList=mongoose.model<aiChatList>("aiChatList",chatlist);

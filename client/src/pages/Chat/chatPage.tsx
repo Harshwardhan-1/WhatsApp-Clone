@@ -226,6 +226,12 @@ const ChatPage = ({ data, data2 }: Props) => {
   }
 
 
+
+const openAiChat = () => {
+  console.log("LOGIN USER ID:", data2.loginUserId);
+  navigate("/AiChat",{state:{senderId:data2.loginUserId,},
+  });
+};
   const [file,setFile]=useState<File>();
 
 
@@ -423,6 +429,7 @@ const handleRemoveReaction = (messageId: string, currentEmoji: string) => {
       <div className="chatHeaderCallBtns">
           <Phone size={20} className="callIconBtn" onClick={() => startCall(data._id, "audio")} />
           <Video size={20} className="callIconBtn" onClick={() => startCall(data._id, "video")} />
+          <button className="aiChatBtn"onClick={openAiChat}title="AI Chat">AI</button>
       </div>
 
           <div className="chatOptions">

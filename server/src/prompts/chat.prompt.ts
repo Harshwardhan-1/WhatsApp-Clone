@@ -6,7 +6,7 @@ import { GROQ_API_KEY } from "../configs/env.config";
 import Groq from "groq-sdk";
 
 const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey:GROQ_API_KEY,
 });
 
 const systemPrompt = `
@@ -87,7 +87,7 @@ export const chatWithAI = async (message: string): Promise<string> => {
                     content: message,
                 },
             ],
-            model: "llama-3.3-70b-versatile",
+            model: "openai/gpt-oss-120b",
             temperature: 0.7,
         });
 
