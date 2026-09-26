@@ -82,7 +82,7 @@ export const chatWithAI = async (message: string): Promise<string> => {
                     role: "system",
                     content: systemPrompt,
                 },
-                {
+                {    
                     role: "user",
                     content: message,
                 },

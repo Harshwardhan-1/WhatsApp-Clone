@@ -3,7 +3,7 @@ import Groq from "groq-sdk";
 
 const groq = new Groq({
     apiKey: GROQ_API_KEY,
-});
+});     
 
 const titleSystemPrompt = `
 You are a chat title generator, similar to WhatsApp/ChatGPT auto-naming.
